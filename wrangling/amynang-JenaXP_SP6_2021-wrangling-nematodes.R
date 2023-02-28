@@ -8,7 +8,7 @@ library(googlesheets4)
 
 ############################## Community Composition ###########################
 
-raw = read_xlsx("C:/Users/felix/Documents/Master Thesis/data/raw_nem.xlsx",
+raw = read_xlsx("id034_nematodes_240-samples_JenaExperiment_DeltaBEF_July2021_Marcel-Ciobanu__240 samples Jena exp SP6 Nematodes Amyntas2021FINAL.xlsx",
                 sheet = "Synthesis",
                 range = "A5:BM245",
                 #range = "BP5:EB245"
