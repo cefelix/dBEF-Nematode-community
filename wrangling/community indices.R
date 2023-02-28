@@ -15,7 +15,7 @@ lsf.str("package:maRcel")
 
 head(data.3) #nematode densities per soil sample
 head(data.4) #nematode densities per 100g soil dry weight
-head(data.7) #nematode densities per 1 square meter, in 0-10 cm depth
+#head(data.7) #nematode densities per 1 square meter, in 0-10 cm depth
 
 ####maRcel testing####
 test_taxa <- c(colnames(data.4[5:7]))
@@ -24,19 +24,8 @@ query_nemaplex("Actinolaimidae") #Error in if (file.access(phantompath, 1) < 0) 
 system("taskkill /im java.exe /f", intern=FALSE, ignore.stdout=FALSE)
 
 ####maturity index - manual calculation####
-#as maRcel produces an error atm, i will create a dataframe with c-p-values manually:
-
-#extract all observed taxa from our data frame
-taxa <- data.4[5:68] %>% 
-  colnames() %>%
-  as.data.frame() 
-
-#create vectors for different indices of the same length
-cp <- rep(NA, nrow(taxa))
-feeding <- rep(NA, nrow(taxa))
-
-#combine the df 'taxa' with the newly created vectors
-taxa <- cbind(taxa, cp, feeding)
+#as maRcel produces an error atm, i will use the data which maRcel::query_nemaplex() should produce:
+nemaplex <- read.csv("./wrangling/nemaplex.csv")
 
 
 
