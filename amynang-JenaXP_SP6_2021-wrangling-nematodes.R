@@ -152,8 +152,10 @@ taxa[taxa == "Macroposthonia"] = "Criconemoides"
 taxa[taxa == "Rhabditidae-dauer larvae"] = "Rhabditidae"
 # query_nemaplex can be found here:
 # https://github.com/amynang/marcel/blob/main/R/functions.R
-source("https://raw.githubusercontent.com/amynang/marcel/main/R/functions.R")
-nemaplex = query_nemaplex(taxa)
+# source("https://raw.githubusercontent.com/amynang/marcel/main/R/functions.R")
+# nemaplex = query_nemaplex(taxa)
+# write.csv(nemaplex, "wrangling/nemaplex.csv")
+nemaplex = read.csv("wrangling/nemaplex.csv", row.names = 1, header = TRUE)
 
 #replace feeding codes with their meaning
 nemaplex <- nemaplex %>% mutate(feeding.type = case_when(feeding == "1" ~ "herbivore",
