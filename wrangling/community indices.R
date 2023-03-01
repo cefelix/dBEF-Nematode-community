@@ -23,7 +23,7 @@
 head(data.3) #nematode densities per soil sample
 head(data.4) #nematode densities per 100g soil dry weight
 #head(data.7) #nematode densities per 1 square meter, in 0-10 cm depth
-<<<<<<< HEAD
+
 
 bexis.options(base_url = "https://jexis.uni-jena.de")
 #get data from bexis from dataset with id = xy
@@ -40,12 +40,10 @@ data.4 <- data.4 %>%
 head(data.4) #now sown diversity is the 4th column
 
 
-=======
->>>>>>> 5e141a19a7d2a7c578126b71f3aa712e9bef3a36
 
 ####maRcel testing####
-test_taxa <- c(colnames(data.4[5:7]))
-query_nemaplex(test_taxa)
+test_taxa <- c(colnames(data.4[6:8]))
+query_nemaplex(test_taxa) #Error in if (file.access(phantompath, 1) < 0) { : argument is of length zero
 system("taskkill /im java.exe /f", intern=FALSE, ignore.stdout=FALSE)
 
 query_nemaplex("Actinolaimidae") #Error in if (file.access(phantompath, 1) < 0) { : argument is of length zero
@@ -56,15 +54,15 @@ system("taskkill /im java.exe /f", intern=FALSE, ignore.stdout=FALSE)
 
 
 
-####maturity index - manual calculation####
+####indices addition ####
 #as maRcel produces an error atm, i will use the data which maRcel::query_nemaplex() should produce:
-nemaplex <- read.csv("./wrangling/nemaplex.csv")
-<<<<<<< HEAD
+data.nplx <- read.csv("./wrangling/nemaplex.csv")
 
+data.indices <- data.4[1:5]
 
+raw.indices <- data.4[6:ncol(data.4)] %>%
+  as.data.frame()
 
-=======
->>>>>>> 5e141a19a7d2a7c578126b71f3aa712e9bef3a36
-
+Enrichment(raw.indices ,nemaplex = data.nplx) #produces NaN
 
 
