@@ -23,6 +23,7 @@
 head(data.3) #nematode densities per soil sample
 head(data.4) #nematode densities per 100g soil dry weight
 #head(data.7) #nematode densities per 1 square meter, in 0-10 cm depth
+<<<<<<< HEAD
 
 bexis.options(base_url = "https://jexis.uni-jena.de")
 #get data from bexis from dataset with id = xy
@@ -39,6 +40,8 @@ data.4 <- data.4 %>%
 head(data.4) #now sown diversity is the 4th column
 
 
+=======
+>>>>>>> 5e141a19a7d2a7c578126b71f3aa712e9bef3a36
 
 ####maRcel testing####
 test_taxa <- c(colnames(data.4[5:7]))
@@ -56,9 +59,12 @@ system("taskkill /im java.exe /f", intern=FALSE, ignore.stdout=FALSE)
 ####maturity index - manual calculation####
 #as maRcel produces an error atm, i will use the data which maRcel::query_nemaplex() should produce:
 nemaplex <- read.csv("./wrangling/nemaplex.csv")
+<<<<<<< HEAD
 
 
 
+=======
+>>>>>>> 5e141a19a7d2a7c578126b71f3aa712e9bef3a36
 
 
 
