@@ -58,8 +58,9 @@ rownames(data.nplx) <- data.nplx$X  #this fixes an NaN error, when applying the 
                                     #for details: https://github.com/cefelix/dBEF-Nematode-community/blob/main/wrangling/nemaplexCSV_error_solution.R
 
 #CP proportions
-data.CP <- data.4 %>%
-  C_P(nemaplex = data.nplx)
+data.4 %>%
+  C_P(nemaplex = data.nplx) %>%
+  summary()
 
 #channel ratio
 data.4 %>%
@@ -80,6 +81,10 @@ data.4 %>%
 data.4 %>%
   Structure(nemaplex = data.nplx) %>%
   summary()
+
+#now try the fancy function which does it all in one:
+data.indices <- data.4 %>%
+  all.indices(nemaplex = data.nplx)
 
 
 
