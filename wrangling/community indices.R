@@ -17,7 +17,7 @@
   library(rBExIS)
 
 
-####data checking####
+####data checking and re-arranging####
 #get data by re-running code from: https://github.com/amynang/JenaXP_SP6_2021/blob/main/wrangling/nematodes.R
 
 head(data.3) #nematode densities per soil sample
@@ -50,19 +50,30 @@ query_nemaplex("Actinolaimidae") #Error in if (file.access(phantompath, 1) < 0) 
 system("taskkill /im java.exe /f", intern=FALSE, ignore.stdout=FALSE)
 
 
-####data frame - split block addition####
 
-
-
-####indices addition ####
+####indices calculation ####
 #as maRcel produces an error atm, i will use the data which maRcel::query_nemaplex() should produce:
 data.nplx <- read.csv("./wrangling/nemaplex.csv")
+rownames(data.nplx) <- data.nplx$X  #this fixes an NaN error, when applying the index functions of maRcel
+                                    #for details: https://github.com/cefelix/dBEF-Nematode-community/blob/main/wrangling/nemaplexCSV_error_solution.R
 
-data.indices <- data.4[1:5]
+#CP proportions
+data.CP <- data.4 %>%
+  C_P(nemaplex = data.nplx)
 
-raw.indices <- data.4[6:ncol(data.4)] %>%
-  as.data.frame()
+#channel ratio
+data.4 %>%
+  Channel(nemaplex = data.nplx) %>% 
+  summary() #thats a Median CI of 100, seems sketchy, should look into it
 
-Enrichment(raw.indices ,nemaplex = data.nplx) #produces NaN
+#maturity index
+data.4 %>% 
+  Maturity(nemaplex = data.nplx) %>%
+  summary()
+
+#enrichment index
+data.4 %>% 
+  Enrichment(nemaplex = data.nplx) %>%
+  summary()
 
 
