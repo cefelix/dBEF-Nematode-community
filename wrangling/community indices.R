@@ -42,12 +42,12 @@ head(data.4) #now sown diversity is the 4th column
 
 
 ####maRcel testing####
-test_taxa <- c(colnames(data.4[6:8]))
-query_nemaplex(test_taxa) #Error in if (file.access(phantompath, 1) < 0) { : argument is of length zero
-system("taskkill /im java.exe /f", intern=FALSE, ignore.stdout=FALSE)
+#test_taxa <- c(colnames(data.4[6:8]))
+#query_nemaplex(test_taxa) #Error in if (file.access(phantompath, 1) < 0) { : argument is of length zero
+#system("taskkill /im java.exe /f", intern=FALSE, ignore.stdout=FALSE)
 
-query_nemaplex("Actinolaimidae") #Error in if (file.access(phantompath, 1) < 0) { : argument is of length zero
-system("taskkill /im java.exe /f", intern=FALSE, ignore.stdout=FALSE)
+#query_nemaplex("Actinolaimidae") #Error in if (file.access(phantompath, 1) < 0) { : argument is of length zero
+#system("taskkill /im java.exe /f", intern=FALSE, ignore.stdout=FALSE)
 
 
 
@@ -82,9 +82,14 @@ data.4 %>%
   Structure(nemaplex = data.nplx) %>%
   summary()
 
-#now try the fancy function which does it all in one:
+####create table with all response variables####
+#using the fancy function which does all indices at once:
+data.4$sowndiv <- data.4$sowndiv %>%
+  as.factor() #this prevents sowndiv being dropped by all.índices()
 data.indices <- data.4 %>%
-  all.indices(nemaplex = data.nplx)
-
+  all.indices(nemaplex = data.nplx) #creating a new df with all indices and bloc/plot/treatment info
+data.indices$sowndiv <- data.indices$sowndiv %>%
+  as.numeric() #converting sowndiv back to numeric
+head(data.indices)
 
 
