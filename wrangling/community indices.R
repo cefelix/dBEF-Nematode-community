@@ -92,5 +92,6 @@ data.indices$sowndiv <- data.indices$sowndiv %>%
   as.character() %>%
   as.numeric() #converting sowndiv back to numeric
 head(data.indices)
+str(data.indices)
 
 
