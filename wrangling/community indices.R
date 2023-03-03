@@ -89,6 +89,7 @@ data.4$sowndiv <- data.4$sowndiv %>%
 data.indices <- data.4 %>%
   all.indices(nemaplex = data.nplx) #creating a new df with all indices and bloc/plot/treatment info
 data.indices$sowndiv <- data.indices$sowndiv %>%
+  as.character() %>%
   as.numeric() #converting sowndiv back to numeric
 head(data.indices)
 
