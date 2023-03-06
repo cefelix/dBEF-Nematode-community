@@ -66,6 +66,8 @@ data.4 %>%
 data.4 %>%
   Channel(nemaplex = data.nplx) %>% 
   summary() #thats a Median CI of 100, seems sketchy, should look into it
+            #after looking into it, a CI of 100 simply means that there are no Ba1 nematodes
+            #in the samples
 
 #maturity index
 data.4 %>% 
