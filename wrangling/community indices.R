@@ -96,4 +96,22 @@ data.indices$sowndiv <- data.indices$sowndiv %>%
 head(data.indices)
 str(data.indices)
 
+####add channel as described by Dietrich et al. 2021####
+
+#This function calculates the channel ratio as Fu/(Fu+Ba):
+ChannelRatio <- function(df, nemaplex)
+  {
+    Ba = which(nemaplex$feeding[match(colnames(df), rownames(nemaplex))] == 
+                  3)
+    Fu = which(nemaplex$feeding[match(colnames(df), rownames(nemaplex))] == 
+                  2)
+    index = df %>% mutate(CR = (rowSums(.[Fu])/(rowSums(.[Ba]) + rowSums(.[Fu]))), .keep = "none")
+    out = cbind(index)
+    return(out)
+  }
+
+#we add a new column to our index data frame which shows the channel ratio (CR)
+data.indices <- cbind(data.indices, ChannelRatio(data.4, data.nplx))
+
+
 
