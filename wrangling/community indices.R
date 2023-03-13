@@ -113,5 +113,7 @@ ChannelRatio <- function(df, nemaplex)
 #we add a new column to our index data frame which shows the channel ratio (CR)
 data.indices <- cbind(data.indices, ChannelRatio(data.4, data.nplx))
 
+#this is a test comment, as i am struggling with merging errors
+
 
 
