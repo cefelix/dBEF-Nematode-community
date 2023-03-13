@@ -27,7 +27,7 @@ ggplot(data.indices, aes(x = sowndiv, y = EI, color = treatment))+
 
 
 
-####Channel ratio####
+####Channel index####
 #scatterplot
 ggplot(data.indices, aes(x = sowndiv, y = CI, color = treatment))+
   geom_point()+
@@ -42,6 +42,25 @@ ggplot(data.indices, aes(x = sowndiv, y = CI, color = block))+
 
 #one graph for each block
 ggplot(data.indices, aes(x = sowndiv, y = CI, color = treatment))+
+  geom_point()+
+  facet_wrap(~block)+
+  scale_x_continuous(trans = 'log2')
+
+####Channel ratio####
+#scatterplot
+ggplot(data.indices, aes(x = sowndiv, y = CR, color = treatment))+
+  geom_point()+
+  scale_x_continuous(trans = 'log2')
+#here something with the maRcel::nemaplex function must have gone wrong
+
+#one graph for each treatment
+ggplot(data.indices, aes(x = sowndiv, y = CR, color = block))+
+  geom_point()+
+  facet_wrap(~treatment)+
+  scale_x_continuous(trans = 'log2')
+
+#one graph for each block
+ggplot(data.indices, aes(x = sowndiv, y = CR, color = treatment))+
   geom_point()+
   facet_wrap(~block)+
   scale_x_continuous(trans = 'log2')
