@@ -114,6 +114,6 @@ ChannelRatio <- function(df, nemaplex)
 data.indices <- cbind(data.indices, ChannelRatio(data.4, data.nplx))
 
 #this is a test comment, as i am struggling with merging errors
-
+#this is another test comment
 
 
