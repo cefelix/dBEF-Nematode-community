@@ -30,7 +30,7 @@ data.2 = data %>% add_column(block = this[,1],
 
 # the unlabeled sample is B1A12D3
 table(data.2$block,data.2$plot)
-View(filter(data.2, block == "B1" & plot == 12))
+#View(filter(data.2, block == "B1" & plot == 12))
 data.2[240,1:4] = as.list(c("B1A12D3","B1","12","3"))
 
 # arrange again
@@ -38,7 +38,7 @@ data.2 = data.2 %>% arrange(Sample)
 
 # check again
 table(data.2$block,data.2$plot)
-View(filter(data.2, block == "B1" & plot == 12))
+#View(filter(data.2, block == "B1" & plot == 12))
 
 # This results in dataset 344 in https://jexis.uni-jena.de
 # data4jexis = data.2 %>% select(-(2:4)) %>% pivot_longer(!Sample,
