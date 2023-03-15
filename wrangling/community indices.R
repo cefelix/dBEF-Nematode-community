@@ -35,7 +35,7 @@ data.4 <- data.4 %>%
   # we add a sowndiv column whose elements are filled from main.plot
   # based on plot matching
   mutate(.after = plot,
-         sowndiv = main.plot$sowndiv[match(.$plot, main.plot$plotcode)])
+         sowndiv = as.character(main.plot$sowndiv[match(.$plot, main.plot$plotcode)]))
 
 head(data.4) #now sown diversity is the 4th column
 
