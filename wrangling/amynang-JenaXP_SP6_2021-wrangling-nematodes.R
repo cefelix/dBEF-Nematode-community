@@ -8,7 +8,7 @@ library(googlesheets4)
 
 ############################## Community Composition ###########################
 
-raw = read.xlsx("H:/JenaSP6_2021/id034_nematodes_240-samples_JenaExperiment_DeltaBEF_July2021_Marcel-Ciobanu__240 samples Jena exp SP6 Nematodes Amyntas2021FINAL.xlsx",
+raw = read.xlsx("wrangling/id034_nematodes_240-samples_JenaExperiment_DeltaBEF_July2021_Marcel-Ciobanu__240 samples Jena exp SP6 Nematodes Amyntas2021FINAL.xlsx",
                 sheet = "Synthesis",
                 rows = 5:245,
                 cols = 1:65)
