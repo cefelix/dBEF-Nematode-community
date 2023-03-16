@@ -65,7 +65,7 @@ data.4 %>%
   C_P(nemaplex = data.nplx) %>%
   summary()
 
-#channel ratio
+#channel index
 data.4 %>%
   Channel(nemaplex = data.nplx) %>% 
   summary() #thats a Median CI of 100, seems sketchy, should look into it
@@ -151,3 +151,37 @@ str(data.indices)
   #soil moisture, covariate, %water of FW
   
 
+#lets start with CI (channel index)
+  data.analysis <- data.4%>%
+    Channel(data.nplx) 
+
+#add CR (channel ratio)        
+  data.analysis <- cbind(data.analysis, ChannelRatio(data.4, data.nplx))
+  
+#add EI (enrichment index)
+  data.analysis <- cbind(data.analysis, Enrichment(data.4, data.nplx)[6])
+  
+#add SI (structure index)
+  data.analysis <- cbind(data.analysis, Structure(data.4, data.nplx)[6])
+
+#add MI (maturity index) 
+  data.analysis <- cbind(data.analysis, Maturity(data.4, data.nplx))
+
+#add abundance of individuals per sample
+  #first, Anja's counts:
+  data.analysis <- full_join(data.analysis, abun, by = "Sample")
+  #check whether everything went well:
+  data.analysis[3] == data.analysis[12] #worked
+  #drop unnecessary columns
+  drop <- c("Date", "Plot", "Subplot")
+  data.analysis = data.analysis[,!(names(data.analysis) %in% drop)]
+  #rename the column
+  names(data.analysis)[11] <- "abundance_anja"
+  
+  #add abundances Marcel counted in a separate column:
+  data.1$abundance_marcel <- rowSums(data.1[2:65])
+  
+  
+#add cp classes (as individuals per 100g dw)  
+   
+  
