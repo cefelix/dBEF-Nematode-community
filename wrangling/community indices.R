@@ -84,7 +84,7 @@ data.4 %>%
   Structure(nemaplex = data.nplx) %>%
   summary()
 
-####create table with all response variables####
+####create table with all FUNCTIONAL INDICES included in maRcel####
 #using the fancy function which does all indices at once:
 data.4$sowndiv <- data.4$sowndiv %>%
   as.factor() #this prevents sowndiv being dropped by all.índices()
@@ -96,7 +96,7 @@ data.indices$sowndiv <- data.indices$sowndiv %>%
 head(data.indices)
 str(data.indices)
 
-####add channel as described by Dietrich et al. 2021####
+####add CHANNEL RATIO as described by Dietrich et al. 2021####
 
 #This function calculates the channel ratio as Fu/(Fu+Ba):
 ChannelRatio <- function(df, nemaplex)
@@ -116,6 +116,13 @@ data.indices <- cbind(data.indices, ChannelRatio(data.4, data.nplx))
 #this is a test comment, as i am struggling with merging errors
 #this is another test comment
 
+
+####Adding SOIL MOISTURE ####
+#calculating soil moisture as proportion of water in the fresh soil used for extraction
+moisture <- soil$water.content / soil$init.weight 
+data.indices <- cbind(data.indices, moisture)
+
+
 ####changing data type of variables####
 
 data.indices$block <- data.indices$block %>% 
@@ -124,3 +131,4 @@ data.indices$treatment <- data.indices$treatment %>%
   as.factor()
 
 str(data.indices)
+
