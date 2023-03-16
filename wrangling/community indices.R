@@ -20,6 +20,9 @@
 ####data checking and re-arranging####
 #get data by re-running code from: https://github.com/amynang/JenaXP_SP6_2021/blob/main/wrangling/nematodes.R
 
+#rename the first raw data df:  
+data.1 <- data 
+  
 head(data.3) #nematode densities per soil sample
 head(data.4) #nematode densities per 100g soil dry weight
 #head(data.7) #nematode densities per 1 square meter, in 0-10 cm depth
@@ -131,4 +134,20 @@ data.indices$treatment <- data.indices$treatment %>%
   as.factor()
 
 str(data.indices)
+
+
+
+####NEW approach for a table with units appropriate to respective response variable### 
+
+#what variables do I want, are they response/explanatory/covariates, which unit:
+  #EI, response, index 0-100
+  #SI
+  #CI
+  #MI
+
+  #cp1 - cp5, response, ind. per 100g DW
+  #abundance, response, ind. per 100g DW
+
+  #soil moisture, covariate, %water of FW
+  
 
