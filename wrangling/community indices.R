@@ -38,7 +38,7 @@ data.4 <- data.4 %>%
   # we add a sowndiv column whose elements are filled from main.plot
   # based on plot matching
   mutate(.after = plot,
-         sowndiv = main.plot$sowndiv[match(.$plot, main.plot$plotcode)])
+         sowndiv = as.character(main.plot$sowndiv[match(.$plot, main.plot$plotcode)]))
 
 head(data.4) #now sown diversity is the 4th column
 
@@ -55,10 +55,8 @@ head(data.4) #now sown diversity is the 4th column
 
 
 ####indices calculation ####
-#as maRcel produces an error atm, i will use the data which maRcel::query_nemaplex() should produce:
-data.nplx <- read.csv("./wrangling/nemaplex.csv")
-rownames(data.nplx) <- data.nplx$X  #this fixes an NaN error, when applying the index functions of maRcel
-                                    #for details: https://github.com/cefelix/dBEF-Nematode-community/blob/main/wrangling/nemaplexCSV_error_solution.R
+data.nplx <- read.csv("./wrangling/nemaplex.csv", row.names = 1)
+
 
 #CP proportions
 data.4 %>%

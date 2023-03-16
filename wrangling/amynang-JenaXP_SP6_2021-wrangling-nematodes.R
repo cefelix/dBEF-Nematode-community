@@ -1,18 +1,18 @@
 #just copying the code from https://github.com/amynang/JenaXP_SP6_2021/blob/main/wrangling/nematodes.R
 #and re-running it to get the data we work with
 
-library(readxl)
+library(openxlsx)
 library(tidyverse)
 library(stringr)
 library(googlesheets4)
 
 ############################## Community Composition ###########################
 
-raw = read_xlsx("id034_nematodes_240-samples_JenaExperiment_DeltaBEF_July2021_Marcel-Ciobanu__240 samples Jena exp SP6 Nematodes Amyntas2021FINAL.xlsx",
+raw = read.xlsx("wrangling/id034_nematodes_240-samples_JenaExperiment_DeltaBEF_July2021_Marcel-Ciobanu__240 samples Jena exp SP6 Nematodes Amyntas2021FINAL.xlsx",
                 sheet = "Synthesis",
-                range = "A5:BM245",
-                #range = "BP5:EB245"
-)
+                rows = 5:245,
+                cols = 1:65)
+
 raw[is.na(raw)] = 0
 # arrange by sample
 data = raw %>% arrange(Sample) 
@@ -30,7 +30,7 @@ data.2 = data %>% add_column(block = this[,1],
 
 # the unlabeled sample is B1A12D3
 table(data.2$block,data.2$plot)
-#View(filter(data.2, block == "B1" & plot == 12))
+# View(filter(data.2, block == "B1" & plot == 12))
 data.2[240,1:4] = as.list(c("B1A12D3","B1","12","3"))
 
 # arrange again
@@ -38,7 +38,7 @@ data.2 = data.2 %>% arrange(Sample)
 
 # check again
 table(data.2$block,data.2$plot)
-#View(filter(data.2, block == "B1" & plot == 12))
+# View(filter(data.2, block == "B1" & plot == 12))
 
 # This results in dataset 344 in https://jexis.uni-jena.de
 # data4jexis = data.2 %>% select(-(2:4)) %>% pivot_longer(!Sample,
@@ -119,14 +119,35 @@ data.4 = data.3 %>% mutate(across(where(is.numeric), # for all numeric columns
 # grams of dry soil per cubic centimeter 
 # a sq meter has 10000 sq centimeters
 # we want to calculate grams of dry soil in a "carpet" of 100*100*10
+
+# soil density measurements for treatments 1 & 2
 soil.density = read.csv("H:/JenaSP6_2021/282_4_Dataset/282_4_data.csv",sep = ";")
 soil.density = soil.density %>% arrange(plot,treatment) %>% 
-  add_column(Sample = str_c(soil.density$plot, soil.density$treatment),
-             .before = "plot")
+  add_column(Sample = str_c(.$plot, .$treatment),
+             .before = "plot") %>% select(1:3,7) %>% 
+  rename(bulk_soil_density = BulkDensity_Soil)
 
+# soil density measurements for main plots (corresponding to treatment 3 ie control)
 soil.density3 = read.table("H:\\JenaSP6_2021\\BulkSoilDensity_mainExp_2020.txt",
                            header = TRUE,
-                           sep = "\t")
+                           sep = "\t") %>% 
+  # we only have density for 0-5cm depth in the other two treatments
+  # also dropping non-dBEF plots
+  filter(upper.depth == 0 & Plot %in% unique(soil.density$plot)) %>% 
+  add_column(Sample = str_c(.$Plot, "D3"),
+             .before = "Plot") %>% 
+  add_column(treatment = "D3",
+             .after = "Plot") %>% 
+  rename(plot = Plot) %>% 
+  select(1:3,6)
+
+# names(soil.density)
+# names(soil.density3)
+
+# together
+soil.density = soil.density %>% rbind(., soil.density3) %>% 
+  arrange(plot, treatment)
+
 
 # now we calculate species densities per gram of dry soil
 data.6 = data.3 %>% mutate(across(where(is.numeric), # for all numeric columns
@@ -135,12 +156,14 @@ data.6 = data.3 %>% mutate(across(where(is.numeric), # for all numeric columns
                            .keep = "unused")
 
 # now we calculate species densities per square meter of land (10cm deep)
-data.7 = data.6 %>% filter(!(treatment == "3")) %>% 
+data.7 = data.6 %>% #filter(!(treatment == "3")) %>% 
   mutate(across(where(is.numeric), # for all numeric columns
                 # we multiply by grams of dry soil per 100*100*10 cubic meters
-                ~ .*soil.density$BulkDensity_Soil*1e05), 
+                ~ .*soil.density$bulk_soil_density*1e05), 
          .keep = "unused")
 
+#> think about rounding the above numbers up to integers if I want to sample 
+#> from bodymass distributions
 
 
 ############################ Ecophysioligical traits ###########################
@@ -149,7 +172,7 @@ taxa = names(raw)[-1]
 # Change to synonym accepted by Nemaplex
 taxa[taxa == "Macroposthonia"] = "Criconemoides"
 # why are these together?
-taxa[taxa == "Rhabditidae-dauer larvae"] = "Rhabditidae"
+taxa[taxa == "Rhabditidae-dauer.larvae"] = "Rhabditidae"
 # query_nemaplex can be found here:
 # https://github.com/amynang/marcel/blob/main/R/functions.R
 # source("https://raw.githubusercontent.com/amynang/marcel/main/R/functions.R")
@@ -218,124 +241,49 @@ ecophys[51, "StDevMass"] = ecophys[51, "AvgMass"]
 
 
 ecophys = ecophys %>% add_column(feeding.type = nemaplex$feeding.type,
-                                 .before = "AvgMass")
+                                 .before = "AvgMass") %>% 
+  arrange(Taxon)
+
+Bacterivore.nematodes = ecophys$Taxon[ecophys$feeding.type == "bacterivore"]
+Fungivore.nematodes = ecophys$Taxon[ecophys$feeding.type == "fungivore"]
+Herbivore.nematodes = ecophys$Taxon[ecophys$feeding.type == "herbivore"] 
+Omnivore.nematodes = ecophys$Taxon[ecophys$feeding.type == "omnivore"] 
+Predator.nematodes = ecophys$Taxon[ecophys$feeding.type == "predator"] 
+
+micro = data.7 %>% 
+  mutate(.after = plot,
+         .keep = "unused",
+         Plot = str_split(.$Sample, "D", simplify = T)[,1],
+         Treatment = paste0("Treatment", treatment)) %>% 
+  select(-c(Sample, block, plot)) %>% 
+  rename(Rhabditidae = `Rhabditidae-dauer.larvae`,
+         Criconemoides.y = Macroposthonia,
+         Criconemoides.x = Criconemoides) %>% 
+  #select(-Rhabditidae) %>% # I guess, dauer larve as dormant are not included in the foodweb
+  rowwise() %>% 
+  mutate(.keep = "unused",
+         Bacterivore.nematodes = sum(pick(any_of(Bacterivore.nematodes))),
+         Fungivore.nematodes = sum(pick(any_of(Fungivore.nematodes))),
+         Herbivore.nematodes = sum(pick(any_of(Herbivore.nematodes))),
+         Omnivore.nematodes = sum(pick(any_of(Omnivore.nematodes))),
+         Predator.nematodes = sum(pick(any_of(Predator.nematodes)))) %>% 
+  ungroup() %>%  
+  mutate(# then I round up to get whole individuals 
+    # (necessary for sampling bodymass distributions)
+    across(where(is.numeric), ceiling))
 
 
 
-# #muldervonk$AvgMass.mv = as.numeric(muldervonk$AvgMass.mv)
-# #muldervonk$StDevMass.mv = as.numeric(muldervonk$StDevMass.mv)
-# # colnames(cohenmulder) = c("Taxon", "feeding.type.cm", "N.cm", 
-# #                          "AvgMass.cm", "StDevMass.cm")
-# 
-# colnames(muldervonk) = c("Taxon", "N.mv", "feeding.type.mv",
-#                          "AvgMass.mv", "StDevMass.mv")
-# 
-# allofthem = full_join(muldervonk, cohenmulder)
-# 
-# allofmine = left_join(nemaplex, allofthem)
-# 
-# the.missing = setdiff(taxa, muldervonk$Taxon)
-# 
-# library(taxize)
-# tax.1 <- tax_name(muldervonk$Taxon, get = "family", db = "ncbi")
-# tax.1[33,3] = "Telotylenchidae"
-# tax.1[65,3] = "Tylenchidae"
-# tax.1[80,3] = "Thornenematidae"
-# tax.2 <- tax_name(the.missing, get = "family", db = "ncbi")
-# 
-# muldervonk = muldervonk %>% add_column(Family = tax.1$family, .before = "Taxon")
-# 
-# avgfam = muldervonk %>% group_by(Family) %>% 
-#   summarise(AvgMass = mean(AvgMass.mv),
-#             AvgStDevMass= mean(StDevMass.mv))
-# 
-# tax.2$AvgMass = avgfam$AvgMass[match(tax.2$family,avgfam$Family)]
-# tax.2$StDevMass = avgfam$AvgStDevMass[match(tax.2$family,avgfam$Family)]
-# 
-# 
-# 
-# allofthem$N.mv[is.na(allofthem$N.mv)] = 0
-# allofthem$AvgMass.mv[is.na(allofthem$AvgMass.mv)] = 0
-# allofthem$StDevMass.mv[is.na(allofthem$StDevMass.mv)] = 0
-# 
-# # https://math.stackexchange.com/questions/2971315/how-do-i-combine-standard-deviations-of-two-groups
-# 
-# allofthem = allofthem %>% mutate(ov.AvgMass = (N*AvgMass + N.mv*AvgMass.mv)/(N+N.mv),
-#                                  ov.StDevMass = sqrt(((N-1)*StDevMass + (N.mv-1)*StDevMass.mv)/(N+N.mv-1) + 
-#                                                        ((N*N.mv)*(AvgMass-AvgMass.mv)^2)/((N+N.mv)*(N+N.mv-1))),
-#                                  .keep ="all")
-# allofthem = allofthem[c("Taxon",
-#                         "cp_value",
-#                         "feeding.type","feeding.type.mv",
-#                         "N",          "N.mv",  
-#                         "AvgMass",    "AvgMass.mv",  
-#                         "StDevMass" , "StDevMass.mv")]
-# 
-# 
-# rlnormtrunc.intuitive = function(n, m, s, p=.9) {
-#   trnc <- EnvStats::rlnormTrunc(n, 
-#                                 meanlog = log(m^2 / sqrt(s^2 + m^2)), 
-#                                 sdlog = sqrt(log(1 + (s^2 / m^2))), 
-#                                 min = qlnorm((1-p)/2, 
-#                                              meanlog = log(m^2 / sqrt(s^2 + m^2)), 
-#                                              sdlog = sqrt(log(1 + (s^2 / m^2)))), 
-#                                 max = qlnorm(1-(1-p)/2, 
-#                                              meanlog = log(m^2 / sqrt(s^2 + m^2)), 
-#                                              sdlog = sqrt(log(1 + (s^2 / m^2)))))
-#   return(trnc)
-# }
-# 
-# for (i in 1:64) {
-#   hist(rlnormtrunc.intuitive(10000, allofthem[i,11], allofthem[i,12]),
-#        main = paste("Histogram of" , allofthem[i,1]),
-#        xlab = NULL,
-#        ylab = NULL,
-#        breaks = 1000)
-# }
-# 
-# hist(rlnormtrunc.intuitive(10000, 26.4783, 3.821168e+01),
-#      breaks = 1000)
-# plot(density(rlnormtrunc.intuitive(100000, 26.4783, 3.821168e+01)))
-
-com = as.data.frame(table(nemaplexx$feeding.type))
-colnames(com) = c("Group",
-                  "No_Sp")
-com = com %>% add_row(Group = c("plants","fungi","bacteria"),
-                      No_Sp = rep(1,3),
-                      .before = 1)
-
-m=matrix(0,
-         ncol = 8,
-         nrow = 8)
-colnames(m) = rownames(m) = c("plants", "fungi", "bacteria",
-                              "h.nematodes",  
-                              "f.nematodes", "b.nematodes", 
-                              "o.nematodes", "p.nematodes")
-
-m["plants", c("h.nematodes",
-              "o.nematodes")] = 1
-m["fungi", c("f.nematodes",
-             "o.nematodes")] = 1
-m["bacteria", c("b.nematodes",
-                "o.nematodes")] = 1
-m[c("h.nematodes",
-    "f.nematodes",
-    "b.nematodes",
-    "o.nematodes",
-    "p.nematodes"), c("o.nematodes",
-                      "p.nematodes")] = 1
-
-nms <- rep(com$Group, com$No_Sp)
-m = m[nms, nms]
-
-colnames(m) = rownames(m) = c("plants","fungi","bacteria",
-                              rownames(nemaplexx))
-
-################################ Maturity Index ################################
-
-################################ c-p structure #################################
-
-################################ Feeding types #################################
-
-#############################  Functional Guilds ###############################
-
+mean.micro.masses = ecophys %>% 
+  mutate(AvgMass = (AvgMass*1e-3)/.2,
+         StDevMass = (StDevMass*1e-3)/.2) %>% 
+  group_by(feeding.type) %>% 
+  summarise(N = n(),
+            MeanMass.mg = mean(AvgMass),
+            StDMass.mg = sqrt(sum(StDevMass^2)/N)) %>% select(-N) %>% 
+  mutate(feeding.type = case_when(feeding.type == "herbivore"   ~ "Herbivore.nematodes",
+                                  feeding.type == "fungivore"   ~ "Fungivore.nematodes",
+                                  feeding.type == "bacterivore" ~ "Bacterivore.nematodes",
+                                  feeding.type == "predator"    ~ "Predator.nematodes",
+                                  feeding.type == "omnivore"    ~ "Omnivore.nematodes")) %>% 
+  rename(taxon = feeding.type)
