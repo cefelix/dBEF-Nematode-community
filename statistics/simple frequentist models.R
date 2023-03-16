@@ -12,7 +12,18 @@ library(tidyverse)
 ####CR####
 data.indices$CR %>%
   hist()
+  #right skewed beta distribution might be suitable
 
-CR_glmer <- glmer(CR ~ sowndiv + treatment + (1|block) , data= data.indices, family = "binomial")
+CR_glmer <- glmer(CR ~ sowndiv * treatment + (1|block) , data= data.indices, family = "binomial")
 summary(CR_glmer)
+
+####CI####
+data.indices$CI %>%
+  hist() #can this be informative?
+
+####EI####
+data.indices$EI %>%
+  hist()
+
+
 

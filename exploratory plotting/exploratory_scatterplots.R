@@ -102,3 +102,18 @@ ggplot(data.indices, aes(x = sowndiv, y = MI, color = treatment))+
   facet_wrap(~block)+
   scale_x_continuous(trans = 'log2')
 
+####share of cp1 nematodes in sample####
+ggplot(data.indices, aes(x = sowndiv, y = cp1, color = treatment ))+
+  geom_point()+
+  scale_x_continuous(trans='log2')
+
+
+
+####soil moisture####
+ggplot(data.indices, aes(x = block, y = moisture))+
+  geom_boxplot()
+  #soil moisture should be included in the model, if we use block as a random effect
+  
+
+
+
