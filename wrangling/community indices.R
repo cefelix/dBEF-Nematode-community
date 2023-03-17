@@ -188,13 +188,22 @@ str(data.indices)
     summary()
   summary(data.analysis)  
 
-#have a brief look into the discrepancy between Anja's counts and Marcel's cumulated identifications
-  ggplot(data.analysis, aes(x=abundance_anja, y=abundance_marcel))+
+#TO DO: convert to no. of individuals per 100g DW  
+  
+  
+#have a brief look into the discrepancy between Anja's counts and Marcel's cumulated identifications 
+#(only up to 100 individuals as more have not been identified)
+  ggplot(data.analysis, aes(x=abundance_anja, y=abundance_marcel, color= block))+
     geom_point()+
-    geom_point(aes(x=abundance_anja, y=abundance_anja, color="red"))+
+    geom_line(aes(x=abundance_anja, y=abundance_anja, color= "y = abundance_anja"))+
     scale_y_continuous(limits = c(0,100))+
     scale_x_continuous(limits = c(0,100))
   
 #add cp classes (as individuals per 100g dw)  
-   
+  
+#calculating soil moisture as %water in relation to fresh weight and join by corresponding sample number
+  soil$percent_water <- soil$water.content / soil$init.weight * 100
+  soil_moisture <- soil[-c(2:8)]
+  data.analysis <- full_join(data.analysis, soil_moisture, by="Sample")
+  
   
