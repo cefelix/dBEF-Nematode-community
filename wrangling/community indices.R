@@ -68,7 +68,7 @@ ChannelRatio <- function(df, nemaplex)
     return(out)
   }
 
-#also, read in the nemaplex data - this is important, KEEP THIS LINE (message to myself)
+#also, read in the nemaplex data - this is important, KEEP THIS LINE! (message to myself)
 data.nplx <- read.csv("./wrangling/nemaplex.csv", row.names = 1)
 
 ####create a table with appropriate units#### 
