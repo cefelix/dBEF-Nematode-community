@@ -100,6 +100,9 @@ data.nplx <- read.csv("./wrangling/nemaplex.csv", row.names = 1)
 
 #add MI (maturity index) 
   data.analysis <- cbind(data.analysis, Maturity(data.4, data.nplx))
+  
+#add relative cp abundances
+  data.analysis <- cbind(data.analysis, C_P(data.4, data.nplx)[6:10])
 
 #extract abundances per sample as counted by Anja, and add join by Sample ID:
   abun_anja <- abun %>%
@@ -116,7 +119,8 @@ data.nplx <- read.csv("./wrangling/nemaplex.csv", row.names = 1)
   colnames(abun_marcel) <- c("abundance_marcel","Sample")
   abun_marcel$abundance_marcel <- abun_marcel$abundance_marcel %>%
     as.numeric()
-  data.analysis <- full_join(data.analysis, abun_marcel, by="Sample")
+  abun_marcel$Sample[240] <- "B1A12D3" #replacing the unlabeled sample, without this line data.analysis gets 241 rows
+  data.analysis <- full_join(data.analysis, abun_marcel, by="Sample") 
   
   data.analysis$abundance_anja %>%
     summary()
@@ -128,14 +132,14 @@ data.nplx <- read.csv("./wrangling/nemaplex.csv", row.names = 1)
   #first check whether net.weight is the net weight of the dried soil:
   soil$net.weight - (soil$dry.weight - soil$pot.weight) < 0.01 #presumably yes
   #add DW per sample to data.analysis:
-  DW_sample <- soil[-c(2:6,8)] %>%
+  DW_sample <- soil[-c(2:6,8,9)] %>%
     data.frame()
   names(DW_sample) <- c("Sample", "DW")
   data.analysis <- full_join(data.analysis, DW_sample, by="Sample")
   #perform the magic, drop the DW column afterwards:
   data.analysis$abundance_anja <- data.analysis$abundance_anja*100/data.analysis$DW
   data.analysis$abundance_marcel <- data.analysis$abundance_marcel*100/data.analysis$DW
-  data.analysis <- data.analysis[-13]
+  data.analysis <- data.analysis[-18]
     
   
   
@@ -149,7 +153,15 @@ data.nplx <- read.csv("./wrangling/nemaplex.csv", row.names = 1)
     scale_y_continuous(limits = c(0,100))+
     scale_x_continuous(limits = c(0,100))
   
-#add cp classes (as individuals per 100g dw)  
+#convert cp1 - cp5 from proportions to individuals per 100g DW
+  data.analysis$cp1 <- data.analysis$cp1 * data.analysis$abundance_anja
+  data.analysis$cp2 <- data.analysis$cp2 * data.analysis$abundance_anja
+  data.analysis$cp3 <- data.analysis$cp3 * data.analysis$abundance_anja
+  data.analysis$cp4 <- data.analysis$cp4 * data.analysis$abundance_anja
+  data.analysis$cp5 <- data.analysis$cp5 * data.analysis$abundance_anja
+  #check whether there are big differences in the sums:
+  rowSums(data.analysis[11:15]) - data.analysis$abundance_anja < 0.1 #looks good
+  
   
 #calculating soil moisture as %water in relation to fresh weight and join by corresponding sample number
   soil$percent_water <- soil$water.content / soil$init.weight * 100
