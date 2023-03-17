@@ -52,52 +52,7 @@ head(data.4) #now sown diversity is the 4th column
 #query_nemaplex("Actinolaimidae") #Error in if (file.access(phantompath, 1) < 0) { : argument is of length zero
 #system("taskkill /im java.exe /f", intern=FALSE, ignore.stdout=FALSE)
 
-
-
-####indices calculation ####
-data.nplx <- read.csv("./wrangling/nemaplex.csv", row.names = 1)
-
-
-#CP proportions
-data.4 %>%
-  C_P(nemaplex = data.nplx) %>%
-  summary()
-
-#channel index
-data.4 %>%
-  Channel(nemaplex = data.nplx) %>% 
-  summary() #thats a Median CI of 100, seems sketchy, should look into it
-            #after looking into it, a CI of 100 simply means that there are no Ba1 nematodes
-            #in the samples
-
-#maturity index
-data.4 %>% 
-  Maturity(nemaplex = data.nplx) %>%
-  summary()
-
-#enrichment index
-data.4 %>% 
-  Enrichment(nemaplex = data.nplx) %>%
-  summary()
-
-#structure index
-data.4 %>%
-  Structure(nemaplex = data.nplx) %>%
-  summary()
-
-####create table with all FUNCTIONAL INDICES included in maRcel####
-#using the fancy function which does all indices at once:
-data.4$sowndiv <- data.4$sowndiv %>%
-  as.factor() #this prevents sowndiv being dropped by all.índices()
-data.indices <- data.4 %>%
-  all.indices(nemaplex = data.nplx) #creating a new df with all indices and bloc/plot/treatment info
-data.indices$sowndiv <- data.indices$sowndiv %>%
-  as.character() %>%
-  as.numeric() #converting sowndiv back to numeric
-head(data.indices)
-str(data.indices)
-
-####add CHANNEL RATIO as described by Dietrich et al. 2021####
+####add a function to calculate CHANNEL RATIO as described by Dietrich et al. 2021####
 
 #This function calculates the channel ratio as Fu/(Fu+Ba):
 ChannelRatio <- function(df, nemaplex)
@@ -111,31 +66,8 @@ ChannelRatio <- function(df, nemaplex)
     return(out)
   }
 
-#we add a new column to our index data frame which shows the channel ratio (CR)
-data.indices <- cbind(data.indices, ChannelRatio(data.4, data.nplx))
 
-#this is a test comment, as i am struggling with merging errors
-#this is another test comment
-
-
-####Adding SOIL MOISTURE ####
-#calculating soil moisture as proportion of water in the fresh soil used for extraction
-moisture <- soil$water.content / soil$init.weight 
-data.indices <- cbind(data.indices, moisture)
-
-
-####changing data type of variables####
-
-data.indices$block <- data.indices$block %>% 
-  as.factor()
-data.indices$treatment <- data.indices$treatment %>%
-  as.factor()
-
-str(data.indices)
-
-
-
-####NEW approach for a table with units appropriate to respective response variable### 
+####create a table with appropriate units#### 
 
 #what variables do I want, are they response/explanatory/covariates, which unit:
   #EI, response, index 0-100
@@ -188,7 +120,21 @@ str(data.indices)
     summary()
   summary(data.analysis)  
 
-#TO DO: convert to no. of individuals per 100g DW  
+#Convert to no. of individuals per 100g DW 
+  #first check whether net.weight is the net weight of the dried soil:
+  soil$net.weight - (soil$dry.weight - soil$pot.weight) < 0.01 #presumably yes
+  #add DW per sample to data.analysis:
+  DW_sample <- soil[-c(2:6,8,9)] %>%
+    data.frame()
+  names(DW_sample) <- c("Sample", "DW")
+  data.analysis <- full_join(data.analysis, DW_sample, by="Sample")
+  #perform the magic, drop the DW column afterwards:
+  data.analysis$abundance_anja <- data.analysis$abundance_anja*100/data.analysis$DW
+  data.analysis$abundance_marcel <- data.analysis$abundance_marcel*100/data.analysis$DW
+  data.analysis <- data.analysis[-13]
+    
+  
+  
   
   
 #have a brief look into the discrepancy between Anja's counts and Marcel's cumulated identifications 
@@ -205,5 +151,19 @@ str(data.indices)
   soil$percent_water <- soil$water.content / soil$init.weight * 100
   soil_moisture <- soil[-c(2:8)]
   data.analysis <- full_join(data.analysis, soil_moisture, by="Sample")
+  
+
+  
+  
+####adjust classes of columns to appropriate ones####
+####
+#block and treatment to factor, sown diversity to numeric:
+data.analysis$block <- data.analysis$block %>% 
+  as.factor()
+data.analysis$treatment <- data.analysis$treatment %>%
+  as.factor()
+data.analysis$sowndiv <- data.analysis$sowndiv %>%
+  as.numeric()
+str(data.analysis)
   
   
