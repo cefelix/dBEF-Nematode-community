@@ -165,20 +165,35 @@ str(data.indices)
 #add MI (maturity index) 
   data.analysis <- cbind(data.analysis, Maturity(data.4, data.nplx))
 
-#add abundance of individuals per sample
-  #first, Anja's counts:
-  data.analysis <- full_join(data.analysis, abun, by = "Sample")
-  #check whether everything went well:
-  data.analysis[3] == data.analysis[12] #worked
-  #drop unnecessary columns
-  drop <- c("Date", "Plot", "Subplot")
-  data.analysis = data.analysis[,!(names(data.analysis) %in% drop)]
-  #rename the column
-  names(data.analysis)[11] <- "abundance_anja"
+#extract abundances per sample as counted by Anja, and add join by Sample ID:
+  abun_anja <- abun %>%
+    data.frame() 
+  names(abun_anja) <- c("Date", "Sample", "Plot", "Subplot", "abundance_anja")
+  abun_anja <- abun_anja[-c(1,3:4)]
+  data.analysis <- full_join(data.analysis, abun_anja, by = "Sample")
   
-  #add abundances Marcel counted in a separate column:
-  data.1$abundance_marcel <- rowSums(data.1[2:65])
+#calculate cumulated identifications by Marcel, and join by corresponding Sample IDs:
+  abun_marcel <- data.1[2:65] %>%
+    rowSums() 
+  abun_marcel <- cbind(abun_marcel, data.1$Sample) %>%
+    data.frame() 
+  colnames(abun_marcel) <- c("abundance_marcel","Sample")
+  abun_marcel$abundance_marcel <- abun_marcel$abundance_marcel %>%
+    as.numeric()
+  data.analysis <- full_join(data.analysis, abun_marcel, by="Sample")
   
+  data.analysis$abundance_anja %>%
+    summary()
+  data.analysis$abundance_marcel %>%
+    summary()
+  summary(data.analysis)  
+
+#have a brief look into the discrepancy between Anja's counts and Marcel's cumulated identifications
+  ggplot(data.analysis, aes(x=abundance_anja, y=abundance_marcel))+
+    geom_point()+
+    geom_point(aes(x=abundance_anja, y=abundance_anja, color="red"))+
+    scale_y_continuous(limits = c(0,100))+
+    scale_x_continuous(limits = c(0,100))
   
 #add cp classes (as individuals per 100g dw)  
    
