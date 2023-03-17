@@ -52,8 +52,10 @@ head(data.4) #now sown diversity is the 4th column
 #query_nemaplex("Actinolaimidae") #Error in if (file.access(phantompath, 1) < 0) { : argument is of length zero
 #system("taskkill /im java.exe /f", intern=FALSE, ignore.stdout=FALSE)
 
-####add a function to calculate CHANNEL RATIO as described by Dietrich et al. 2021####
 
+
+####add a function to calculate CHANNEL RATIO as described by Dietrich et al. 2021####
+####
 #This function calculates the channel ratio as Fu/(Fu+Ba):
 ChannelRatio <- function(df, nemaplex)
   {
@@ -66,6 +68,8 @@ ChannelRatio <- function(df, nemaplex)
     return(out)
   }
 
+#also, read in the nemaplex data - this is important, KEEP THIS LINE (message to myself)
+data.nplx <- read.csv("./wrangling/nemaplex.csv", row.names = 1)
 
 ####create a table with appropriate units#### 
 
@@ -124,7 +128,7 @@ ChannelRatio <- function(df, nemaplex)
   #first check whether net.weight is the net weight of the dried soil:
   soil$net.weight - (soil$dry.weight - soil$pot.weight) < 0.01 #presumably yes
   #add DW per sample to data.analysis:
-  DW_sample <- soil[-c(2:6,8,9)] %>%
+  DW_sample <- soil[-c(2:6,8)] %>%
     data.frame()
   names(DW_sample) <- c("Sample", "DW")
   data.analysis <- full_join(data.analysis, DW_sample, by="Sample")

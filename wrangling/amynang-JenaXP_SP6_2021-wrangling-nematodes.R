@@ -287,3 +287,4 @@ mean.micro.masses = ecophys %>%
                                   feeding.type == "predator"    ~ "Predator.nematodes",
                                   feeding.type == "omnivore"    ~ "Omnivore.nematodes")) %>% 
   rename(taxon = feeding.type)
+
