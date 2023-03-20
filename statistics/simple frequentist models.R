@@ -67,7 +67,7 @@ summary(cp2_glmer.nb)
 #this section might be moved to ./exploratory plotting
 
 #lets create a dataframe with only 2 columns: cp-class and respective abundance within that class.
-#each row represents the abundance cp-x nematodes in a sample -> each sample has 5 rows in this df
+#each row represents the abundance cp1/2/.../5 nematodes in a sample -> each sample has 5 rows in this df
   #this is just for the convenience of plotting the histograms for each cp-class next to each other, using facet_wrap()!
 
 cp.hist <- data.analysis$cp1 %>%
