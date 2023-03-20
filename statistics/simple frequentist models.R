@@ -5,60 +5,20 @@
 library(lme4)
 library(tidyverse)
 
-####generalized mixed effect models####
-#for now i will go with a binomial distribution, even though i am not sure how i should treat ecological indices
-#(they originate from count data though)
+####INAPPROPRIATE glmm for cp2####
+#Negative binomial and poisson distribution are not appropriate! Our data are densities, not counts! Still, I will keep this section as a reminder. 
 
-####CP-CLASSES and overall abundance####
-####
-#I start here, just because these distributions look like negative binomial, and this seems for now easy to me
+cp2_glmer <- glmer(cp2 ~ sowndiv * treatment + (1|block), data = data.analysis, family = "poisson") #large eigenvalue warning
+warnings() #NOT TO USE. poisson distribution for continuous variable doesn't make sense. 
+summary(cp2_glmer) 
+  #NOTE: we also should try out random slopes depending on treatment, according to Reich et al. 2012 (if that makes sense...)
 
-#lets look at the distributions
-data.analysis$abundance_anja %>%
-  hist() #negative binomial
-
-data.analysis$cp1 %>%
-  hist() #negative binomial
-data.analysis$cp2 %>%
-  hist() #negative binomial
-data.analysis$cp3 %>%
-  hist() #negative binomial
-data.analysis$cp4 %>%
-  hist()
-data.analysis$cp5 %>%
-  hist() #negative binomial
-
-####cp-1, cp-2####
-cp1_glmer <- glmer(cp1 ~ sowndiv * treatment + (1|block), data = data.analysis, family = "poisson") #this gives warnings as we input non-integer values
-warnings()
-summary(cp1_glmer) #we also should try out random slopes depending on treatment, according to Reich et al. 2012 (if that makes sence...)
-
-#but, as the warnings complain about non-integer values, lets not use half nematodes and round our data (this is probably highly inappropriate):
-data.analysis.round <- data.analysis
-data.analysis.round$cp1 <- data.analysis$cp1 %>%
-  round()
-data.analysis.round$cp2 <- data.analysis$cp2 %>%
-  round()
-data.analysis.round$cp3 <- data.analysis$cp3 %>%
-  round()
-data.analysis.round$cp4 <- data.analysis$cp4 %>%
-  round()
-data.analysis.round$cp5 <- data.analysis$cp5 %>%
-  round()
-data.analysis.round$abundance_anja <- data.analysis$abundance_anja %>%
-  round()
-
-#repeat the code from the start of this section:
-cp1_glmer <- glmer(cp1 ~ sowndiv * treatment + (1|block), data = data.analysis.round, family = "poisson") 
-summary(cp1_glmer) #we also should try out random slopes depending on treatment, according to Reich et al. 2012 (if that makes sence...)
-
-cp2_glmer <- glmer(cp2 ~ sowndiv * treatment + (1|block), data = data.analysis.round, family = "poisson") #large eigenvalue warning
-summary(cp2_glmer)
-
-cp2_glmer.nb <- glmer.nb(cp2 ~ sowndiv*treatment + (1|block), data =data.analysis.round) #large eigenvalue warning, model failed to converge warning
+cp2_glmer.nb <- glmer.nb(cp2 ~ sowndiv*treatment + (1|block), data =data.analysis) #large eigenvalue warning, model failed to converge warning
+warnings() #NEITHER USE THIS. negative binomial distribution also needs discrete responses!
 summary(cp2_glmer.nb) 
 
-#hmm. Internet gives some ideas on troubleshooting: https://rstudio-pubs-static.s3.amazonaws.com/33653_57fc7b8e5d484c909b615d8633c01d51.html
+#For future negative binomial distribution related warnings, the internet gives some ideas on troubleshooting: 
+#https://rstudio-pubs-static.s3.amazonaws.com/33653_57fc7b8e5d484c909b615d8633c01d51.html
 
 
 
@@ -100,29 +60,12 @@ scale_x_continuous(limits = c(0,400))+
   summary(data.analysis$CI)
 
 
+####GLMM for bacterivores, fungivores, channel ratio####
+  #trying to recreate analysis as Dietrich et al. 2021 reportet in fig.2b/c and table 2:
+  #check out beta distribution (?)
 
 
 
-####overall abundance####
-abundance_glmer.nb <- glmer.nb(abundance_anja ~ treatment * sowndiv + (1|block), data = data.analysis.round)
-summary(abundance_glmer.nb)
-
-ggplot(data=data.analysis.round, aes(x=sowndiv, y=abundance_anja, color= treatment))+
-  geom_point()+
-  scale_x_continuous(trans = "log2")
-
-
-
-
-
-
-####CR####
-data.analysis$CR %>%
-  hist()
-  #right skewed beta distribution might be suitable
-
-CR_glmer <- glmer(CR ~ sowndiv * treatment + (1|block) , data= data.analysis, family = "binomial")
-summary(CR_glmer)
 
 
 
