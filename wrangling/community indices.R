@@ -42,7 +42,8 @@ data.4 <- data.4 %>%
 
 head(data.4) #now sown diversity is the 4th column
 
-
+#also, read in the nemaplex data - this is important, KEEP THIS LINE! (message to myself)
+data.nplx <- read.csv("./wrangling/nemaplex.csv", row.names = 1)
 
 ####maRcel testing####
 #test_taxa <- c(colnames(data.4[6:8]))
@@ -68,8 +69,34 @@ ChannelRatio <- function(df, nemaplex)
     return(out)
   }
 
-#also, read in the nemaplex data - this is important, KEEP THIS LINE! (message to myself)
-data.nplx <- read.csv("./wrangling/nemaplex.csv", row.names = 1)
+####create functions to determine fungal and and bacterial feeders####
+####
+
+#proportion of bacterial feeders
+bacterial <- function(df, nemaplex) {
+  Ba = which(nemaplex$feeding[match(colnames(df), rownames(nemaplex))] == 3)
+  abun.Ba = df %>% mutate(bacterivores = rowSums(.[Ba]), .keep = "none")
+  abun.all = df %>% 
+    select_if(is.numeric,) %>%
+    rowSums()
+  density = abun.Ba / abun.all
+  return(density)
+}
+
+bacterial(data.4, data.nplx)  
+
+#proportion of fungal feeders
+fungal <- function(df, nemaplex) {
+  Fu = which(nemaplex$feeding[match(colnames(df), rownames(nemaplex))] == 2)
+  abun.Fu = df %>% mutate(fungivores = rowSums(.[Fu]), .keep = "none")
+  abun.all = df %>% 
+    select_if(is.numeric,) %>%
+    rowSums()
+  density = abun.Fu / abun.all
+  return(density)
+}
+
+
 
 ####create a table with appropriate units#### 
 
