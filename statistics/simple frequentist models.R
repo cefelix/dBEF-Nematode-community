@@ -63,10 +63,59 @@ scale_x_continuous(limits = c(0,400))+
 ####GLMM for bacterivores, fungivores, channel ratio####
   #trying to recreate analysis as Dietrich et al. 2021 reportet in fig.2b/c and table 2:
   #check out beta distribution (?)
+  
+#lets check out how many nematodes should live in our 24kg of soil:
+data.analysis$bacterivores %>% sum() #a lot
+data.analysis$fungivores %>% sum() #a lot * 3
+  
+  
+#histograms first
+ggplot(data.analysis, aes(x=bacterivores))+
+  geom_histogram(binwidth = 25) #unimodal, right skewed (="left leaning")
+  #gamma distribution
 
+ggplot(data.analysis, aes(x=fungivores))+
+  geom_histogram(binwidth = 25) #unimodal, right skewed
+  #gamma distribution   
 
+ggplot(data.analysis, aes(x=CR))+
+  geom_histogram(binwidth = 0.05) #left skewed
+  #CR = Fu / (Fu + Ba)
 
+####glmm bacterivore /fungivore density using gamma distribution####
+ba.glmm.gamma <- glmer(bacterivores ~ sowndiv * treatment + (1|block), data = data.analysis, family = Gamma) #error: no zeros allowed
+ summary(data.analysis$bacterivores == 0) # 16 out of 240 :(
+fu.glmm.gamma <- glmer(fungivores ~ sowndiv * treatment + (1|block), data = data.analysis, family = Gamma)
+  summary(data.analysis$fungivores == 0) # 4 out of 240 :(
+  
+#just add 0.1**6 to every density to get rid of the problem:
+data.FuBa <- data.analysis
+  data.FuBa$bacterivores <- data.FuBa$bacterivores +  0.1**6
+  data.FuBa$fungivores <- data.FuBa$fungivores +  0.1**6
+  
+#retry:   
+  summary(data.FuBa$bacterivores == 0)
+  ba.glmm.gamma <- glmer(bacterivores ~ sowndiv * treatment + (1|block), data = data.FuBa, family = Gamma(link=log)) 
+    #specifying link function to log prevents error: "PIRLS loop resulted in NaN value"
+    summary(ba.glmm.gamma)
+  fu.glmm.gamma <- glmer(fungivores ~ sowndiv * treatment + (1|block), data = data.FuBa, family = Gamma(link=log)) 
+    summary(fu.glmm.gamma)
 
-
-
+#check assumptions on this model
+    ba.glmm.gamma %>%
+      residuals() %>%
+      plot()
+    
+    fu.glmm.gamma %>%
+      residuals() %>%
+      plot()
+    
+  
+####glmm bacterivore/fungivore density using normal distribution####
+  ba.glmm.normal <- lmer(bacterivores ~ sowndiv * treatment + (1|block), data = data.FuBa)
+  summary(ba.glmm.normal)
+  
+  
+  
+  
 
