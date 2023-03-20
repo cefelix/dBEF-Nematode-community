@@ -69,7 +69,7 @@ ChannelRatio <- function(df, nemaplex)
     return(out)
   }
 
-####create functions to determine fungal and and bacterial feeders####
+####create functions to determine fungal and and bacterial feeder proportions####
 ####
 
 #proportion of bacterial feeders
@@ -96,18 +96,28 @@ fungal <- function(df, nemaplex) {
   return(density)
 }
 
+#lets generalize these functions to one single function, with an additional argument for feeding type:
+#UNDER CONSTRUCTION
+feeding_type <- function(df, nemaplex, feeding) {
+
+}
 
 
 ####create a table with appropriate units#### 
 
 #what variables do I want, are they response/explanatory/covariates, which unit:
-  #EI, response, index 0-100
+  
+  #Indices (0-100 / 0-1), all response:
+  #EI
   #SI
   #CI
   #MI
-
-  #cp1 - cp5, response, ind. per 100g DW
-  #abundance, response, ind. per 100g DW
+  
+  #Densities (ind. per 100g DW), all response
+  #cp1 - cp5
+  #abundance
+  #bacterial feeders
+  #fungal feeders
 
   #soil moisture, covariate, %water of FW
   
@@ -134,7 +144,7 @@ fungal <- function(df, nemaplex) {
 #extract abundances per sample as counted by Anja, and add join by Sample ID:
   abun_anja <- abun %>%
     data.frame() 
-  names(abun_anja) <- c("Date", "Sample", "Plot", "Subplot", "abundance_anja")
+  names(abun_anja) <- c("Date", "Sample", "Plot", "Subplot", "abundance")
   abun_anja <- abun_anja[-c(1,3:4)]
   data.analysis <- full_join(data.analysis, abun_anja, by = "Sample")
   
@@ -143,15 +153,15 @@ fungal <- function(df, nemaplex) {
     rowSums() 
   abun_marcel <- cbind(abun_marcel, data.1$Sample) %>%
     data.frame() 
-  colnames(abun_marcel) <- c("abundance_marcel","Sample")
-  abun_marcel$abundance_marcel <- abun_marcel$abundance_marcel %>%
+  colnames(abun_marcel) <- c("counts.cummulated","Sample")
+  abun_marcel$counts.cummulated <- abun_marcel$counts.cummulated %>%
     as.numeric()
   abun_marcel$Sample[240] <- "B1A12D3" #replacing the unlabeled sample, without this line data.analysis gets 241 rows
   data.analysis <- full_join(data.analysis, abun_marcel, by="Sample") 
   
-  data.analysis$abundance_anja %>%
+  data.analysis$abundance %>%
     summary()
-  data.analysis$abundance_marcel %>%
+  data.analysis$counts.cummulated %>%
     summary()
   summary(data.analysis)  
 
@@ -164,8 +174,8 @@ fungal <- function(df, nemaplex) {
   names(DW_sample) <- c("Sample", "DW")
   data.analysis <- full_join(data.analysis, DW_sample, by="Sample")
   #perform the magic, drop the DW column afterwards:
-  data.analysis$abundance_anja <- data.analysis$abundance_anja*100/data.analysis$DW
-  data.analysis$abundance_marcel <- data.analysis$abundance_marcel*100/data.analysis$DW
+  data.analysis$abundance <- data.analysis$abundance*100/data.analysis$DW
+  data.analysis$counts.cummulated <- data.analysis$counts.cummulated*100/data.analysis$DW
   data.analysis <- data.analysis[-18]
     
   
@@ -174,20 +184,24 @@ fungal <- function(df, nemaplex) {
   
 #have a brief look into the discrepancy between Anja's counts and Marcel's cumulated identifications 
 #(only up to 100 individuals as more have not been identified)
-  ggplot(data.analysis, aes(x=abundance_anja, y=abundance_marcel, color= block))+
+  ggplot(data.analysis, aes(x=abundance, y=counts.cummulated, color= block))+
     geom_point()+
-    geom_line(aes(x=abundance_anja, y=abundance_anja, color= "y = abundance_anja"))+
+    geom_line(aes(x=abundance, y=abundance, color= "y = abundance"))+
     scale_y_continuous(limits = c(0,100))+
     scale_x_continuous(limits = c(0,100))
   
 #convert cp1 - cp5 from proportions to individuals per 100g DW
-  data.analysis$cp1 <- data.analysis$cp1 * data.analysis$abundance_anja
-  data.analysis$cp2 <- data.analysis$cp2 * data.analysis$abundance_anja
-  data.analysis$cp3 <- data.analysis$cp3 * data.analysis$abundance_anja
-  data.analysis$cp4 <- data.analysis$cp4 * data.analysis$abundance_anja
-  data.analysis$cp5 <- data.analysis$cp5 * data.analysis$abundance_anja
+  data.analysis$cp1 <- data.analysis$cp1 * data.analysis$abundance
+  data.analysis$cp2 <- data.analysis$cp2 * data.analysis$abundance
+  data.analysis$cp3 <- data.analysis$cp3 * data.analysis$abundance
+  data.analysis$cp4 <- data.analysis$cp4 * data.analysis$abundance
+  data.analysis$cp5 <- data.analysis$cp5 * data.analysis$abundance
   #check whether there are big differences in the sums:
-  rowSums(data.analysis[11:15]) - data.analysis$abundance_anja < 0.1 #looks good
+  rowSums(data.analysis[11:15]) - data.analysis$abundance < 0.1 #looks good
+  
+#calculate abundance of fungivores and bacterivores per 100g DW
+  data.analysis <- cbind(data.analysis, bacterial(data.4, data.nplx) * data.analysis$abundance)
+  data.analysis <- cbind(data.analysis, fungal(data.4, data.nplx) * data.analysis$abundance)
   
   
 #calculating soil moisture as %water in relation to fresh weight and join by corresponding sample number
