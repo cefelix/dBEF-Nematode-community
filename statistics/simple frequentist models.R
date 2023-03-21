@@ -82,7 +82,7 @@ ggplot(data.analysis, aes(x=CR))+
   geom_histogram(binwidth = 0.05) #left skewed
   #CR = Fu / (Fu + Ba)
 
-####glmm bacterivore /fungivore density using gamma distribution####
+####fitting a glmm bacterivore /fungivore density using gamma distribution####
 ba.glmm.gamma <- glmer(bacterivores ~ sowndiv * treatment + (1|block), data = data.analysis, family = Gamma) #error: no zeros allowed
  summary(data.analysis$bacterivores == 0) # 16 out of 240 :(
 fu.glmm.gamma <- glmer(fungivores ~ sowndiv * treatment + (1|block), data = data.analysis, family = Gamma)
@@ -101,19 +101,72 @@ data.FuBa <- data.analysis
   fu.glmm.gamma <- glmer(fungivores ~ sowndiv * treatment + (1|block), data = data.FuBa, family = Gamma(link=log)) 
     summary(fu.glmm.gamma)
 
-#check assumptions on this model
+####check assumptions on ba.glmm.gamma####
     ba.glmm.gamma %>%
       residuals() %>%
-      plot()
-    
+      plot() #slightky curved in the right quarter(?), like bottom of a quadratic relationship
+      
+      #residuals vs fitted
+      ba.pred <- predict(ba.glmm.gamma)
+      ba.resid <- residuals(ba.glmm.gamma)
+      plot(ba.pred, ba.resid) #maybe remove the outliers, to see the pattern of the remaining data better
+      
+      #histogram of residuals
+      hist(ba.resid) # skewed... the 16 outliers on the left...
+      
+        
+####check assumptions on fu.glmm.gamma####            
     fu.glmm.gamma %>%
       residuals() %>%
-      plot()
+      plot() #this looks okay
     
-  
+      #residuals vs fitted
+      fu.pred <- predict(fu.glmm.gamma)
+      fu.resid <- residuals(fu.glmm.gamma)
+      plot(fu.pred, fu.resid)
+      
+      #histogram of residuals
+      hist(fu.resid) #left skewed... 4 outliers left?
+      
+    
+####just a check on gamma models####
+    library(tidyverse)
+    
+    #Simulate
+    set.seed(0)
+    N <- 250
+    x <- runif(N, -1, 1)
+    a <- 0.5
+    b <- 1.2
+    y_true <- exp(a + b * x)
+    shape <- 2
+    y <- rgamma(N, scale = y_true/shape, shape = shape)
+    
+    #Model
+    plot(x,y)
+    model <- glm(y ~ x, family = Gamma(link = "log"))
+    summary(model)
+    
+    #Deviance residuals
+    ypred = predict(model)
+    res = residuals(model, type = 'deviance')
+    plot(ypred,res)
+    hist(res)
+    
+    #Deviance GOF
+    
+    deviance = model$deviance
+    p.value = pchisq(deviance, df = model$df.residual, lower.tail = F)
+    # Fail to reject; looks like a good fit.
+    
+     
 ####glmm bacterivore/fungivore density using normal distribution####
   ba.glmm.normal <- lmer(bacterivores ~ sowndiv * treatment + (1|block), data = data.FuBa)
   summary(ba.glmm.normal)
+  
+  plot(ba.glmm.normal)
+  qqnorm(ba.glmm.normal, ~ranef(., level = 0))  
+  
   
   
   
