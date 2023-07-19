@@ -94,7 +94,14 @@ data.3 = data.2 %>% mutate(across(where(is.numeric), # for all numeric columns
 sum(data.3[1,5:68])
 rowSums(data.3[,5:68]) 
 # this is interesting...
-rowSums(data.3[,5:68]) == abun$`Number of Nematodes`
+z <- rowSums(data.3[,5:68]) != abun$`Number of Nematodes` 
+  sum(z) #23 out of 240 are not equal
+   
+  z <- rowSums(data.3[,5:68]) - abun$`Number of Nematodes`
+  z <- abs(z) < 1e-10
+      sum(z) 
+      #0 -> only a computation issue
+  
 
 # now we calculate species densities per 100 gram of dry soil
 data.4 = data.3 %>% mutate(across(where(is.numeric), # for all numeric columns
