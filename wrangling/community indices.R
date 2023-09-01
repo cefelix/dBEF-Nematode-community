@@ -44,6 +44,12 @@ head(data.4) #now sown diversity is the 4th column
 
 #also, read in the nemaplex data - this is important, KEEP THIS LINE! (message to myself)
 data.nplx <- read.csv("./wrangling/nemaplex.csv", row.names = 1)
+  
+  #I added family level information on specimens identified till genus level:
+  #genus identification only changes information in families: 
+    #Aporcelimidae, Dorylaimidae, Qudsianematidae, Tylenchidae
+  
+
 
 ####maRcel testing####
 #test_taxa <- c(colnames(data.4[6:8]))
@@ -101,6 +107,13 @@ fungal <- function(df, nemaplex) {
 feeding_type <- function(df, nemaplex, feeding) {
 
 }
+#feeding types are coded according to yeates et al. 1993 (non listed categories dont appear in data)
+  #1 - herbivore (plant feeder)
+  #2 - fungivore (hyphal feeder)
+  #3 - bacterivore 
+  #5 - predator
+  #8 - omnivore
+  
 
 
 ####create a table with appropriate units#### 

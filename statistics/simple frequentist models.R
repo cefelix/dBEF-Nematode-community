@@ -6,6 +6,10 @@ library(lme4)
 library(tidyverse)
 library(lmerTest)
 
+####012 MOVE TO OTHER FILE####
+data.analysis$plot <- data.analysis$plot %>% as.factor()
+
+
 ####02 INAPPROPRIATE glmm for cp2####
 #Negative binomial and poisson distribution are not appropriate! Our data are densities, not counts! Still, I will keep this section as a reminder. 
 
@@ -84,9 +88,10 @@ ggplot(data.analysis, aes(x=CR))+
   #CR = Fu / (Fu + Ba)
 
 ####21 fitting a glmm on ba/fu density using gamma distribution####
-ba.glmm.gamma <- glmer(bacterivores ~ sowndiv * treatment + (1|block), data = data.analysis, family = Gamma) #error: no zeros allowed
+#usually, a gamma distribution is used when the underlying process is a poisson process (?)  --> see the same model using a lognormal distribution below at 41
+ba.glmm.gamma <- glmer(bacterivores ~ 1 + sowndiv * treatment + (1+treatment|plot), data = data.analysis, family = Gamma) #error: no zeros allowed
  summary(data.analysis$bacterivores == 0) # 16 out of 240 :(
-fu.glmm.gamma <- glmer(fungivores ~ sowndiv * treatment + (1|block), data = data.analysis, family = Gamma)
+fu.glmm.gamma <- glmer(fungivores ~ 1 + sowndiv * treatment + (1+treatment|plot), data = data.analysis, family = Gamma)
   summary(data.analysis$fungivores == 0) # 4 out of 240 :(
   
 #just add 0.1**6 to every density to get rid of the problem:
@@ -96,10 +101,10 @@ data.FuBa <- data.analysis
   
 #retry:   
   summary(data.FuBa$bacterivores == 0)
-  ba.glmm.gamma <- glmer(bacterivores ~ sowndiv * treatment + (1|block), data = data.FuBa, family = Gamma(link=log)) 
+  ba.glmm.gamma <- glmer(bacterivores ~ 1+ sowndiv * treatment + (1+treatment|plot), data = data.FuBa, family = Gamma(link=log)) 
     #specifying link function to log prevents error: "PIRLS loop resulted in NaN value"
     summary(ba.glmm.gamma)
-  fu.glmm.gamma <- glmer(fungivores ~ sowndiv * treatment + (1|block), data = data.FuBa, family = Gamma(link=log)) 
+  fu.glmm.gamma <- glmer(fungivores ~ 1 + sowndiv * treatment + (1+treatment|plot), data = data.FuBa, family = Gamma(link=log)) 
     summary(fu.glmm.gamma)
 
 ####22 check assumptions on ba.glmm.gamma####
@@ -111,7 +116,8 @@ ba.glmm.gamma %>%
   ba.pred <- predict(ba.glmm.gamma)
   ba.resid <- residuals(ba.glmm.gamma)
   plot(ba.pred, ba.resid) #maybe remove the outliers, to see the pattern of the remaining data better
-  
+  #try lognormal instead, if the outliers look better there, choose lognormal
+    
   #histogram of residuals
   hist(ba.resid) # skewed... the 16 outliers on the left...
       
@@ -137,7 +143,7 @@ fu.glmm.gamma %>%
 
 library(glmmTMB)  
   
-CR.glmm.beta <- glmmTMB(CR ~ sowndiv * treatment + (1|block), data = data.analysis, family = beta_family)  #error: y values must be 0<y<1
+CR.glmm.beta <- glmmTMB(CR ~ 1 + sowndiv * treatment + (1+ treatment|plot), data = data.analysis, family = beta_family)  #error: y values must be 0<y<1
   summary(data.analysis$CR == 0) #3
   summary(data.analysis$CR == 1) #15
   #...and 1 NA (so one sample with neither a fungivore, nor a bacterivore)
@@ -149,7 +155,7 @@ CR.glmm.beta <- glmmTMB(CR ~ sowndiv * treatment + (1|block), data = data.analys
   data.analysis.CR[data.analysis.CR$CR==1,]$CR <- rep(1-0.1**6, 15) #replacing 1 with almost 1
   
 #re-run the stuff from above
-CR.glmm.beta <- glmmTMB(CR ~ sowndiv * treatment + (1|block), data = data.analysis.CR, family = beta_family) 
+CR.glmm.beta <- glmmTMB(CR ~ 1 + sowndiv * treatment + (1 + treatment|plot), data = data.analysis.CR, family = beta_family) 
   summary(CR.glmm.beta)
   
   
@@ -167,15 +173,26 @@ CR.glmm.beta <- glmmTMB(CR ~ sowndiv * treatment + (1|block), data = data.analys
   hist(CR.resid) #left skewed
   
 
-####41 fitting a log-transformed lmer on ba density , as Dietrich 2021####
-ba.lmer <- lmer(log(bacterivores) ~ sowndiv * treatment + (1|block), data = data.analysis) #error NA/NaN/Inf in y
+####41 fitting a log-transformed lmer on ba and fu density####
+
+  
+ba.lmer <- lmer(log(bacterivores) ~ 1 + sowndiv * treatment + (1|block), data = data.analysis) #error NA/NaN/Inf in y
   log(data.analysis$bacterivores) %>%
     summary() #minimum -Inf, due to log(0), 16 rows in total 
-  #lets drop the lines where we have zero bacterivores:
-  data.analysis.ba.lmer <- data.analysis[(data.analysis$bacterivores > 0) == TRUE,]
-
+  #lets convert 0 to 0.1**6:
+  data.analysis.ba.lmer <- data.analysis
+  data.analysis.ba.lmer[data.analysis$bacterivores == 0,]$bacterivores <- rep(0.1**2, 16) #this doesnt work
+  data.analysis.ba.lmer$treatment <- data.analysis.ba.lmer$treatment %>% as.factor()
+  data.analysis.ba.lmer$plot <- data.analysis.ba.lmer$plot %>% as.factor()
 #re-run the model above
-ba.lmer <- lmer(log(bacterivores) ~ sowndiv*treatment + (1|block), data = data.analysis.ba.lmer)
+#ba.lmer <- lmer(log(bacterivores) ~ 1 + sowndiv*treatment + (1 + treatment|plot), data = data.analysis.ba.lmer)
+  #when integrating treatmeant as a random slope, the model throws an error:
+  #Error: number of observations (=224) <= number of random effects (=237) for term (1 + treatment | plot); 
+  #the random-effects parameters and the residual variance (or scale parameter) are probably unidentifiable
+ba.lmer <- lmer(log(bacterivores) ~ 1+  sowndiv * treatment + (1 + treatment|plot), data = data.analysis.ba.lmer)
+data.analysis$plot <- as.factor(data.analysis$plot)
+
+  
 summary(ba.lmer) #Dietrich doesn't specify how they got their p-values, as lmer does not output them by default
 
 
