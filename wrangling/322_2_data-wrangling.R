@@ -29,8 +29,17 @@ composition_vog <- mutate(composition_vog, sample = paste(plotcode, treatment, s
   relocate(sample, .before = plotcode)
 
 
-####density data from 2017 as sent by Vogel####
-getwd()
+
+####density data from nematodes_Jun2017.csv ####
+# ---
+#note: The nematodes_Jun2017.csv file has some flaws as:
+#   1   Two columns with the supposedly same measure (nematodes per g DW), called
+#       `indiv.per.mass..gdw.1` and `tot.abundance.per.soildw`
+#   2   intransparent calculation of these the above mentioned columns
+#   3   deviations of the two reaching more than 1 individual per g DW in 14 samples
+#
+#THUS: Use the density data we calculated in the section below:
+
 raw <- read.csv("./nematodes_Jun2017.csv")
 
 #select the density columns:
@@ -43,11 +52,44 @@ densities_vog <- mutate(densities_vog, sample = paste(plotcode, treatment, sep =
   arrange(sample) %>%
   relocate(sample, .before = plotcode)
 
-####soil DW and total abundances as sent by Vogel####
+densities_vog %>%
+  filter(abs(indiv.per.mass..gdw.1. - tot.abundance.per.soildw) > 1) #14 samples -.-
+    #`indiv.per.mass..gdw.1.` is matching my calculations from below
+
+
+
+####DW, abundances and densities as in `complete dataset nematodes.xlsx`####
+# ---
+#note: use the densities calculated in this section
+
 raw <- read.xlsx("./complete dataset nematodes.xlsx", sheet = "Tabelle1")
 
-#keep only plotcode, DW, total abundance and density
-DW_vog <- raw[4:nrow(raw), 1:5]
+#keep only plotcode, DW, total abundance and density; get correct column names:
+DW_vog <- raw[4:nrow(raw), 1:5] 
+  colnames(DW_vog) <- c(DW_vog[1, 1:3], "total_nematodes", "nem_gDW")
+  DW_vog <- DW_vog[-1,] %>% #droping first row, it's the rownames
+    filter(total_nematodes != -9999) #probably some weird excel error
+  
+
+#Jexis conform sample names:  
+DW_vog <- mutate(DW_vog, sample =paste(plotcode, treatment, sep="D")) %>%
+  arrange(sample) %>%
+  relocate(sample, .before = plotcode) 
+
+#recalculate nematodes per 100g DW:
+DW_vog$total_nematodes <- as.numeric(DW_vog$total_nematodes)
+DW_vog$`soil (gdw)` <- as.numeric(DW_vog$`soil (gdw)`)
+DW_vog$nem_gDW <- as.numeric(DW_vog$nem_gDW)
+DW_vog$nem_100gDW <- DW_vog$total_nematodes / (DW_vog$`soil (gdw)`/100)
+
+#check the differences between my calculated densities and Vogel's provided ones:
+str(DW_vog)
+DW_vog %>%
+  filter(abs(nem_gDW*100 - nem_100gDW) > 0.001) #B4A0D2 has a -9999 error
+
+
+
+
 
 
 
@@ -63,9 +105,9 @@ DW_vog <- raw[4:nrow(raw), 1:5]
   wrong_plot <-  c("B2A23D1", "B2A23D2", "B2A23D3", "B2A20D1", "B2A20D2", "B2A20D3")
 
 #merge into one table
-genusDW_vog <- densities_vog %>% full_join(composition_vog, by = join_by(sample)) %>%
-  filter(sample %not_in% composition_missing) %>%
-  filter(sample %not_in% composition_duplicate) %>%
+genusDW_vog <- DW_vog %>% full_join(composition_vog, by = join_by(sample)) %>%
+  #filter(sample %not_in% composition_missing) %>%
+  #filter(sample %not_in% composition_duplicate) %>%
   filter(sample %not_in% wrong_plot)
 
 
