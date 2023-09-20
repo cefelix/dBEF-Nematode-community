@@ -4,6 +4,7 @@
 library(tidyr)
 library(dplyr)
 library(readxl)
+library(stringr)
 #functions:
 `%not_in%` <- purrr::negate(`%in%`)
 
@@ -110,21 +111,17 @@ vogel2017a$plotcode.x == vogel2017a$plotcode.y
 vogel2017a <- vogel2017a  %>% rename(c(blockplot = plotcode.x, treatment = treatment.x))
 
 #Split blockplot into block and plot:
-#vogel2017a$block <- str_remove(vogel2017a$blockplot, pattern = "A.*") 
-vogel2017a$plot <- str_remove(vogel2017a$blockplot, pattern = ".*A")
-
-vogel2017a %>% mutate(block = str_remove(.$blockplot, pattern = "A.*")) %>%
-  mutate(.after = sample)
+vogel2017a <- vogel2017a %>% 
+  mutate(block = str_remove(.$blockplot, pattern = "A.*"), .after = 1) %>%
+  mutate(plot = str_remove(.$blockplot, pattern = ".*A"), .after = 2) %>%
+  #add year:
+  mutate(year = c("2017"), .after = treatment)
   
+vogel2017a[1,1:7]
+
 #remove columns plotcode.y, treatment.y, blockplot, nem_gDW:
 vogel2017a <- vogel2017a %>% subset(select = -c(plotcode.y, treatment.y, blockplot, nem_gDW))
 
-#add column year:
-vogel2017a$year <- "2017"
-
-#relocate new columns:
-vogel2017a <- vogel2017a %>% relocate(c(block, plot), .after = sample) %>%
-  relocate(year, .after = treatment)
 head(vogel2017a)
 
 
