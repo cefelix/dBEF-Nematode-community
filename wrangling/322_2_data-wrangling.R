@@ -62,7 +62,7 @@ densities_vog %>%
 # ---
 #note: use the densities calculated in this section
 
-raw <- read.xlsx("./complete dataset nematodes.xlsx", sheet = "Tabelle1")
+raw <- read_xlsx("./complete dataset nematodes.xlsx", sheet = "Tabelle1")
 
 #keep only plotcode, DW, total abundance and density; get correct column names:
 DW_vog <- raw[4:nrow(raw), 1:5] 
