@@ -135,9 +135,3 @@ write.csv(vogel2017a, "./wrangling/Vogel2017.csv")
 
 
 
-
-
-
-
-
-
