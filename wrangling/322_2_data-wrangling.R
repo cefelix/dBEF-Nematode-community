@@ -110,8 +110,11 @@ vogel2017a$plotcode.x == vogel2017a$plotcode.y
 vogel2017a <- vogel2017a  %>% rename(c(blockplot = plotcode.x, treatment = treatment.x))
 
 #Split blockplot into block and plot:
-vogel2017a$block <- str_remove(vogel2017a$blockplot, pattern = "A.*") 
+#vogel2017a$block <- str_remove(vogel2017a$blockplot, pattern = "A.*") 
 vogel2017a$plot <- str_remove(vogel2017a$blockplot, pattern = ".*A")
+
+vogel2017a %>% mutate(block = str_remove(.$blockplot, pattern = "A.*")) %>%
+  mutate(.after = sample)
   
 #remove columns plotcode.y, treatment.y, blockplot, nem_gDW:
 vogel2017a <- vogel2017a %>% subset(select = -c(plotcode.y, treatment.y, blockplot, nem_gDW))
@@ -125,6 +128,10 @@ vogel2017a <- vogel2017a %>% relocate(c(block, plot), .after = sample) %>%
 head(vogel2017a)
 
 
+####saving as .csv####
+#better to re-run each time
+getwd()
+write.csv(vogel2017a, "./wrangling/Vogel2017.csv")
 
 
 
