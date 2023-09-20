@@ -89,46 +89,41 @@ DW_vog %>%
 
 
 
-
-
-
-
-
 ####merge density and composition data####
 
 #define rows which have to be dropped due to inconsistent data:
-  #following samples are missing (Vogel script, line 465 to 470):
-  composition_missing <- c("B2A04D2", "B1A04D2", "B2A01D2","B2A16D2", "B3A03D2")
+  #following samples are missing (Vogel script, line 465 to 470, additionally B2A03D2):
+  composition_missing <- c("B2A04D2", "B1A04D2", "B2A01D2","B2A16D2", "B3A03D2", "B2A03D2")
   #following samples occurred twice (472-474):
   composition_duplicate <- c("B3A23D2", "B1A22D2", "B2A22D2")
   #following samples are from plots which dont have the target plant richness (476-478):
   wrong_plot <-  c("B2A23D1", "B2A23D2", "B2A23D3", "B2A20D1", "B2A20D2", "B2A20D3")
 
-#merge into one table
-genusDW_vog <- DW_vog %>% full_join(composition_vog, by = join_by(sample)) %>%
-  #filter(sample %not_in% composition_missing) %>%
-  #filter(sample %not_in% composition_duplicate) %>%
+#merge into one table:
+vogel2017a <- DW_vog %>% full_join(composition_vog, by = join_by(sample)) %>%
+  filter(sample %not_in% composition_missing) %>%
+  filter(sample %not_in% composition_duplicate) %>%
   filter(sample %not_in% wrong_plot)
 
+#remove/rename duplicate plotcode and treatment columns:
+vogel2017a$plotcode.x == vogel2017a$plotcode.y
+vogel2017a <- vogel2017a  %>% rename(c(blockplot = plotcode.x, treatment = treatment.x))
 
+#Split blockplot into block and plot:
+vogel2017a$block <- str_remove(vogel2017a$blockplot, pattern = "A.*") 
+vogel2017a$plot <- str_remove(vogel2017a$blockplot, pattern = ".*A")
+  
+#remove columns plotcode.y, treatment.y, blockplot, nem_gDW:
+vogel2017a <- vogel2017a %>% subset(select = -c(plotcode.y, treatment.y, blockplot, nem_gDW))
 
-####Vogel excluded some plots where data was missing or occured twice####
+#add column year:
+vogel2017a$year <- "2017"
 
-    #following treatment D2 samples are missing (Vogel script line 465 to 470):
-    a <- c("B2A04D2", "B1A04D2", "B2A01D2","B2A16D2", "B3A03D2")
-      #B2A04 D2: composition missing, density available
-      #B1A04 D2: composition missing, density available
-      #B2A01 D2: composition missing, density available
-    
-    #the following plots occured twice and thus were removed (472 line to 474):
-    c(B3A23, B1A22, B2A22)
-      #B3A23 D2: twice in community composition with differing values -> DROP
-      #B1A22 D2: twice in community composition with differing values -> DROP
-      #B2A22 D2: twice in community composition, twice in densities -> DROP
-        #(-> could be kept for some analysis)
-    
-    #the following plots should not have been sampled (line 476 to 478):
-    c(B2A23, B2A20)
+#relocate new columns:
+vogel2017a <- vogel2017a %>% relocate(c(block, plot), .after = sample) %>%
+  relocate(year, .after = treatment)
+head(vogel2017a)
+
 
 
 
