@@ -125,7 +125,7 @@ amyntas2021d <- data.4 %>%
   mutate(.after = plot,
          sowndiv = as.character(main.plot$sowndiv[match(.$plot, main.plot$plotcode)]))
 
-write.csv(amyntas2021d, "./wrangling/Amyntas2021d.csv")
+write.csv(amyntas2021d, "./wrangling/Amyntas2021.csv")
 
 ###continuation of original code###
 
