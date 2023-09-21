@@ -79,6 +79,7 @@ ChannelRatio <- function(df, nemaplex)
 ####
 
 #proportion of bacterial feeders
+#THIS IS DANGEROUS; it automatically uses all numeric columns!
 bacterial <- function(df, nemaplex) {
   Ba = which(nemaplex$feeding[match(colnames(df), rownames(nemaplex))] == 3)
   abun.Ba = df %>% mutate(bacterivores = rowSums(.[Ba]), .keep = "none")
