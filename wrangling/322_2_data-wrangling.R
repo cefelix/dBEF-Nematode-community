@@ -6,6 +6,7 @@ library(dplyr)
 library(readxl)
 library(stringr)
 library(rBExIS)
+library(vegan)
 #functions:
 `%not_in%` <- purrr::negate(`%in%`)
 
@@ -135,10 +136,47 @@ vogel2017a <- vogel2017a %>%
 
 
 
+####vogel2017d - calculate taxon abundances per 100g soil DW####
+
+#transform abundances to frequencies:
+vogel2017b <- vogel2017a
+#select taxon's column indices:
+taxons <- grep("Acrobeles", colnames(vogel2017a)):ncol(vogel2017a)
+#transform abundances to frequencies
+vogel2017b[,taxons] <- vegan::decostand(vogel2017a[,taxons], "total", 1)
+
+  #check whether row sums are equal to 1:
+  rowSums(vogel2017b[,taxons]) == 1 
+
+#multiply frequencies with absolute numbers of extracted nematodes:
+vogel2017c <- vogel2017b
+taxons <- grep("Acrobeles", colnames(vogel2017b)):ncol(vogel2017b)
+vogel2017c[,taxons] <- vogel2017b[,taxons]*vogel2017b$total_nematodes
+
+  #check whether rowsums are equal to total_nematodes
+  abs(rowSums(vogel2017c[,taxons]) - vogel2017c$total_nematodes) <0.0001
+  
+#multiply frequencies with nematode densities per 100g DW
+vogel2017d <- vogel2017b
+taxons <- grep("Acrobeles", colnames(vogel2017b)):ncol(vogel2017b)
+vogel2017d[,taxons] <- vogel2017b[,taxons]*vogel2017b$nem_100gDW
+
+  #check whether rowsums are equal to nem_100gDW
+  abs(rowSums(vogel2017d[,taxons]) - vogel2017d$nem_100gDW) <0.0001
+  
+  #drop unnecessary columns
+  vogel2017d <- vogel2017d %>%
+    subset(select = -c(`soil (gdw)`, total_nematodes, total_identified, nem_100gDW))
+  
+  #this is the same format as data.4 from our 2021's data wrangling
+
+
+
+
 ####saving as .csv####
 #better to re-run each time
 getwd()
-write.csv(vogel2017a, "./wrangling/Vogel2017.csv")
+write.csv(vogel2017d, "./wrangling/Vogel2017.csv")
 
 
 
