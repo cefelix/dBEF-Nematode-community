@@ -27,13 +27,13 @@ composition_vog <- raw %>%
   select(-row) %>%
   arrange(plotcode)
 
-#change misleading column name, as this is not the total abundance of the sample:
+#change misleading column name, as this is not the total abundance of the Sample:
 colnames(composition_vog)[3] <- "total_identified"
 
-#create Jexis conform sample names:
-composition_vog <- mutate(composition_vog, sample = paste(plotcode, treatment, sep = "")) %>%
-  arrange(sample) %>%
-  relocate(sample, .before = plotcode)
+#create Jexis conform Sample names:
+composition_vog <- mutate(composition_vog, Sample = paste(plotcode, treatment, sep = "")) %>%
+  arrange(Sample) %>%
+  relocate(Sample, .before = plotcode)
 
 
 
@@ -43,7 +43,7 @@ composition_vog <- mutate(composition_vog, sample = paste(plotcode, treatment, s
 #   1   Two columns with the supposedly same measure (nematodes per g DW), called
 #       `indiv.per.mass..gdw.1` and `tot.abundance.per.soildw`
 #   2   intransparent calculation of these the above mentioned columns
-#   3   deviations of the two reaching more than 1 individual per g DW in 14 samples
+#   3   deviations of the two reaching more than 1 individual per g DW in 14 Samples
 #
 #THUS: Use the density data we calculated in the section below:
 
@@ -54,13 +54,13 @@ densities_vog <- subset(raw, select = c(plotcode,
                                         treatment,
                                        `indiv.per.mass..gdw.1.`,
                                        `tot.abundance.per.soildw`))
-#create Jexis conform sample names:
-densities_vog <- mutate(densities_vog, sample = paste(plotcode, treatment, sep = "D")) %>% 
-  arrange(sample) %>%
-  relocate(sample, .before = plotcode)
+#create Jexis conform Sample names:
+densities_vog <- mutate(densities_vog, Sample = paste(plotcode, treatment, sep = "D")) %>% 
+  arrange(Sample) %>%
+  relocate(Sample, .before = plotcode)
 
 densities_vog %>%
-  filter(abs(indiv.per.mass..gdw.1. - tot.abundance.per.soildw) > 1) #14 samples -.-
+  filter(abs(indiv.per.mass..gdw.1. - tot.abundance.per.soildw) > 1) #14 Samples -.-
     #`indiv.per.mass..gdw.1.` is matching my calculations from below
 
 
@@ -78,10 +78,10 @@ DW_vog <- raw[4:nrow(raw), 1:5]
     filter(total_nematodes != -9999) #probably some weird excel error
   
 
-#Jexis conform sample names:  
-DW_vog <- mutate(DW_vog, sample =paste(plotcode, treatment, sep="D")) %>%
-  arrange(sample) %>%
-  relocate(sample, .before = plotcode) 
+#Jexis conform Sample names:  
+DW_vog <- mutate(DW_vog, Sample =paste(plotcode, treatment, sep="D")) %>%
+  arrange(Sample) %>%
+  relocate(Sample, .before = plotcode) 
 
 #recalculate nematodes per 100g DW:
 DW_vog$total_nematodes <- as.numeric(DW_vog$total_nematodes)
@@ -99,18 +99,18 @@ DW_vog %>%
 ####vogel2017a - merge density and composition data####
 
 #define rows which have to be dropped due to inconsistent data:
-  #following samples are missing (Vogel script, line 465 to 470, additionally B2A03D2):
+  #following Samples are missing (Vogel script, line 465 to 470, additionally B2A03D2):
   composition_missing <- c("B2A04D2", "B1A04D2", "B2A01D2","B2A16D2", "B3A03D2", "B2A03D2")
-  #following samples occurred twice (472-474):
+  #following Samples occurred twice (472-474):
   composition_duplicate <- c("B3A23D2", "B1A22D2", "B2A22D2")
-  #following samples are from plots which dont have the target plant richness (476-478):
+  #following Samples are from plots which dont have the target plant richness (476-478):
   wrong_plot <-  c("B2A23D1", "B2A23D2", "B2A23D3", "B2A20D1", "B2A20D2", "B2A20D3")
 
 #merge into one table:
-vogel2017a <- DW_vog %>% full_join(composition_vog, by = join_by(sample)) %>%
-  filter(sample %not_in% composition_missing) %>%
-  filter(sample %not_in% composition_duplicate) %>%
-  filter(sample %not_in% wrong_plot)
+vogel2017a <- DW_vog %>% full_join(composition_vog, by = join_by(Sample)) %>%
+  filter(Sample %not_in% composition_missing) %>%
+  filter(Sample %not_in% composition_duplicate) %>%
+  filter(Sample %not_in% wrong_plot)
 
 #remove/rename duplicate plotcode and treatment columns:
 vogel2017a$plotcode.x == vogel2017a$plotcode.y
