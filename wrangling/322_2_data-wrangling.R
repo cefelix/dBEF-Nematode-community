@@ -5,8 +5,13 @@ library(tidyr)
 library(dplyr)
 library(readxl)
 library(stringr)
+library(rBExIS)
 #functions:
 `%not_in%` <- purrr::negate(`%in%`)
+
+#load plot info from jexis:
+bexis.options(base_url = "https://jexis.uni-jena.de")
+main.plot = bexis.get.dataset_by(id = 90)
 
 
 ####community composition data as in dataset 322 in JEXIS####
@@ -90,7 +95,7 @@ DW_vog %>%
 
 
 
-####merge density and composition data####
+####vogel2017a - merge density and composition data####
 
 #define rows which have to be dropped due to inconsistent data:
   #following samples are missing (Vogel script, line 465 to 470, additionally B2A03D2):
@@ -108,21 +113,26 @@ vogel2017a <- DW_vog %>% full_join(composition_vog, by = join_by(sample)) %>%
 
 #remove/rename duplicate plotcode and treatment columns:
 vogel2017a$plotcode.x == vogel2017a$plotcode.y
-vogel2017a <- vogel2017a  %>% rename(c(blockplot = plotcode.x, treatment = treatment.x))
+vogel2017a <- vogel2017a  %>% rename(c(plot = plotcode.x, treatment = treatment.x))
 
 #Split blockplot into block and plot:
 vogel2017a <- vogel2017a %>% 
-  mutate(block = str_remove(.$blockplot, pattern = "A.*"), .after = 1) %>%
-  mutate(plot = str_remove(.$blockplot, pattern = ".*A"), .after = 2) %>%
+  mutate(block = str_remove(.$plot, pattern = "A.*"), .after = 1) %>%
   #add year:
   mutate(year = c("2017"), .after = treatment)
   
 vogel2017a[1,1:7]
 
 #remove columns plotcode.y, treatment.y, blockplot, nem_gDW:
-vogel2017a <- vogel2017a %>% subset(select = -c(plotcode.y, treatment.y, blockplot, nem_gDW))
+vogel2017a <- vogel2017a %>% subset(select = -c(plotcode.y, treatment.y,  nem_gDW))
 
 head(vogel2017a)
+
+#add sowndiv, whose elements are filled from main.plot based on plot matching
+vogel2017a <- vogel2017a %>% 
+  mutate(.after = plot,
+         sowndiv = as.character(main.plot$sowndiv[match(.$plot, main.plot$plotcode)]))
+
 
 
 ####saving as .csv####
