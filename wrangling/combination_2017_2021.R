@@ -37,6 +37,31 @@ dBEF_nem <- full_join(amyntas2021, vogel2017)
 
 #### independent variables####
 
+# a function to combine "year" and "treatment" into "years of Soil history":
+calc_SH<- function(data ,treatment, year){
+  SH <- rep(NA, nrow(data))
+  for (i in 1:nrow(data)) {
+    if(treatment[i] == "1") {
+      SH[i] = year[i]-2016
+    } else if (treatment[i] == "2") {
+      SH[i] = year[i]-2002
+    } else if (treatment[i] == "3") {
+      SH[i] = year[i]-2002
+    } 
+    else{
+      return("treatment must be 1, 2, or 3")
+    }
+  } 
+  return(SH)
+  }
+# treatment codes: 1 = -SH-PH, 2 = +SH-PH, 3 = +SH+PH
+# years of setup: 2016, 2002
+
+#testing it:
+calc_SH(dBEF_nem, treatment = dBEF_nem$treatment, year = dBEF_nem$year) %>%
+  hist() #looks good
+
+
 
 
 
