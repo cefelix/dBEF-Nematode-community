@@ -5,6 +5,7 @@ library(openxlsx)
 library(tidyverse)
 library(stringr)
 library(googlesheets4)
+library(rBExIS)
 
 ############################## Community Composition ###########################
 
@@ -108,6 +109,25 @@ data.4 = data.3 %>% mutate(across(where(is.numeric), # for all numeric columns
                                   # we divide by grams of dry soil
                                   ~ .*100/soil$net.weight), 
                            .keep = "unused")
+
+
+
+### create a table with year and sowndiv added, similar to wrangling of vogel's data###
+
+#load main plot info:
+bexis.options(base_url = "https://jexis.uni-jena.de")
+main.plot = bexis.get.dataset_by(id = 90)
+
+
+amyntas2021d <- data.4 %>%
+  mutate(year = "2021", .after = treatment) %>%
+  mutate(plot = paste(block, plot, sep="A")) %>%
+  mutate(.after = plot,
+         sowndiv = as.character(main.plot$sowndiv[match(.$plot, main.plot$plotcode)]))
+
+write.csv(amyntas2021d, "./wrangling/Amyntas2021d.csv")
+
+###continuation of original code###
 
 # # long format for Jexis
 # data.5 = data.4 %>% select(-(2:4)) %>% pivot_longer(where(is.numeric),
