@@ -4,6 +4,7 @@
 #libraries
 library(dplyr)
 library(tidyr)
+library(maRcel)
 
 amyntas2021 <- read.csv("./wrangling/Amyntas2021.csv", row.names = 1)
 vogel2017 <- read.csv("./wrangling/Vogel2017.csv", row.names = 1)
@@ -86,6 +87,49 @@ dBEF_nem <- dBEF_nem %>%
 
 #### response variables####
 
+#total abundance (individuals per 100g DW)
+#column indices of taxa:
+taxa <- c(grep("Acrobeles", colnames(dBEF_nem)):ncol(dBEF_nem))
+
+dBEF_nem <- dBEF_nem %>%
+  mutate(ind_per100g = rowSums(dBEF_nem[taxa]), .before = Acrobeles)
+
+
+  
+  grep("Acrobeles", colnames(.))
+
+rowSums()
+which(colnames(dBEF_nem)== "Acrobeles")
+
+
+#densities of trophic guilds:
+
+  # Ba per 100g
+  
+  # Fu per 100g
+  
+  # Pl per 100g 
+  
+  # Om per 100g
+  
+  # Ca per 100g
+
+
+#densities by life strategy:
+  
+  # cp-1 per 100g
+
+  # cp-2 per 100g
+
+  # cp-3 per 100g
+
+  # cp-4 per 100g
+
+  # cp-5 per 100g
+
+
+
+
 
 
 
@@ -103,7 +147,17 @@ dBEF_nem$Protorhabditis %>%
 dBEF_nem$Rhabditis %>%
   sum() #9170 (Ba-cp1) -> but most likely Rhabditis
 
+####save the whole file as .csv####
+write.csv(dBEF_nem, "./dBEF_nem.csv")
 
 
+
+####trash####
+
+nemaplex <- read.csv("./wrangling/nemaplex.csv")
+nemaplex$X
+
+setdiff(nemaplex$X, colnames(dBEF_nem))
+setdiff(colnames(dBEF_nem), nemaplex$X)
 
 
