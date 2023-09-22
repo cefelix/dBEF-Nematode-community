@@ -81,14 +81,29 @@ calc_history <- function(data ,treatment, year, type){
 dBEF_nem <- dBEF_nem %>%
   mutate(., SH = calc_history(., .$treatment,. $year, type="soil"), .after= sowndiv) %>%
   mutate(., PH = calc_history(., .$treatment,. $year, type="plant"), .after= sowndiv) 
-  
-  
-
-
 
 
 
 #### response variables####
+
+
+
+
+
+
+
+####how to deal with dauer larvae?####
+#dauer larvae problem: they could be from each of the three occurring genera of rhabditidae:
+dBEF_nem$Rhabditidae.dauer.larvae %>%
+  sum() #9118
+dBEF_nem$Mesorhabditis %>%
+  sum() #31 (Ba-cp1)
+dBEF_nem$Protorhabditis %>%
+  sum() #67 (Ba-cp1)
+dBEF_nem$Rhabditis %>%
+  sum() #9170 (Ba-cp1) -> but most likely Rhabditis
+
+
 
 
 
