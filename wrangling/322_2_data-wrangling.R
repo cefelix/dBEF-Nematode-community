@@ -12,8 +12,9 @@ library(vegan)
 
 #load plot info from jexis:
 bexis.options(base_url = "https://jexis.uni-jena.de")
-main.plot = bexis.get.dataset_by(id = 90)
-
+#main.plot = bexis.get.dataset_by(id = 90)
+#as the previous line throws an error, just load the file manually:
+main.plot <- read.csv("./main_plot_information.csv")
 
 ####community composition data as in dataset 322 in JEXIS####
 raw <- read.csv("./322_2_data.csv") #as in JEXIS
@@ -115,6 +116,12 @@ vogel2017a <- DW_vog %>% full_join(composition_vog, by = join_by(Sample)) %>%
 #remove/rename duplicate plotcode and treatment columns:
 vogel2017a$plotcode.x == vogel2017a$plotcode.y
 vogel2017a <- vogel2017a  %>% rename(c(plot = plotcode.x, treatment = treatment.x))
+
+#rename Rhabditidae.dauer.larva into (...)larvae (congruent with data from 2021)
+vogel2017a <- vogel2017a %>%
+  mutate(Rhabditidae.dauer.larvae = Rhabditidae.dauer.larva, .after=Rhabditidae.dauer.larva) %>%
+  subset(select = -c(Rhabditidae.dauer.larva))
+
 
 #Split blockplot into block and plot:
 vogel2017a <- vogel2017a %>% 
