@@ -64,6 +64,17 @@ nemaplex %>% filter(if_any(everything(), is.na))
   #from those of non-dauerlarvae rhabditidae being present: 
     #if dauerlarvae present, a microbial bloom might have occured previuosly;
     #if rhabditidae in normal form present, this might indicate an occuring microbial bloom
+    dBEF_nem$Rhabditidae.dauer.larvae %>%
+      sum() #9118
+    dBEF_nem$Mesorhabditis %>%
+      sum() #31 (Ba-cp1)
+    dBEF_nem$Protorhabditis %>%
+      sum() #67 (Ba-cp1)
+    dBEF_nem$Rhabditis %>%
+      sum() #9170 (Ba-cp1) -> but most likely Rhabditis
+    (dBEF_nem$Rhabditidae.dauer.larvae - dBEF_nem$Rhabditis) %>% 
+      summary() #--> maybe check whether in dry week there are more dauerlarvae
+    
   
   #This will include Rhabditidae in the calculation of all trophic/cp guild density calculations:
   nemaplex[rownames(nemaplex)=="Rhabditidae.dauer.larvae",]$cp_value <- 1
@@ -281,22 +292,53 @@ dBEF_nem <- dBEF_nem %>%
     mutate(trophic_guildsCP(.[taxa], nemaplex), .before = "Acrobeles")
 
     
+####indices####
+  #shannon's diversity H':
+  taxa <- c(grep("Acrobeles", colnames(dBEF_nem)):ncol(dBEF_nem))
+  dBEF_nem <- dBEF_nem %>%
+    mutate(Shannon_H = diversity(.[taxa], index = "shannon"), .before = "Acrobeles" ) 
+    
+  #species number:
+  taxa <- c(grep("Acrobeles", colnames(dBEF_nem)):ncol(dBEF_nem))
+  presence <- dBEF_nem[taxa] > 0
+  dBEF_nem <- dBEF_nem %>%
+    mutate(Hill_q0 = rowSums(presence == TRUE), .before = "Acrobeles")
+    rm(presence)
+
+  #effective species number (exp(H'), Hill number with q=1):
+  taxa <- c(grep("Acrobeles", colnames(dBEF_nem)):ncol(dBEF_nem))
+  dBEF_nem <- dBEF_nem %>%
+    mutate(Hill_q1 = exp(.$Shannon_H), .before = "Acrobeles")
+
+  #nematode specific indices from maRcel
+  taxa <- c(grep("Acrobeles", colnames(dBEF_nem)):ncol(dBEF_nem))
+  indices_nematodes <- cbind(Enrichment(dBEF_nem[taxa], nemaplex),
+                            Structure(dBEF_nem[taxa], nemaplex),
+                            Maturity(dBEF_nem[taxa], nemaplex),
+                            Channel(dBEF_nem[taxa], nemaplex) ) 
+  dBEF_nem <- dBEF_nem %>% 
+    mutate(., indices_nematodes, .before = "Acrobeles")
+    rm(indices_nematodes)
   
+  #nematode specific indices as in Eisenhauer 2011
+  #Fu/(Ba+Fu):
+    taxa <- c(grep("Acrobeles", colnames(dBEF_nem)):ncol(dBEF_nem))
+    dBEF_nem <- dBEF_nem %>%
+      mutate("Fu/(Fu+Ba)" = .$Fu_per100g / (.$Fu_per100g + .$Ba_per100g), .before = "Acrobeles")
+  #(Fu+Ba)/Pl:
+    taxa <- c(grep("Acrobeles", colnames(dBEF_nem)):ncol(dBEF_nem))
+    dBEF_nem <- dBEF_nem %>%
+      mutate("(Fu+Ba)/Pl" = (.$Fu_per100g + .$Ba_per100g) / .$Pl_per100g, .before = "Acrobeles")
+  #Pr/Pl:
+    taxa <- c(grep("Acrobeles", colnames(dBEF_nem)):ncol(dBEF_nem))
+    dBEF_nem <- dBEF_nem %>%
+    mutate("Pr/Pl" = .$Pr_per100g / .$Pl_per100g, .before = "Acrobeles")  
 
-
-####how to deal with dauer larvae?####
-#dauer larvae problem: they could be from each of the three occurring genera of rhabditidae:
-dBEF_nem$Rhabditidae.dauer.larvae %>%
-  sum() #9118
-dBEF_nem$Mesorhabditis %>%
-  sum() #31 (Ba-cp1)
-dBEF_nem$Protorhabditis %>%
-  sum() #67 (Ba-cp1)
-dBEF_nem$Rhabditis %>%
-  sum() #9170 (Ba-cp1) -> but most likely Rhabditis
+  
 
 ####save the whole file as .csv####
 write.csv(dBEF_nem, "./dBEF_nem.csv")
+
 
 
 
