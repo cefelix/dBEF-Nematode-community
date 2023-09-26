@@ -40,6 +40,35 @@ rm(add_am, add_vo, taxons)
 #merge both data sets
 dBEF_nem <- full_join(amyntas2021, vogel2017)
 
+####fixing NA's in nemaplex####
+#
+#check on NA's in nemaplex:
+nemaplex %>% filter(if_any(everything(), is.na))
+
+  #merge Macroposthonia and Criconemoides as one genus
+  dBEF_nem$Criconemoides <- dBEF_nem$Criconemoides+dBEF_nem$Macroposthonia
+  #and drop $Macroposhonia
+  dBEF_nem <- dBEF_nem %>%
+    subset(., select = -c(Macroposthonia))
+  
+  #Nordiidae can either be herbivores or Omnivores (Bongers 1999: The Maturity index, table 2)
+  #but are always cp-4:
+  nemaplex[rownames(nemaplex)=="Nordiidae",]$cp_value <- 4
+  #assigning them to Omnivores:
+  nemaplex[rownames(nemaplex)=="Nordiidae",]$feeding <- 8
+  #to see if results differ, repeat analysis with Nordiidae as herbivores
+  #nemaplex[rownames(nemaplex)=="Nordiidae",]$feeding <- 1
+  
+  #how to treat Rhabditidae dauer larvae?
+  #keeping them as own taxon for now, as the ecological implication presence of dauerlarvae differ
+  #from those of non-dauerlarvae rhabditidae being present: 
+    #if dauerlarvae present, a microbial bloom might have occured previuosly;
+    #if rhabditidae in normal form present, this might indicate an occuring microbial bloom
+  
+  #This will include Rhabditidae in the calculation of all trophic/cp guild density calculations:
+  nemaplex[rownames(nemaplex)=="Rhabditidae.dauer.larvae",]$cp_value <- 1
+  nemaplex[rownames(nemaplex)=="Rhabditidae.dauer.larvae",]$feeding <- 3
+
 
 #### independent variables####
 
@@ -250,7 +279,8 @@ dBEF_nem <- dBEF_nem %>%
   taxa <- c(grep("Acrobeles", colnames(dBEF_nem)):ncol(dBEF_nem))
   dBEF_nem <- dBEF_nem %>%
     mutate(trophic_guildsCP(.[taxa], nemaplex), .before = "Acrobeles")
-  
+
+    
   
 
 
