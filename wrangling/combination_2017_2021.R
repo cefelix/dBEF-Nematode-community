@@ -1,5 +1,9 @@
 #combining Vogel's 2017 and Amyntas' 2021 data
 #to be safe, re-run the wrangling files for 2017/2021's data previous to this!
+#
+#
+# in dBEF_nem: taxa densities always have to be the last columns of dBEF_nem to 
+# make this code work!
 
 #libraries
 library(dplyr)
@@ -8,6 +12,7 @@ library(maRcel)
 
 amyntas2021 <- read.csv("./wrangling/Amyntas2021.csv", row.names = 1)
 vogel2017 <- read.csv("./wrangling/Vogel2017.csv", row.names = 1)
+nemaplex <- read.csv("wrangling/nemaplex.csv", row.names = 1)
 
 ###
 ####merge into one table####
@@ -92,48 +97,161 @@ dBEF_nem <- dBEF_nem %>%
 taxa <- c(grep("Acrobeles", colnames(dBEF_nem)):ncol(dBEF_nem))
 
 dBEF_nem <- dBEF_nem %>%
-  mutate(ind_per100g = rowSums(dBEF_nem[taxa]), .before = Acrobeles)
-
-
-  
-  grep("Acrobeles", colnames(.))
-
-rowSums()
-which(colnames(dBEF_nem)== "Acrobeles")
+  mutate(ind_per100g = rowSums(dBEF_nem[taxa]), .before = "Acrobeles")
 
 
 #densities of trophic guilds:
 
-  # Ba per 100g
+  #a function to filter out trophic guilds
+  trophic_guilds <- function(df, nemaplex) {
+    #plant feeders:
+    Pl = which(nemaplex$feeding[match(colnames(df), rownames(nemaplex))] == 1)
+    abun.Pl = df %>% mutate(herbivores = rowSums(.[Pl]), .keep = "none")
+    
+    #fungal feeders:
+    Fu = which(nemaplex$feeding[match(colnames(df), rownames(nemaplex))] == 2)
+    abun.Fu = df %>% mutate(fungivores = rowSums(.[Fu]), .keep = "none")
+    
+    #bacterial feeders:
+    Ba = which(nemaplex$feeding[match(colnames(df), rownames(nemaplex))] == 3)
+    abun.Ba = df %>% mutate(bacterivores = rowSums(.[Ba]), .keep = "none")
+    
+    #Predators:
+    Pr = which(nemaplex$feeding[match(colnames(df), rownames(nemaplex))] == 5)
+    abun.Pr = df %>% mutate(predators = rowSums(.[Pr]), .keep = "none")
+    
+    
+    #Omnivores:
+    Om = which(nemaplex$feeding[match(colnames(df), rownames(nemaplex))] == 8)
+    abun.Om = df %>% mutate(omnivores = rowSums(.[Om]), .keep = "none")
+    
+    densities_tr = cbind(abun.Pl, abun.Fu, abun.Ba, abun.Pr, abun.Om)
+    return(densities_tr)
+  }
   
-  # Fu per 100g
+  #apply trophic_guilds on dBEF_nem
+  taxa <- c(grep("Acrobeles", colnames(dBEF_nem)):ncol(dBEF_nem))
+  dBEF_nem <- dBEF_nem %>% 
+    mutate(trophic_guilds(.[taxa], nemaplex), .before = "Acrobeles") %>%  
+    rename("Pl_per100g" = "herbivores",
+           "Fu_per100g" = "fungivores" ,
+           "Ba_per100g" = "bacterivores",
+           "Pr_per100g" = "predators",
+           "Om_per100g" = "omnivores")
+
   
-  # Pl per 100g 
+#densities by cp-value:
   
-  # Om per 100g
+  #determine columns where taxonomic data is:
+  taxa <- c(grep("Acrobeles", colnames(dBEF_nem)):ncol(dBEF_nem))
   
-  # Ca per 100g
-
-
-#densities by life strategy:
+  #adding 5 columns, density of cp-groups in ind/100g, added before the taxa
+  dBEF_nem <- dBEF_nem %>%
+    mutate(maRcel::C_P(.[taxa],nemaplex)*.$ind_per100g, .before = "Acrobeles") %>%
+    rename("cp1_per100g" = "cp1",
+           "cp2_per100g" = "cp2",
+           "cp3_per100g" = "cp3",
+           "cp4_per100g" = "cp4",
+           "cp5_per100g" = "cp5")
   
-  # cp-1 per 100g
+  
+#combination of trophic guild and cp-value:
+  
+  # a function filtering the density of each trophic guild and the cp-value:
+  trophic_guildsCP <- function(df, nemaplex) {
+    
+    #Plant feeders: Pl-2
+    Pl2 = which(nemaplex$feeding[match(colnames(df), rownames(nemaplex))] == 1 &
+                  nemaplex$cp_value[match(colnames(df), rownames(nemaplex))] == 2)
+    abun.Pl2 = df %>% mutate(Pl2 = rowSums(.[Pl2]), .keep = "none")
+      #Pl-3
+      Pl3 = which(nemaplex$feeding[match(colnames(df), rownames(nemaplex))] == 1 &
+                    nemaplex$cp_value[match(colnames(df), rownames(nemaplex))] == 3)
+      abun.Pl3 = df %>% mutate(Pl3 = rowSums(.[Pl3]), .keep = "none")
+      #Pl-4
+      Pl4 = which(nemaplex$feeding[match(colnames(df), rownames(nemaplex))] == 1 &
+                    nemaplex$cp_value[match(colnames(df), rownames(nemaplex))] == 4)
+      abun.Pl4 = df %>% mutate(Pl4 = rowSums(.[Pl4]), .keep = "none")
+      #Pl-5
+      Pl5 = which(nemaplex$feeding[match(colnames(df), rownames(nemaplex))] == 1 &
+                    nemaplex$cp_value[match(colnames(df), rownames(nemaplex))] == 5)
+      abun.Pl5 = df %>% mutate(Pl5 = rowSums(.[Pl5]), .keep = "none")
+      
+    #fungal feeders: Fu-2
+    Fu2 = which(nemaplex$feeding[match(colnames(df), rownames(nemaplex))] == 2 &
+                  nemaplex$cp_value[match(colnames(df), rownames(nemaplex))] == 2)
+    abun.Fu2 = df %>% mutate(Fu2 = rowSums(.[Fu2]), .keep = "none")
+      #Fu-3
+      Fu3 = which(nemaplex$feeding[match(colnames(df), rownames(nemaplex))] == 2 &
+                    nemaplex$cp_value[match(colnames(df), rownames(nemaplex))] == 3)
+      abun.Fu3 = df %>% mutate(Fu3 = rowSums(.[Fu3]), .keep = "none")
+      #Fu-4
+      Fu4 = which(nemaplex$feeding[match(colnames(df), rownames(nemaplex))] == 2 &
+                    nemaplex$cp_value[match(colnames(df), rownames(nemaplex))] == 4)
+      abun.Fu4 = df %>% mutate(Fu4 = rowSums(.[Fu4]), .keep = "none")
+      #Fu-5
+      Fu5 = which(nemaplex$feeding[match(colnames(df), rownames(nemaplex))] == 2 &
+                    nemaplex$cp_value[match(colnames(df), rownames(nemaplex))] == 5)
+      abun.Fu5 = df %>% mutate(Fu5 = rowSums(.[Fu5]), .keep = "none")
 
-  # cp-2 per 100g
-
-  # cp-3 per 100g
-
-  # cp-4 per 100g
-
-  # cp-5 per 100g
-
-
-
-
-
-
-
-
+    #bacterial feeders: Ba-1
+    Ba1 = which(nemaplex$feeding[match(colnames(df), rownames(nemaplex))] == 3 &
+                  nemaplex$cp_value[match(colnames(df), rownames(nemaplex))] == 1)
+    abun.Ba1 = df %>% mutate(Ba1 = rowSums(.[Ba1]), .keep = "none")
+      #Ba-2
+      Ba2 = which(nemaplex$feeding[match(colnames(df), rownames(nemaplex))] == 3 &
+                      nemaplex$cp_value[match(colnames(df), rownames(nemaplex))] == 2)
+        abun.Ba2 = df %>% mutate(Ba2 = rowSums(.[Ba2]), .keep = "none")
+      #Ba-3
+      Ba3 = which(nemaplex$feeding[match(colnames(df), rownames(nemaplex))] == 3 &
+                    nemaplex$cp_value[match(colnames(df), rownames(nemaplex))] == 3)
+      abun.Ba3 = df %>% mutate(Ba3 = rowSums(.[Ba3]), .keep = "none")
+      #Ba-4
+      Ba4 = which(nemaplex$feeding[match(colnames(df), rownames(nemaplex))] == 3 &
+                    nemaplex$cp_value[match(colnames(df), rownames(nemaplex))] == 4)
+      abun.Ba4 = df %>% mutate(Ba4 = rowSums(.[Ba4]), .keep = "none")
+      #Ba-5
+      Ba5 = which(nemaplex$feeding[match(colnames(df), rownames(nemaplex))] == 3 &
+                    nemaplex$cp_value[match(colnames(df), rownames(nemaplex))] == 5)
+      abun.Ba5 = df %>% mutate(Ba5 = rowSums(.[Ba5]), .keep = "none")
+      
+    #Predators: Pr-3
+    Pr3 = which(nemaplex$feeding[match(colnames(df), rownames(nemaplex))] == 5 &
+                  nemaplex$cp_value[match(colnames(df), rownames(nemaplex))] == 3)
+    abun.Pr3 = df %>% mutate(Pr3 = rowSums(.[Pr3]), .keep = "none")
+      #Pr-4
+      Pr4 = which(nemaplex$feeding[match(colnames(df), rownames(nemaplex))] == 5 &
+                    nemaplex$cp_value[match(colnames(df), rownames(nemaplex))] == 4)
+      abun.Pr4 = df %>% mutate(Pr4 = rowSums(.[Pr4]), .keep = "none")
+      #Pr-5
+      Pr5 = which(nemaplex$feeding[match(colnames(df), rownames(nemaplex))] == 5 &
+                    nemaplex$cp_value[match(colnames(df), rownames(nemaplex))] == 5)
+      abun.Pr5 = df %>% mutate(Pr5 = rowSums(.[Pr5]), .keep = "none")
+    
+    #Omnivores: Om-4
+    Om4 = which(nemaplex$feeding[match(colnames(df), rownames(nemaplex))] == 8 &
+                 nemaplex$cp_value[match(colnames(df), rownames(nemaplex))] == 4)
+    abun.Om4 = df %>% mutate(Om4 = rowSums(.[Om4]), .keep = "none")
+      #Om-5
+      Om5 = which(nemaplex$feeding[match(colnames(df), rownames(nemaplex))] == 8 &
+                    nemaplex$cp_value[match(colnames(df), rownames(nemaplex))] == 5)
+      abun.Om5 = df %>% mutate(Om5 = rowSums(.[Om5]), .keep = "none")
+      
+    
+    densities_tr_cp = cbind(abun.Pl2, abun.Pl3, abun.Pl4, abun.Pl5,
+                            abun.Fu2, abun.Fu3, abun.Fu4, abun.Fu5,
+                            abun.Ba1, abun.Ba2, abun.Ba3, abun.Ba4, abun.Ba5,
+                            abun.Pr3, abun.Pr4, abun.Pr5,
+                            abun.Om4, abun.Om5)
+    return(densities_tr_cp)
+  }
+  
+  #apply trophic_guildsCP
+  taxa <- c(grep("Acrobeles", colnames(dBEF_nem)):ncol(dBEF_nem))
+  dBEF_nem <- dBEF_nem %>%
+    mutate(trophic_guildsCP(.[taxa], nemaplex), .before = "Acrobeles")
+  
+  
 
 
 ####how to deal with dauer larvae?####
@@ -151,13 +269,5 @@ dBEF_nem$Rhabditis %>%
 write.csv(dBEF_nem, "./dBEF_nem.csv")
 
 
-
-####trash####
-
-nemaplex <- read.csv("./wrangling/nemaplex.csv")
-nemaplex$X
-
-setdiff(nemaplex$X, colnames(dBEF_nem))
-setdiff(colnames(dBEF_nem), nemaplex$X)
 
 
