@@ -9,6 +9,7 @@
 library(dplyr)
 library(tidyr)
 library(maRcel)
+library(vegan)
 
 amyntas2021 <- read.csv("./wrangling/Amyntas2021.csv", row.names = 1)
 vogel2017 <- read.csv("./wrangling/Vogel2017.csv", row.names = 1)
@@ -127,6 +128,27 @@ calc_history <- function(data ,treatment, year, type){
 dBEF_nem <- dBEF_nem %>%
   mutate(., SH = calc_history(., .$treatment,. $year, type="soil"), .after= sowndiv) %>%
   mutate(., PH = calc_history(., .$treatment,. $year, type="plant"), .after= sowndiv) 
+
+#functional groups numbers:
+main.plot <- read.csv("./main_plot_information.csv")
+dBEF_nem <- dBEF_nem %>% 
+  mutate(.after = sowndiv,
+         func.group = as.numeric(main.plot$func.group[match(.$plot, main.plot$plotcode)]))
+
+#presence/absence of functional groups:
+main.plot$numgrass[main.plot$numgrass > 0] <- 1
+  main.plot$numleg[main.plot$numleg > 0]     <- 1
+  main.plot$numsherb[main.plot$numsherb > 0] <- 1
+  main.plot$numtherb[main.plot$numtherb > 0] <- 1
+dBEF_nem <- dBEF_nem %>%
+  mutate(.after = SH,
+         grasses = as.character(main.plot$numgrass[match(.$plot, main.plot$plotcode)]),
+         legumes = as.character(main.plot$numleg[match(.$plot, main.plot$plotcode)]),
+         s.herbs = as.character(main.plot$numsherb[match(.$plot, main.plot$plotcode)]),
+         t.herbs = as.character(main.plot$numtherb[match(.$plot, main.plot$plotcode)]),
+    
+  )
+
 
 
 
