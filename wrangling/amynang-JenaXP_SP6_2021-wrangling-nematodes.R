@@ -70,6 +70,12 @@ abun = abun %>% add_column(Sample = str_c(abun$Plot, gsub("Treatment", "D", abun
 soil = soil %>% add_column(Sample = str_c(soil$Plot, gsub("Treatment", "D", abun$Subplot)),
                            .before = "Plot")
 
+#merge abun and soil, to save as abundances 2021:
+abun_soil <- full_join(abun, soil)
+abun_soil <- abun_soil %>%
+  rename(., total_nematodes = "Number of Nematodes", "soil (gdw)" = net.weight)
+write.csv(abun_soil, file = "./wrangling/abundances2021.csv")
+
 # This results in dataset 345 in https://jexis.uni-jena.de
 # data4jexis = cbind(abun,soil) %>% select(c(2,5,10,12,13)) %>% 
 #   mutate(water.content = round(water.content/init.weight, 3)) %>% select(-3)
