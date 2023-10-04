@@ -141,6 +141,7 @@ vogel2017a <- vogel2017a %>%
   mutate(.after = plot,
          sowndiv = as.character(main.plot$sowndiv[match(.$plot, main.plot$plotcode)]))
 
+write.csv(vogel2017a, file = "./wrangling/abundances2017.csv")
 
 
 ####vogel2017d - calculate taxon abundances per 100g soil DW####
