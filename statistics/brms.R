@@ -9,6 +9,7 @@ library(ggplot2)
 dBEF_nem <- read.csv("./dBEF_nem.csv", row.names = 1)
 dBEF_nem %>%
   str()
+load(file = "./statistics/brms/230929_Lm.RData")
 
 dBEF_nem$treatment <- dBEF_nem$treatment %>%
   as.factor()
@@ -28,6 +29,13 @@ hist(dBEF_nem$Log_ind_per100g)
 
 
 ####simple model on overall density####
+
+#m1: abun ~ sowndiv+(1|block) fam=lognormal
+#m2: log(abun) ~ sowndiv+(1|block), fam=gaussian
+#m3: log(abun) ~ sowndiv+treatment+(1|block), fam=gaussian
+#m4: log(abun) ~ sowndiv+SH+PH+(1|block), fam= gaussian, SH+PH numeric
+#m5: log(abun) ~ sowndiv+SH+(1|block), fam= gaussian, SH factor
+#m6: log(abun) ~ sowndiv*SH+(1|block), fam= gaussian, SH numeric
 
 m1.1 <- brm(ind_per100g ~ sowndiv + (1|block),
          data = dBEF_nem, family = "lognormal",
@@ -52,6 +60,8 @@ m1.3 <- brm(ind_per100g ~ sowndiv + (1|block),
             control = list(adapt_delta=0.9999))
 summary(m1.3) # no divergent transitions
 #
+pp_check(m1.3)
+
 
 m2.1 <- brm(Log_ind_per100g ~ sowndiv + (1|block),
           data = dBEF_nem, family = "gaussian",
@@ -86,6 +96,8 @@ m2.4 <- brm(Log_ind_per100g ~ sowndiv + (1|block),
                            max_treedepth = 11))
 summary(m2.4)
 
+pp_check(m2.4)
+
 m3.1 <- brm(Log_ind_per100g ~ sowndiv + treatment + (1|block),
             data = dBEF_nem, family = "gaussian",
             chains = 3,
@@ -101,6 +113,8 @@ m3.2 <- brm(Log_ind_per100g ~ sowndiv + treatment + (1|block),
             control = list(adapt_delta = 0.99))
 summary(m3.2)
 
+pp_check(m3.2)
+
 
 #include SH and PH as numeric variables
 m4.1 <- brm(Log_ind_per100g ~ sowndiv + SH + PH + (1|block),
@@ -109,6 +123,7 @@ m4.1 <- brm(Log_ind_per100g ~ sowndiv + SH + PH + (1|block),
             cores = 3,
             iter = 2000, warmup = 1000)
 summary(m4.1)
+pp_check(m4.1)
 
 m4.2 <- brm(Log_ind_per100g ~ sowndiv + SH + PH + (1|block),
             data = dBEF_nem, family = "gaussian",
@@ -116,6 +131,19 @@ m4.2 <- brm(Log_ind_per100g ~ sowndiv + SH + PH + (1|block),
             cores = 3,
             iter = 2000, warmup = 1000,
             control = list(adapt_delta = 0.99))
+summary(m4.2)
+
+m4.3 <- brm(Log_ind_per100g ~ sowndiv + SH + PH + (1|block),
+            data = dBEF_nem, family = "gaussian",
+            chains = 3,
+            cores = 3,
+            iter = 2000, warmup = 1000,
+            control = list(adapt_delta = 0.9999))
+summary(m4.3)
+
+pp_check(m4.2)
+
+
 
 #include SH and PH as a factors
 dBEF_nem$SH <- dBEF_nem$SH %>% as.factor()
@@ -157,6 +185,8 @@ m6.3 <- brm(Log_ind_per100g ~ sowndiv * SH + (1|block),
             control = list(adapt_delta = 0.9999))
 summary(m6.3)
 
+pp_check(m6.3)
+
            
 
 
@@ -174,10 +204,10 @@ summary(m1.3)
 save(m1.1, m1.2,m1.3, 
      m2.1, m2.2, m2.3, m2.4,
      m3.1, m3.2,
-     m4.1, m4.2,
+     m4.1, m4.2, m4.3,
      m5.1,
      m6.1, m6.2, m6.3,
-     file = "./statistics/brms/230929_Lm.RData")
+     file = "./statistics/brms/231004_Lm.RData")
 
 
 
