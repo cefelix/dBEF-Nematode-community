@@ -377,9 +377,14 @@ dBEF_nem <- dBEF_nem %>%
     taxa <- c(grep("Acrobeles", colnames(dBEF_nem)):ncol(dBEF_nem))
     dBEF_nem <- dBEF_nem %>%
     mutate("Pr/Pl" = .$Pr_per100g / .$Pl_per100g, .before = "Acrobeles")  
-        
-  
 
+#check colSums to see whether there are taxa that don't have at least 1 individual in any plot:            
+  taxa <- c(grep("Acrobeles", colnames(dBEF_nem)):ncol(dBEF_nem))  
+  colSums(dBEF_nem[taxa]) #Rhabdolaimus, due to removal of wrongly labelled sample
+  
+  colSums(amyntas2021[9:89])
+  colSums(vogel2017[9:89])
+  
 ####save the whole file as .csv####
 write.csv(dBEF_nem, "./dBEF_nem.csv")
 
