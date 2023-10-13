@@ -82,5 +82,8 @@ dBEF_bs[1:3,2:6,1:5]
 #save the result:
 save(dBEF_bs, file = "./dBEF_bootstrapped.RData")
 
+#this is a test comment to resolve error: git did not send all necessary objects
+
+
 
 
