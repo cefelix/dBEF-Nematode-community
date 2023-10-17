@@ -1,4 +1,6 @@
 ####loading data and packages ####
+# a workflow: https://m-clark.github.io/posts/2021-02-28-practical-bayes-part-i/
+
 
 library(brms)
 library(dplyr)
@@ -192,7 +194,7 @@ summary(m6.3)
 
 pp_check(m6.3)
 
-####saving brm outputs####
+#### 2.2 saving brm outputs ####
 save(m1.1, m1.2,m1.3, 
      m2.1, m2.2, m2.3, m2.4,
      m3.1, m3.2,
@@ -200,3 +202,120 @@ save(m1.1, m1.2,m1.3,
      m5.1,
      m6.1, m6.2, m6.3,
      file = "./statistics/brms/231004_Lm.RData")
+
+#### 3.1 analysing 2017 data separately ####
+dBEF_nem17 <- subset(dBEF_nem, year == 2017 )
+
+#distribution: lognormal
+par(mfrow=c(1,2))
+hist(dBEF_nem17$ind_per100g, breaks = seq(min(dBEF_nem17$ind_per100g), max(dBEF_nem17$ind_per100g), length.out=30))
+rlnorm(1000, meanlog = log(10), sdlog = log(1.5)) %>%
+  hist()
+par(mfrow=c(1,1))
+
+#plot the data:
+ggplot(dBEF_nem17, aes(x=log(sowndiv), y=ind_per100g, col=treatment) )+
+  geom_jitter()
+  #treatment 3 (+SH, +PH) show positiv relationship
+  #treatment 2 (+Sh, -PH) shows positive trend over 1, 4, 16 species, but very low abundances at 60 sp
+  #treatment 1 (-SH, -PH) same as treatment 2
+
+m17.11
+
+
+
+
+
+#### 4.1 analysing 2021 data separately ####
+dBEF_nem21 <- subset(dBEF_nem, year == 2021)
+dBEF_nem21$SH <- as.factor(dBEF_nem21$SH)
+dBEF_nem21$PH <- as.factor(dBEF_nem21$PH)
+
+#distribution: lognormal
+par(mfrow=c(1,2))
+hist(dBEF_nem21$ind_per100g, breaks = seq(min(dBEF_nem21$ind_per100g), max(dBEF_nem21$ind_per100g), length.out=30))
+rlnorm(1000, meanlog = log(10), sdlog = log(2)) %>%
+  hist()
+par(mfrow=c(1,1))
+
+#plot the data:
+ggplot(dBEF_nem21, aes(x=log(sowndiv), y=ind_per100g, col=treatment) )+
+  geom_jitter()
+
+#model terms:
+#m21.1: abun ~ sowndiv*treatment + (1|block), fam=lognormal
+#m21.2: abun ~ sowndiv*SH*PH + (1|block), fam=lognormal 
+  #m1 and m2 should be the same, as treatment is an interaction of SH and PH (?)
+# { m21.3: log(abun) ~ sowndiv*treatment + (1|block), fam=gaussian
+#   m21.4: abun ~ sowndiv*SH + (1|block), fam=lognormal
+#   m21.5: abun ~ sowndiv*PH + (1|block), fam=lognormal } not done yet
+
+#loading the fit models from previous session:
+load("./statistics/brms/231017_abun.RData")
+
+#m21.1
+  
+  #m21.10 arbitrarily leaves out the random factor block
+  m21.10 <- brm(ind_per100g ~ sowndiv * treatment, 
+                data = dBEF_nem21, family = "lognormal",
+                chains = 3,
+                cores = 3,
+                iter = 2000, warmup = 1000, 
+                control = list(adapt_delta =0.99))
+  summary(m21.10)
+  
+
+  m21.11 <- brm(ind_per100g ~ sowndiv * treatment + (1|block), 
+              data = dBEF_nem21, family = "lognormal",
+              chains = 3,
+              cores = 3,
+              iter = 2000, warmup = 1000)
+  summary(m21.11) #8 divergent transitions
+  
+  m21.12 <- update(m21.11, control = list(adapt_delta=0.99))
+    summary(m21.12)
+  mcmc_plot(m21.12, type = "combo")  
+  mcmc_plot(m21.12, type = "violin")
+  mcmc_plot(m21.12, type = "rhat")
+  
+  #posterior predictive check:
+  pp_check(m21.12, ndraws = 100)
+    #check if model predicts minimum/median/max values well:
+    pp_check(m21.12, ndraws=100, 
+             type = "stat", stat="min") #min is captured well
+    pp_check(m21.12, ndraws=100, 
+             type = "stat", stat="median") #model underestimates median
+    pp_check(m21.12, ndraws=100, 
+             type = "stat", stat="max") #model overestimates max
+    
+  #bayesian R2 
+  bayes_R2(m21.12) #with random effects
+  bayes_R2(m21.12, re_formula = NA) #without random effects
+  
+  
+  
+#m21.2
+  m21.21 <- brm(ind_per100g ~ sowndiv * SH * PH + (1|block), 
+                 data = dBEF_nem21, family = "lognormal",
+                 chains = 3,
+                 cores = 3,
+                 iter = 2000, warmup = 1000)
+  summary(m21.21) #apparantly this threefold interaction is a bad idea
+  
+  m21.22 <- update(m21.21, control = list(adapt_delta=0.99))
+    summary(m21.22)
+  
+  m21.23 <- update(m21.21, control = list(adapt_delta=0.99))
+    summary(m21.23)
+    
+  pp_check(m21.23, ndraws=100)
+  
+  
+  
+####4.2 saving 2021s models####
+  save(m21.10, m21.11,m21.12, 
+       m21.21, m21.22, m21.23,
+       file = "./statistics/brms/231017_abun.RData")
+
+
+
