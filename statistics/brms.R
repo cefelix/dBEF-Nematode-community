@@ -9,26 +9,31 @@ library(ggplot2)
 dBEF_nem <- read.csv("./dBEF_nem.csv", row.names = 1)
 dBEF_nem %>%
   str()
-load(file = "./statistics/brms/230929_Lm.RData")
+load(file = "./statistics/brms/231004_Lm.RData")
 
 dBEF_nem$treatment <- dBEF_nem$treatment %>%
   as.factor()
 
-####examining distributions####
+#### 2.1 combined analysis for data from 2017 and 2021 ####
 
-dBEF_nem #%>%#
+#examining the individual abundances of 2017 and 2021 in one model, with year as a continuos variable
+#this should not be used due to different sampling depths in 2017 (25g FW, 5cm) and 2021 (25g, 10cm)
+
+#distribution: lognormal
+par(mfrow=c(1,2))
 hist(dBEF_nem$ind_per100g, breaks = seq(min(dBEF_nem$ind_per100g), max(dBEF_nem$ind_per100g), length.out=30))
+rlnorm(1000, meanlog = log(10), sdlog = log(2.25)) %>%
+  hist()
+par(mfrow=c(1,1))
 
-#lets log transform this
+#so lets add a column with log-transformed individual abundances:
 dBEF_nem <- dBEF_nem %>%
   mutate(Log_ind_per100g = log(ind_per100g), .after = ind_per100g)
-
 hist(dBEF_nem$Log_ind_per100g)
 
-
-
-
-####simple model on overall density####
+#lets see the data
+ggplot(dBEF_nem, aes(x= log(sowndiv), y=ind_per100g, col=treatment))+
+  geom_point()
 
 #m1: abun ~ sowndiv+(1|block) fam=lognormal
 #m2: log(abun) ~ sowndiv+(1|block), fam=gaussian
@@ -38,10 +43,10 @@ hist(dBEF_nem$Log_ind_per100g)
 #m6: log(abun) ~ sowndiv*SH+(1|block), fam= gaussian, SH numeric
 
 m1.1 <- brm(ind_per100g ~ sowndiv + (1|block),
-         data = dBEF_nem, family = "lognormal",
-         chains = 3,
-         cores = 3,
-         iter = 2000, warmup = 1000)
+            data = dBEF_nem, family = "lognormal",
+            chains = 3,
+            cores = 3,
+            iter = 2000, warmup = 1000)
 summary(m1.1) #5 divergent transitions
 
 m1.2 <- brm(ind_per100g ~ sowndiv + (1|block),
@@ -64,10 +69,10 @@ pp_check(m1.3)
 
 
 m2.1 <- brm(Log_ind_per100g ~ sowndiv + (1|block),
-          data = dBEF_nem, family = "gaussian",
-          chains = 3,
-          cores = 3,
-          iter = 2000, warmup = 1000)
+            data = dBEF_nem, family = "gaussian",
+            chains = 3,
+            cores = 3,
+            iter = 2000, warmup = 1000)
 summary(m2.1) # 3 divergent transitions
 
 m2.2 <- brm(Log_ind_per100g ~ sowndiv + (1|block),
@@ -187,19 +192,6 @@ summary(m6.3)
 
 pp_check(m6.3)
 
-           
-
-
-
-####compare models####
-
-#gaussian (logtransformed data)
-summary(m2.4)
-
-#lognormal(untransformed data)
-summary(m1.3)
-
-
 ####saving brm outputs####
 save(m1.1, m1.2,m1.3, 
      m2.1, m2.2, m2.3, m2.4,
@@ -208,44 +200,3 @@ save(m1.1, m1.2,m1.3,
      m5.1,
      m6.1, m6.2, m6.3,
      file = "./statistics/brms/231004_Lm.RData")
-
-
-
-
-
-####old####
-
-
-parallel::detectCores()
-
-
-
-m <- brm(bf(CR ~ 1+ treatment + sowndiv +treatment:sowndiv + (1 + treatment|plot)),
-         family = zero_one_inflated_beta(),
-         chains = 3,
-         cores = 3,
-         iter = 2000,
-         #backend = 'cmdstanr',
-         data = data.analysis[is.na(data.analysis$CR)==F,])
-summary(m)
-
-pp_check(m)
-plot(m)
-
-
-conditional_effects(m)
-
-plot(conditional_effects(m), ask = F) #plots predictions
-
-#exponent of vegan::diversity
-#paper/blog by jost
-
-#abundances of whole commnity
-#diversity of complete nematodes
-#abundances of feeding groups
-#mi 
-
-
-#package : tidybayes
-
-#https://ben18785.shinyapps.io/distribution-zoo/
