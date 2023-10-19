@@ -32,7 +32,8 @@ hist(dBEF_nem$cp1_per100g, breaks = seq(min(dBEF_nem$cp1_per100g), max(dBEF_nem$
 sum(dBEF_nem21$cp1_per100g == 0) #116 of 240
 
 ggplot(dBEF_nem21, aes(x = log(sowndiv), y = cp1_per100g))+
-  geom_point()
+  geom_jitter()+
+  geom_smooth(method = "lm")
 
 #m21.11
 m21.cp1.0 <- brm(cp1_per100g ~ sowndiv * treatment, 
