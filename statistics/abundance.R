@@ -1,8 +1,6 @@
 ####loading data and packages ####
 # a workflow: https://m-clark.github.io/posts/2021-02-28-practical-bayes-part-i/
-# rethinking in brms: https://bookdown.org/ajkurz/Statistical_Rethinking_recoded/overfitting-regularization-and-information-criteria.html
-
-
+# rethinking in brms: https://bookdown.org/ajkurz/Statistical_Rethinking_recoded/interactions.html
 library(brms)
 library(dplyr)
 library(tidyr)
