@@ -20,6 +20,13 @@ dBEF_nem$treatment <- as.factor(dBEF_nem$treatment)
 dBEF_nem <- dBEF_nem %>%
   mutate(col.sowndiv = as.factor(sowndiv), .after=sowndiv)
 
+#add log-transformed densities for each trophic guild:
+dBEF_nem <- dBEF_nem %>%
+  mutate(Ba_per100gLog = ifelse(Ba_per100g == 0, 0.001, Ba_per100g), 
+         .after=Ba_per100g) %>%
+  mutate(Ba_per100gLog = log(Ba_per100gLog))
+
+
 #### 0 - all data #### 
 #inspect data
 dBEF_nemSH1 <- subset(dBEF_nem, SH == 1)
@@ -70,6 +77,7 @@ dBEF_nem21 <- subset(dBEF_nem, year==2021)
   dBEF_nem21_t2 <- subset(dBEF_nem21, treatment == 2)
   dBEF_nem21_t3 <- subset(dBEF_nem21, treatment == 1)
   
+  
 #### 2.01 - are 5 trophic group density variables independent from each other? ####  
 corr21 <- dBEF_nem21 %>% 
   select(c(Fu_per100g, Ba_per100g, Pl_per100g, Pr_per100g, Om_per100g))
@@ -87,6 +95,7 @@ rm(corr21)
 
 #how many samples have zero bacterivores:
 sum(dBEF_nem21$Fu_per100g == 0) #4 of 240
+dBEF_nem21_noZero <- subset(dBEF_nem21, Fu_per100g != 0)
 
 #a jitter plot with an OLS regression line
 p.all <- ggplot(dBEF_nem21, aes(x = log(sowndiv), y = Fu_per100g))+
@@ -118,14 +127,8 @@ grid.arrange(p.all, p.t1, p.t2, p.t3)
   # m.Fu.12:  log(density) ~ sowndiv * treatment + (1|block), fam=gaussian , data = all
   # m.Fu.13:  density ~ sowndiv * treatment, fam= hurdle_lognormal, data = 
   
-#log transforming Fu densities, if bigger than zero:  
-dBEF_nem21 <- dBEF_nem21 %>% 
-  mutate(Fu_per100gLog = ifelse(Fu_per100g == 0, 0, log(Fu_per100g) ) , 
-         .after = Fu_per100g)
-  #a df excluding zeros:
-  dBEF_nem21_noZero <- subset(dBEF_nem21, Fu_per100g != 0)
-  #load the existing models:
-  load("./statistics/brms/231019_TrophicGuilds.RData")
+  #the already fit models:
+  load("./statistics/brms/231020_TrophicGuilds.RData")
   
 
 # first, a log transformed model excluding all zero values:
@@ -189,6 +192,36 @@ mcmc_plot(m.Fu.13, type = "pairs",
 #and to compare with Random factors: 
 m.Fu.13b <- update(m.Fu.13, Fu_per100g ~ sowndiv*treatment + (1|block), newdata = dBEF_nem21)
 #pp_check(m.Fu.13b)
+
+#### 2.13 model prediction accuracy comparison using loo ####
+m.Fu.11 <- add_criterion(m.Fu.11, c("loo", "waic"))
+m.Fu.11b <- add_criterion(m.Fu.11b, c("loo", "waic"))
+m.Fu.12 <- add_criterion(m.Fu.12, c("loo", "waic"))
+m.Fu.13 <- add_criterion(m.Fu.13, c("loo", "waic"))
+m.Fu.13b <- add_criterion(m.Fu.13b, c("loo", "waic"))
+
+waic(m.Fu.11)
+waic(m.Fu.11b)
+waic(m.Fu.12)
+waic(m.Fu.13)
+waic(m.Fu.13b)
+
+loo(m.Fu.12)
+
+#all models:
+model_weights(m.Fu.11, m.Fu.11b, m.Fu.12, m.Fu.13, m.Fu.13b,
+              weights = "loo") %>%
+  round(digits = 3)
+
+l <- loo_compare(m.Fu.11, m.Fu.11b, m.Fu.12, m.Fu.13, m.Fu.13b, 
+            criterion = "loo") 
+print(l, simplify = F)
+
+#no zero data:
+model_weights(m.Fu.11, m.Fu.11b,
+              weights = "loo") %>%
+  round(digits = 3)
+
 
 #save models
 
