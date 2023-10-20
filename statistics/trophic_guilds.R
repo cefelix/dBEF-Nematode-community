@@ -22,9 +22,31 @@ dBEF_nem <- dBEF_nem %>%
 
 #add log-transformed densities for each trophic guild:
 dBEF_nem <- dBEF_nem %>%
+  #log transform Ba densities
   mutate(Ba_per100gLog = ifelse(Ba_per100g == 0, 0.001, Ba_per100g), 
          .after=Ba_per100g) %>%
-  mutate(Ba_per100gLog = log(Ba_per100gLog))
+  mutate(Ba_per100gLog = log(Ba_per100gLog)) %>%
+  #log Fu 
+  mutate(Fu_per100gLog = ifelse(Fu_per100g == 0, 0.001, Fu_per100g), 
+         .after=Fu_per100g) %>%
+  mutate(Fu_per100gLog = log(Fu_per100gLog)) %>%
+  #log Pr
+  mutate(Pr_per100gLog = ifelse(Pr_per100g == 0, 0.001, Pr_per100g), 
+         .after=Pr_per100g) %>%
+  mutate(Pr_per100gLog = log(Pr_per100gLog)) %>% 
+  #log Pl
+  mutate(Pl_per100gLog = ifelse(Pl_per100g == 0, 0.001, Pl_per100g), 
+       .after=Pl_per100g) %>%
+  mutate(Pl_per100gLog = log(Pl_per100gLog)) %>% 
+  #log Om
+  mutate(Om_per100gLog = ifelse(Om_per100g == 0, 0.001, Om_per100g), 
+         .after=Pl_per100g) %>%
+  mutate(Om_per100gLog = log(Om_per100gLog))
+  
+  
+
+
+
 
 
 #### 0 - all data #### 
@@ -157,24 +179,94 @@ mcmc_plot(m.Fu.11b, type="pairs",
           diag_fun="dens")
   
 
-# second, a log transformed model with all values: 
-m.Fu.12a <- brm(Fu_per100gLog ~ sowndiv*treatment + (1|block),
+#### 2.12a - log transformed model with all values: ####
+m.Fu.12 <- brm(Fu_per100gLog ~ sowndiv*treatment + (1|block),
                data = dBEF_nem21, family = "gaussian",
                chains = 3,
                cores = 3,
                iter = 2000, warmup = 1000,
                control = list(adapt_delta=0.9))
 summary(m.Fu.12)
+#model diagnostics:  
   plot(m.Fu.12)
-  pp_check(m.Fu.12) #underestimating the amount of zeros
-                    #shifting the peak to the left
-                    #overestimating right tail frequencies
+  pp_check(m.Fu.12) #overpredicting at very low values 
+                    #not accounting for zeros properly
+                    #
   mcmc_plot(m.Fu.12, type="neff") #bigger than 0.1
-  mcmc_plot(m.Fu.12a, type = "pairs",
+  mcmc_plot(m.Fu.12, type = "pairs",
             diag_fun = "dens",
             off_diag_fun = "hex",
             fixed = TRUE)
   mcmc_intervals(m.Fu.12)
+  
+  #model plotting:
+  #new data to create regression curve:
+  #thats only block1
+  nd <- tibble(sowndiv = seq(from = 1, 
+                             to = 60, 
+                             length.out = 30) %>% rep(., times = 3),
+               treatment = rep(1:3, each = 30),
+               block = rep("B1", 90))
+  #fitted values
+  f <-
+    fitted(m.Fu.12, newdata = nd) %>%
+    as_tibble() %>%
+    bind_cols(nd) %>%
+    mutate(treatment = as.factor(treatment)) # treatment has to a factor to be plotted
+  
+  #plotting fitted stuff
+  ggplot(dBEF_nem21, aes(x=log(sowndiv)))+
+    geom_jitter(aes(y = Fu_per100g, color = treatment), width = 0.125, alpha=0.5)+
+    geom_smooth(data = f,
+                aes(y = exp(Estimate),  #exp estimate to not plot logged data
+                    color = treatment),
+                stat = "identity")+
+    scale_x_continuous()+
+    ylab("Fungivores per 100g DW")+
+    theme_classic()
+  
+
+#### 2.12b - log transformed model with all values, but without RE block: #### 
+#plotting it without block:
+  m.Fu.12b <- brm(Fu_per100gLog ~ sowndiv*treatment,
+                 data = dBEF_nem21, family = "gaussian",
+                 chains = 3,
+                 cores = 3,
+                 iter = 2000, warmup = 1000,
+                 control = list(adapt_delta=0.9))
+  summary(m.Fu.12b)
+  pp_check(m.Fu.12b)
+  
+#model plotting:
+  #new data to create regression curve:
+  nd <- tibble(sowndiv = seq(from = 1, 
+                             to = 60, 
+                             length.out = 30) %>% rep(., times = 3),
+               treatment = rep(1:3, each = 30),
+               )
+  #fitted values
+  f <-
+    fitted(m.Fu.12b, newdata = nd) %>%
+    as_tibble() %>%
+    bind_cols(nd) %>%
+    mutate(treatment = as.factor(treatment)) # treatment has to a factor to be plotted
+  
+  #plotting fitted stuff
+  ggplot(dBEF_nem21, aes(x=log(sowndiv)))+
+    geom_jitter(aes(y = Fu_per100g, color = treatment), width = 0.125, alpha = 0.6)+
+    geom_smooth(data = f,
+                aes(y = exp(Estimate),  #exp estimate to not plot logged data
+                    color = treatment),
+                stat = "identity")+
+    scale_x_continuous()+
+    ylab("Fungivores per 100g DW")+
+    theme_classic()
+  
+ 
+  f$sowndiv <- f$sowndiv %>% as.numeric()
+  f$treatment %>% str()
+  
+  
   
 #third, a log transformed hurdle model (without random factor)
 m.Fu.13 <- brm(Fu_per100g ~ sowndiv*treatment,
@@ -196,7 +288,7 @@ m.Fu.13b <- update(m.Fu.13, Fu_per100g ~ sowndiv*treatment + (1|block), newdata 
 #### 2.13 model prediction accuracy comparison using loo ####
 m.Fu.11 <- add_criterion(m.Fu.11, c("loo", "waic"))
 m.Fu.11b <- add_criterion(m.Fu.11b, c("loo", "waic"))
-m.Fu.12 <- add_criterion(m.Fu.12, c("loo", "waic"))
+m.Fu.12a <- add_criterion(m.Fu.12a, c("loo", "waic"), moment_match = TRUE)
 m.Fu.13 <- add_criterion(m.Fu.13, c("loo", "waic"))
 m.Fu.13b <- add_criterion(m.Fu.13b, c("loo", "waic"))
 
@@ -206,7 +298,9 @@ waic(m.Fu.12)
 waic(m.Fu.13)
 waic(m.Fu.13b)
 
-loo(m.Fu.12)
+loo(m.Fu.11)
+loo(m.Fu.11b)
+loo(m.Fu.12a)
 
 #all models:
 model_weights(m.Fu.11, m.Fu.11b, m.Fu.12, m.Fu.13, m.Fu.13b,
