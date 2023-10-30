@@ -21,19 +21,24 @@ nemaplex <- read.csv("wrangling/nemaplex.csv", row.names = 1)
 
 ####for bootstrap re-sampling: adding raw counts and soil dry weigths ####
 abun_amyntas <- read.csv("./wrangling/abundances2021.csv", row.names = 1)  %>% 
-  select(c(Sample, total_nematodes, soil..gdw.))
+  select(c(Sample, total_nematodes, soil..gdw., soil.water.gravimetric))
 
 amyntas2021 <- amyntas2021 %>%
   mutate(total_nematodes = abun_amyntas$total_nematodes[match(.$Sample, abun_amyntas$Sample)],
-         soilDW = abun_amyntas$soil..gdw.[match(.$Sample, abun_amyntas$Sample)],  
+         soilDW = abun_amyntas$soil..gdw.[match(.$Sample, abun_amyntas$Sample)],
+         SWC_gravimetric = abun_amyntas$soil.water.gravimetric[match(.$Sample, 
+                                                                     abun_amyntas$Sample)],
          .after = year)
 
 abun_vogel <- read.csv("./wrangling/abundances2017.csv", row.names = 1) %>%
-  select(c(Sample, total_nematodes, soil..gdw.))
+  select(c(Sample, total_nematodes, soil..gdw., soil.water.gravimetric))
+  #soil water gravimetric is yet to add into the abundances2017.csv file!
 
 vogel2017 <- vogel2017 %>%
   mutate(total_nematodes = abun_vogel$total_nematodes[match(.$Sample, abun_vogel$Sample)],
          soilDW = abun_vogel$soil..gdw.[match(.$Sample, abun_vogel$Sample)],
+         SWC_gravimetric = abun_vogel$soil.water.gravimetric[match(.$Sample, 
+                                                                     abun_vogel$Sample)],
            .after = year)
 
 
@@ -382,8 +387,8 @@ dBEF_nem <- dBEF_nem %>%
   taxa <- c(grep("Acrobeles", colnames(dBEF_nem)):ncol(dBEF_nem))  
   colSums(dBEF_nem[taxa]) #Rhabdolaimus, due to removal of wrongly labelled sample
   
-  colSums(amyntas2021[9:89])
-  colSums(vogel2017[9:89])
+  colSums(amyntas2021[10:90])
+  colSums(vogel2017[10:90])
   
 ####save the whole file as .csv####
 write.csv(dBEF_nem, "./dBEF_nem.csv")
