@@ -60,9 +60,20 @@ abun = read_sheet("https://docs.google.com/spreadsheets/d/1YMQmyhLYfr86CcmwpLwRk
                   sheet = "abundance")
 soil = read_sheet("https://docs.google.com/spreadsheets/d/1YMQmyhLYfr86CcmwpLwRkLQPxwy4Yk2oyrPKXO8Cf0w/edit#gid=0",
                   sheet = "soil weight")
+  
 # B1A06D1 has init.weight 52.53!, likely a typo reversing 2&5
 soil[16,"init.weight"] = 25.53
 soil[16,"water.content"] = soil[16,"init.weight"] - soil[16,"net.weight"]
+
+#check wether net.weight + water.content = init.weight
+(soil$net.weight + soil$water.content - soil$init.weight) %>%
+  max() #it is
+#thus: water.content = init.weigth - net.weight
+
+#calculate gravimetric soil water content as 
+#("mass of moist soil" − "mass of oven-dried soil")/"mass of oven-dried soil" * 100:
+soil <- soil %>%
+  mutate(soil.water.gravimetric = water.content / net.weight * 100)
 
 # create sample codes to match the ones in comp data
 abun = abun %>% add_column(Sample = str_c(abun$Plot, gsub("Treatment", "D", abun$Subplot)),
@@ -123,6 +134,8 @@ data.4 = data.3 %>% mutate(across(where(is.numeric), # for all numeric columns
 #load main plot info:
 bexis.options(base_url = "https://jexis.uni-jena.de")
 main.plot = bexis.get.dataset_by(id = 90)
+main.plot <- read.csv2("./Main plot information.csv")
+
 
 
 amyntas2021d <- data.4 %>%
