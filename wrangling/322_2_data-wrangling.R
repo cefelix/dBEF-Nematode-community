@@ -90,6 +90,14 @@ DW_vog$`soil (gdw)` <- as.numeric(DW_vog$`soil (gdw)`)
 DW_vog$nem_gDW <- as.numeric(DW_vog$nem_gDW)
 DW_vog$nem_100gDW <- DW_vog$total_nematodes / (DW_vog$`soil (gdw)`/100)
 
+#add gravimetric soil water content (WARNING: as we lack the original measuring sheet, 
+  #we assume that each sample consisted of 25g fresh soil initially!)
+#Thus: ("mass of moist soil" − "mass of oven-dried soil")/"mass of oven-dried soil" * 100:
+DW_vog <- DW_vog %>%
+  mutate(soil.water.gravimetric = (25 - DW_vog$`soil (gdw)`)/DW_vog$`soil (gdw)` *100, 
+         .before = total_nematodes)
+
+
 #check the differences between my calculated densities and Vogel's provided ones:
 str(DW_vog)
 DW_vog %>%
