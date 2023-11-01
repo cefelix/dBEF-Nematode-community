@@ -42,6 +42,8 @@ dBEF_nem <- dBEF_nem %>%
   mutate(Om_per100gLog = ifelse(Om_per100g == 0, 0.001, Om_per100g), 
          .after=Pl_per100g) %>%
   mutate(Om_per100gLog = log(Om_per100gLog))
+
+
   
   
 
@@ -84,6 +86,92 @@ p.19 <- ggplot(dBEF_nemSH19, aes(y = Fu_per100g, x=log(sowndiv)) )+
   geom_smooth(method="lm")
 
 grid.arrange(p.1, p.5, p.15, p.19)
+
+#### 0.11 - all data, log(Fu) modelling####
+hist(dBEF_nem$Fu_per100gLog)
+m.0.Fu11 <- brm(Fu_per100gLog ~ sowndiv*treatment + year + (1|block),
+                     data = dBEF_nem, family = "gaussian",
+                     chains = 3,
+                     cores = 3,
+                     iter = 2000, warmup = 1000,
+                     control = list(adapt_delta=0.99)) 
+pp_check(m.0.Fu11, ndraws=100)
+
+#lets make a yearblock variable:
+dBEF_nem <- dBEF_nem %>%
+  mutate(yearblock = as.factor(paste(dBEF_nem$year, dBEF_nem$block, sep="")),
+         .after = block)
+
+m.0.Fu12 <- brm(Fu_per100gLog ~ sowndiv*SH + (1|yearblock),
+                data = dBEF_nem, family = "gaussian",
+                chains = 3,
+                cores = 3,
+                iter = 2000, warmup = 1000,
+                control = list(adapt_delta=0.99)) 
+pp_check(m.0.Fu12, ndraws=100)
+
+m.0.Fu13 <- brm(Fu_per100gLog ~ sowndiv*SH*PH + (1|yearblock),
+                data = dBEF_nem, family = "gaussian",
+                chains = 3,
+                cores = 3,
+                iter = 2000, warmup = 1000,
+                control = list(adapt_delta=0.99)) 
+pp_check(m.0.Fu13, ndraws=100) # 1396 transitions that exceeded max_treedepth
+
+m.0.Fu14 <- update(m.0.Fu13,
+                   control=list(max_treedepth = 12))
+pp_check(m.0.Fu14, ndraw=100)
+
+m.0.Fu15 <- brm(Fu_per100gLog ~ sowndiv*SH*PH + SWC_gravimetric + (1|yearblock),
+                   data = dBEF_nem, family = "gaussian",
+                   chains = 3,
+                   cores = 3,
+                   iter = 2000, warmup = 1000,
+                   control = list(adapt_delta=0.99)) 
+pp_check(m.0.Fu15, ndraws=100) #1691 transitions exceeding max_treedepth
+
+m.0.Fu16 <- update(m.0.Fu15,
+                   control=list(max_treedepth=100))
+pp_check(m.0.Fu16, ndraw=100)
+
+
+#save the models above:
+save(m.0.Fu11,
+     m.0.Fu12,
+     m.0.Fu13,
+     m.0.Fu14,
+     m.0.Fu15,
+     m.0.Fu16,
+     file = "./statistics/brms/231101_Fu_allData.RData")
+
+
+#### 0.21 - all data, standardized Fu modelling ####
+
+Fu_scaled <- scale(dBEF_nem$Fu_per100g)[,1]
+dBEF_nem <- dBEF_nem %>%
+  mutate(Fu_per100gStd = Fu_scaled, 
+         .after =  Fu_per100g)
+
+a <- dBEF_nem$Fu_per100g %>%
+  scale() 
+a[,1] %>% str()
+
+dBEF_nem %>%
+  pull(Fu_per100gStd) %>%
+  density() %>%
+  plot()
+
+#%>%
+  unlist %>%
+  as.numeric() %>%
+
+dBEF_nem$Fu_per100g
+
+
+
+
+
+
 
 
 ####1 - 2017's data####
@@ -240,6 +328,30 @@ summary(m.Fu.12)
     ylab("Fungivores per 100g DW")+
     theme_classic()
   
+  
+#### 2.12a2 - Fu_per100gLog ~ sowndiv*treatment + SWC_gravimetric ####  
+  m.Fu.12a2 <- brm(Fu_per100gLog ~ sowndiv*treatment + SWC_gravimetric,
+                 data = dBEF_nem21, family = "gaussian",
+                 chains = 3,
+                 cores = 3,
+                 iter = 2000, warmup = 1000,
+                 control = list(adapt_delta=0.9))  
+  pp_check(m.Fu.12a2, ndraws=100) #include block:
+  m.Fu.12a4 <- update(m.Fu.12a3,
+                      control = list(adapt_delta = 0.99))
+  
+#### 2.12a5 Fu_per100gLog ~ SWC_gravimetric ####  
+  m.Fu.12a6 <- brm(Fu_per100gLog ~ SWC_gravimetric + (1|block),
+                   data = dBEF_nem21, family = "gaussian",
+                   chains = 3,
+                   cores = 3,
+                   iter = 2000, warmup = 1000,
+                   control = list(adapt_delta=0.9))
+  m.Fu.12a7 <- update(m.Fu.12a6, 
+                      control = list(adapt_delta=0.99))
+  
+  pp_check(m.Fu.12a7, ndraws=100)
+  
 #### 2.12b - Fu_per100gLog ~ sowndiv*treatment + (Fu_per100gLog|block): ####
   m.Fu.12b1 <- brm(Fu_per100gLog ~ sowndiv*treatment + (Fu_per100gLog|block),
                  data = dBEF_nem21, family = "gaussian",
@@ -288,7 +400,7 @@ summary(m.Fu.12)
                  control = list(adapt_delta=0.9))
   
   summary(m.Fu.12c)
-  pp_check(m.Fu.12c) 
+  pp_check(m.Fu.12c, ndraws=100) 
   #not accounting for block makes the 
   #model concentrate probability mass in the tails tails
   
@@ -375,9 +487,11 @@ model_weights(m.Fu.11, m.Fu.11b,
 #save models
 
 save(m.Fu.11, m.Fu.11b,
-     m.Fu.12, m.Fu.12b, m.Fu.12c, m.Fu.12b., m.Fu.12b1, m.Fu.12b2,
+     m.Fu.12, 
+     m.Fu.12a2, m.Fu.12a3, m.Fu.12a4, m.Fu.12a5, m.Fu.12a6, m.Fu.12a7,
+     m.Fu.12b, m.Fu.12c, m.Fu.12b., m.Fu.12b1, m.Fu.12b2,
      m.Fu.13, m.Fu.13b,
-     file = "./statistics/brms/231031_TrophicGuilds.RData")
+     file = "./statistics/brms/231101_TrophicGuilds.RData")
 
 ####2.21 - Bacterivores 
 
