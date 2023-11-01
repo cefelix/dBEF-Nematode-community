@@ -88,6 +88,9 @@ p.19 <- ggplot(dBEF_nemSH19, aes(y = Fu_per100g, x=log(sowndiv)) )+
 grid.arrange(p.1, p.5, p.15, p.19)
 
 #### 0.11 - all data, log(Fu) modelling####
+  #load the fit models:
+  load("./statistics/brms/231101_Fu_allData.RData")
+
 hist(dBEF_nem$Fu_per100gLog)
 m.0.Fu11 <- brm(Fu_per100gLog ~ sowndiv*treatment + year + (1|block),
                      data = dBEF_nem, family = "gaussian",
@@ -493,5 +496,19 @@ save(m.Fu.11, m.Fu.11b,
      m.Fu.13, m.Fu.13b,
      file = "./statistics/brms/231101_TrophicGuilds.RData")
 
-####2.21 - Bacterivores 
+####2.21 - Bacterivores ####
+  #explore:
+  hist(dBEF_nem$Ba_per100gLog)
+
+#### Ba_per100gLog ~ sowndiv*treatment + (1|block) ####
+m.Ba.21 <- brm(Ba_per100gLog ~ sowndiv*treatment + (1|block),
+                data = dBEF_nem21, family = "gaussian",
+                chains = 3,
+                cores = 3,
+                iter = 2000, warmup = 1000,
+                control = list(adapt_delta=0.9))
+pp_check(m.Ba.21, ndraws=21) #9 divergent transitions, ESS too low
+m.Ba.21b <- update(m.Ba.21, 
+                   control = list(adapt_delta=0.99))
+pp_check(m.Ba.21b, ndraws=100) #bad fit, lets standardize
 
