@@ -512,3 +512,78 @@ m.Ba.21b <- update(m.Ba.21,
                    control = list(adapt_delta=0.99))
 pp_check(m.Ba.21b, ndraws=100) #bad fit, lets standardize
 
+
+#### 2.3 - Herbivores ####
+#### 2.31 - Pl_per100gLog ~ sowndiv*treatment + (1|block) ####
+m.Pl.31 <- brm(Pl_per100gLog ~ sowndiv*treatment + (1|block),
+                  data = dBEF_nem21, family = "gaussian",
+                  chains = 3,
+                  cores = 3,
+                  iter = 2000, warmup = 1000,
+                  control = list(adapt_delta=0.9))
+pp_check(m.Pl.31, ndraws = 100)
+
+
+pr_uniform = prior(uniform(-100, 100), lb=-100, ub=100, class = "b")
+m.Pl.31.unifPrior <- brm(Pl_per100gLog ~ sowndiv*treatment + (1|block),
+                        data = dBEF_nem21, 
+                        iter = 1000,
+                        sample_prior = "only",
+                        prior=pr_uniform)
+pp_check(m.Pl.31.unifPrior, ndraws = 100)+
+  xlim(-10, 20)
+
+pr_gaussian = prior(normal(0, 5), class="b")
+m.Pl.31.unifPrior <- brm(Pl_per100gLog ~ sowndiv*treatment + (1|block),
+                         data = dBEF_nem21, 
+                         iter = 1000,
+                         sample_prior = "only",
+                         prior=pr_gaussian)
+pp_check(m.Pl.31.unifPrior, ndraws = 100)+
+  xlim(-10, 20)
+
+
+#lets set the default priors manually:
+get_prior(Pl_per100gLog ~ sowndiv*treatment + (1|block),
+          data = dBEF_nem21, family = "gaussian")
+          #student_t(3, 0, 2.5) means a student t distribution with:
+          #3 degrees of freedom, center of 0, range of -2.5 to +2.5
+priors <- c(
+  prior(uniform(-100, 100), class="b"),
+  prior("student_t(3, 0, 2.5)", class = "sd"),
+  prior("student_t(3, 0, 2.5)", class = "sigma"),
+  prior("student_t(3, 5.6, 2.5)", class = "intercept")
+) 
+
+curve(dnorm(x, 0, 1), from = -5, to=5)
+curve(dt(x, df=3), from=-5, to=5, col="red", add = TRUE)
+curve(dt(x, df=10), from=-5, to=5, col="green", add = TRUE)
+curve(dnorm(x, 0, 0.5), from = -5, to=5, col="pink", add=TRUE)
+
+#lets check 
+prior
+
+priors <- 
+
+#check out priors:
+library(pubh)
+rnorm(1e4, mean=0, sd=4) %>% density() %>% plot()
+rnorm(1e4, mean=0, sd=4) %>% inv_logit() %>% density() %>% plot()
+
+
+#### 2.32 - Pl_per100g ~ sowndiv * treatment + (1|block), fam=lognormal ####
+#add small constant to zeros:
+dBEF_nem21 <- dBEF_nem21 %>% 
+  mutate(Pl_per100g  = ifelse(Pl_per100g == 0, 0.01, Pl_per100g ))
+
+m.Pl.32 <- brm(Pl_per100g ~ sowndiv*treatment + (1|block),
+               data = dBEF_nem21, family = "lognormal",
+               chains = 3,
+               cores = 3,
+               iter = 2000, warmup = 1000,
+               control = list(adapt_delta=0.9)) #2 divergent transitions -->
+#increase delta:
+m.Pl.33 <- update(m.Pl.32,
+                  control = list(adapt_delta=0.99))
+pp_check(m.Pl.33, ndraw=100)
+
