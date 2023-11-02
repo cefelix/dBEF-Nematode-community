@@ -315,6 +315,46 @@ load("./statistics/brms/231017_abun.RData")
   save(m21.10, m21.11,m21.12, 
        m21.21, m21.22, m21.23,
        file = "./statistics/brms/231017_abun.RData")
+  
+  
+####5 modelling only counts####
+  dBEF_nem$total_nematodes %>% density() %>% plot()
+m.counts.11 <- brm(total_nematodes ~ sowndiv*treatment + (1|block), 
+                   data = dBEF_nem21, family = "poisson",
+                   chains = 3,
+                   cores = 3,
+                   iter = 2000, warmup = 1000 )
 
+m.counts.13 <- update(m.counts.11,
+                      control = list(adapt_delta = 0.95,
+                                     max_treedepth=12))
+pp_check(m.counts.11)
+pp_check(m.counts.13, ndraws=100) #bimodal, not fitting at all
+#same for 17 data
+m.counts.11a <- brm(total_nematodes ~ sowndiv*treatment + (1|block), 
+                   data = dBEF_nem17, family = "poisson",
+                   chains = 3,
+                   cores = 3,
+                   iter = 3000, warmup = 1500,
+                   control = list(adapt_delta = 0.9))
+####somewhat working model with count data ####
+m.counts.11c <- update(m.counts.11b, 
+                       iter=4000, warmup=1500,
+                       control = list(adapt_delta = 0.99,
+                                      max_treedepth = 15))
+pp_check(m.counts.11c) #3 divergent transitions 
+  #underpredicting low counts, too high probability mass in the centre
 
+m.counts.11d <- update(m.counts.11c,
+                       control = list(adapt_delta=0.995))
+pairs(m.counts.11d) %>% plot()
 
+save(m.counts.11,
+     m.counts.11a, m.counts.11b, m.counts.11c, m.counts.11d,
+     m.counts.12, 
+     m.counts.13,
+     file = "./statistics/brms/231102_TotAbun_counts.RData")
+#exclude 
+
+dBEF_nem21$total_nematodes %>% density() %>% plot()
+dBEF_nem21$ind_per100g %>% density() %>% plot()
