@@ -14,42 +14,6 @@ library(hexbin)
 library(GGally)
 
 dBEF_nem <- read.csv("./dBEF_nem.csv", row.names = 1)
-dBEF_nem %>%
-  str()
-dBEF_nem$treatment <- as.factor(dBEF_nem$treatment)
-dBEF_nem <- dBEF_nem %>%
-  mutate(col.sowndiv = as.factor(sowndiv), .after=sowndiv)
-
-#add log-transformed densities for each trophic guild:
-dBEF_nem <- dBEF_nem %>%
-  #log transform Ba densities
-  mutate(Ba_per100gLog = ifelse(Ba_per100g == 0, 0.001, Ba_per100g), 
-         .after=Ba_per100g) %>%
-  mutate(Ba_per100gLog = log(Ba_per100gLog)) %>%
-  #log Fu 
-  mutate(Fu_per100gLog = ifelse(Fu_per100g == 0, 0.001, Fu_per100g), 
-         .after=Fu_per100g) %>%
-  mutate(Fu_per100gLog = log(Fu_per100gLog)) %>%
-  #log Pr
-  mutate(Pr_per100gLog = ifelse(Pr_per100g == 0, 0.001, Pr_per100g), 
-         .after=Pr_per100g) %>%
-  mutate(Pr_per100gLog = log(Pr_per100gLog)) %>% 
-  #log Pl
-  mutate(Pl_per100gLog = ifelse(Pl_per100g == 0, 0.001, Pl_per100g), 
-       .after=Pl_per100g) %>%
-  mutate(Pl_per100gLog = log(Pl_per100gLog)) %>% 
-  #log Om
-  mutate(Om_per100gLog = ifelse(Om_per100g == 0, 0.001, Om_per100g), 
-         .after=Pl_per100g) %>%
-  mutate(Om_per100gLog = log(Om_per100gLog))
-
-
-  
-  
-
-
-
-
 
 #### 0 - all data #### 
 #inspect data
@@ -57,9 +21,6 @@ dBEF_nemSH1 <- subset(dBEF_nem, SH == 1)
 dBEF_nemSH5 <- subset(dBEF_nem, SH == 5)
 dBEF_nemSH15 <- subset(dBEF_nem, SH == 15)
 dBEF_nemSH19 <- subset(dBEF_nem, SH == 19)
-
-
-
 
 p.1 <- ggplot(dBEF_nemSH1, aes(y = Fu_per100g, x=log(sowndiv)) )+
   geom_jitter(aes(col=col.sowndiv))+
@@ -147,36 +108,6 @@ save(m.0.Fu11,
      m.0.Fu16,
      file = "./statistics/brms/231101_Fu_allData.RData")
 
-
-#### 0.21 - all data, standardized Fu modelling ####
-
-Fu_scaled <- scale(dBEF_nem$Fu_per100g)[,1]
-dBEF_nem <- dBEF_nem %>%
-  mutate(Fu_per100gStd = Fu_scaled, 
-         .after =  Fu_per100g)
-
-a <- dBEF_nem$Fu_per100g %>%
-  scale() 
-a[,1] %>% str()
-
-dBEF_nem %>%
-  pull(Fu_per100gStd) %>%
-  density() %>%
-  plot()
-
-#%>%
-  unlist %>%
-  as.numeric() %>%
-
-dBEF_nem$Fu_per100g
-
-
-
-
-
-
-
-
 ####1 - 2017's data####
 dBEF_nem17 <- subset(dBEF_nem, year==2017)
 
@@ -200,9 +131,6 @@ rm(corr21)
   
 #### 2.11 - Fungivores exploration ####   
   #examine the data 
-  hist(dBEF_nem21$Fu_per100g, breaks = seq(min(dBEF_nem21$Fu_per100g), 
-                                           max(dBEF_nem21$Fu_per100g), 
-                                           length.out=30))
   ggplot(dBEF_nem21, aes(x=Fu_per100g))+
     geom_density()
 
