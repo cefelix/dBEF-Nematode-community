@@ -90,3 +90,19 @@ dBEF_nem$Ba_per100gStd %>% hist(breaks=30)
 pairs(~Ba_per100g +  Fu_per100g + Pl_per100g + Om_per100g + Pr_per100g, data=dBEF_nem)
 
 
+#### 1e-3 constant addition to zeros: ####
+
+dBEF_nem <- dBEF_nem %>%
+  mutate(Ba_per100gZeroC = ifelse(Ba_per100g == 0, 0.001, Ba_per100g), 
+         .after=Ba_per100g) %>% 
+  mutate(Fu_per100gZeroC = ifelse(Fu_per100g == 0, 0.001, Fu_per100g), 
+         .after=Fu_per100g) %>%
+  mutate(Pr_per100gZeroC = ifelse(Pr_per100g == 0, 0.001, Pr_per100g), 
+         .after=Pr_per100g) %>%
+  mutate(Pl_per100gZeroC = ifelse(Pl_per100g == 0, 0.001, Pl_per100g), 
+         .after=Pl_per100g) %>%
+  mutate(Om_per100gZeroC = ifelse(Om_per100g == 0, 0.001, Om_per100g), 
+         .after=Om_per100g) 
+
+
+
