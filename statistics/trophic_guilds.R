@@ -122,7 +122,7 @@ dBEF_nem21 <- subset(dBEF_nem, year==2021)
   dBEF_nem21_t3 <- subset(dBEF_nem21, treatment == 1)
   
   
-#### 2.01 - are 5 trophic group density variables independent from each other? ####  
+#### 2.01 - are trophic guild density variables independent from each other? ####  
 corr21 <- dBEF_nem21 %>% 
   select(c(Fu_per100g, Ba_per100g, Pl_per100g, Pr_per100g, Om_per100g))
 ggpairs(corr21) #Fu and Ba seem to be correlated
@@ -136,7 +136,6 @@ rm(corr21)
 
 #how many samples have zero bacterivores:
 sum(dBEF_nem21$Fu_per100g == 0) #4 of 240
-dBEF_nem21_noZero <- subset(dBEF_nem21, Fu_per100g != 0)
 
 #a jitter plot with an OLS regression line
 p.all <- ggplot(dBEF_nem21, aes(x = log(sowndiv), y = Fu_per100g))+
@@ -162,7 +161,7 @@ grid.arrange(p.all, p.t1, p.t2, p.t3)
   rm(dBEF_nem21_t1, dBEF_nem21_t2, dBEF_nem21_t3,
      p.all, p.t1, p.t2, p.t3)
   
-#### 2.11b - Fungivores random factors #### 
+#exploration of random factors
   #soil dry weight:
   ggplot(dBEF_nem21, aes(x=soilDW, y = Fu_per100g, col = block))+
     geom_point()
@@ -184,33 +183,8 @@ grid.arrange(p.all, p.t1, p.t2, p.t3)
   # m.Fu.13:  density ~ sowndiv * treatment, fam= hurdle_lognormal, data = 
   
   #the already fit models:
-  load("./statistics/brms/231019_TrophicGuilds.RData")
+  load("./statistics/brms/231101_TrophicGuilds.RData")
   
-
-# first, a log transformed model excluding all zero values:
-m.Fu.11 <- brm(Fu_per100g ~ sowndiv*treatment + (1|block),
-               data = dBEF_nem21_noZero, family = "lognormal",
-               chains = 3,
-               cores = 3,
-               iter = 2000, warmup = 1000,
-               control = list(adapt_delta=0.99))
-summary(m.Fu.11)
-  pp_check(m.Fu.11, draws=100)      #model underpredicts
-  mcmc_plot(m.Fu.11, type="combo")  #
-  mcmc_plot(m.Fu.11, type="violin")
-  
-  mcmc_plot(m.Fu.11, type="neff") #at least >10% of posterior samples, better >50%
-  mcmc_plot(m.Fu.11, type="trace") #should bounce around a value randomly
-  
-#and the same, but using Log-transformed fu density and family = gaussian  
-m.Fu.11b <- update(m.Fu.11, newdata = dBEF_nem21_noZero,
-                   Fu_per100gLog ~ sowndiv*treatment + (1|block),
-                   family="gaussian")
-summary(m.Fu.11b)
-pp_check(m.Fu.11b) #model underestimates, except for very high / very low values
-mcmc_plot(m.Fu.11b, type="pairs",
-          off_diag_fun="hex",
-          diag_fun="dens")
   
 
 #### 2.12a - Fu_per100gLog ~ sowndiv*treatment + (1|block): ####
@@ -220,27 +194,18 @@ m.Fu.12 <- brm(Fu_per100gLog ~ sowndiv*treatment + (1|block),
                cores = 3,
                iter = 2000, warmup = 1000,
                control = list(adapt_delta=0.9))
-summary(m.Fu.12)
-#model diagnostics:  
-  plot(m.Fu.12)
-  pp_check(m.Fu.12, ndraws=100) #overpredicting at very low values 
-                    #not accounting for zeros properly
-                    #
-  mcmc_plot(m.Fu.12, type="neff") #bigger than 0.1
-  mcmc_plot(m.Fu.12, type = "pairs",
-            diag_fun = "dens",
-            off_diag_fun = "hex",
-            fixed = TRUE)
-  mcmc_intervals(m.Fu.12)
   
-  #model plotting:
+pp_check(m.Fu.12, ndraws=100) #overpredicting at low values 
+                    #not accounting for zeros properly
+  
+#model plotting:
   #new data to create regression curve:
   #thats only block1
   nd <- tibble(sowndiv = seq(from = 1, 
                              to = 60, 
                              length.out = 30) %>% rep(., times = 3),
                treatment = rep(1:3, each = 30),
-               block = rep("B1", 90))
+               block = rep("B4", 90))
   #fitted values
   f <-
     fitted(m.Fu.12, newdata = nd) %>%
@@ -260,28 +225,7 @@ summary(m.Fu.12)
     theme_classic()
   
   
-#### 2.12a2 - Fu_per100gLog ~ sowndiv*treatment + SWC_gravimetric ####  
-  m.Fu.12a2 <- brm(Fu_per100gLog ~ sowndiv*treatment + SWC_gravimetric,
-                 data = dBEF_nem21, family = "gaussian",
-                 chains = 3,
-                 cores = 3,
-                 iter = 2000, warmup = 1000,
-                 control = list(adapt_delta=0.9))  
-  pp_check(m.Fu.12a2, ndraws=100) #include block:
-  m.Fu.12a4 <- update(m.Fu.12a3,
-                      control = list(adapt_delta = 0.99))
-  
-#### 2.12a5 Fu_per100gLog ~ SWC_gravimetric ####  
-  m.Fu.12a6 <- brm(Fu_per100gLog ~ SWC_gravimetric + (1|block),
-                   data = dBEF_nem21, family = "gaussian",
-                   chains = 3,
-                   cores = 3,
-                   iter = 2000, warmup = 1000,
-                   control = list(adapt_delta=0.9))
-  m.Fu.12a7 <- update(m.Fu.12a6, 
-                      control = list(adapt_delta=0.99))
-  
-  pp_check(m.Fu.12a7, ndraws=100)
+
   
 #### 2.12b - Fu_per100gLog ~ sowndiv*treatment + (Fu_per100gLog|block): ####
   m.Fu.12b1 <- brm(Fu_per100gLog ~ sowndiv*treatment + (Fu_per100gLog|block),
@@ -292,8 +236,8 @@ summary(m.Fu.12)
                  control = list(adapt_delta=0.99))  
   m.Fu.12b2 <- update(m.Fu.12b1, control=list(max_treedepth=12))
   #too little data?
-  pp_check(m.Fu.12b1, ndraws=100)
-  summary(m.Fu.12b1)
+  pp_check(m.Fu.12b2, ndraws=100)
+  summary(m.Fu.12b2)
 
 #### 2.12b - Fu_per100gLog ~ sowndiv*treatment+SWC+(1|block) ####
   m.Fu.12b <- brm(Fu_per100gLog ~ sowndiv * treatment + SWC_gravimetric + (1|block),
@@ -306,35 +250,12 @@ summary(m.Fu.12)
   m.Fu.12b. <- update(m.Fu.12b, control = list(adapt_delta = 0.99))
   
   summary(m.Fu.12b.)
-  pp_check(m.Fu.12b.) #thats a bad fit, lets remove block:
-  
-  m.Fu.12b2 <- brm(Fu_per100gLog ~ sowndiv * treatment + SWC_gravimetric,
-                  data = dBEF_nem21, family = "gaussian",
-                  chains = 3,
-                  cores = 3,
-                  iter = 2000, warmup = 1000,
-                  control = list(adapt_delta=0.9))
-  summary(m.Fu.12b2)
-  pp_check(m.Fu.12b2)
-  
+  pp_check(m.Fu.12b., ndraws=100) #thats a bad fit, lets remove block:
   
   
   
 
-#### 2.12c - log transformed model with all values, but without RE block: #### 
-#plotting it without block:
-  m.Fu.12c <- brm(Fu_per100gLog ~ sowndiv*treatment,
-                 data = dBEF_nem21, family = "gaussian",
-                 chains = 3,
-                 cores = 3,
-                 iter = 2000, warmup = 1000,
-                 control = list(adapt_delta=0.9))
-  
-  summary(m.Fu.12c)
-  pp_check(m.Fu.12c, ndraws=100) 
-  #not accounting for block makes the 
-  #model concentrate probability mass in the tails tails
-  
+
 #model plotting:
   #new data to create regression curve:
   nd <- tibble(sowndiv = seq(from = 1, 
@@ -415,14 +336,7 @@ model_weights(m.Fu.11, m.Fu.11b,
   round(digits = 3)
 
 
-#save models
 
-save(m.Fu.11, m.Fu.11b,
-     m.Fu.12, 
-     m.Fu.12a2, m.Fu.12a3, m.Fu.12a4, m.Fu.12a5, m.Fu.12a6, m.Fu.12a7,
-     m.Fu.12b, m.Fu.12c, m.Fu.12b., m.Fu.12b1, m.Fu.12b2,
-     m.Fu.13, m.Fu.13b,
-     file = "./statistics/brms/231101_TrophicGuilds.RData")
 
 ####2.21 - Bacterivores ####
   #explore:
@@ -514,4 +428,62 @@ m.Pl.32 <- brm(Pl_per100g ~ sowndiv*treatment + (1|block),
 m.Pl.33 <- update(m.Pl.32,
                   control = list(adapt_delta=0.99))
 pp_check(m.Pl.33, ndraw=100)
+
+
+
+
+
+####outdated####
+#excluding zeros:
+dBEF_nem21_noZero <- subset(dBEF_nem21, Fu_per100g > 0)
+# a log transformed model excluding all zero values:
+m.Fu.11 <- brm(Fu_per100g ~ sowndiv*treatment + (1|block),
+               data = dBEF_nem21_noZero, family = "lognormal",
+               chains = 3,
+               cores = 3,
+               iter = 2000, warmup = 1000,
+               control = list(adapt_delta=0.99))
+summary(m.Fu.11)
+pp_check(m.Fu.11, ndraws=100)+
+  xlim(0, 3000) #model assigns higher probability to right tail
+pp_check(m.Fu.11, ndraws=100)+
+  xlim(0, 1000) #and much higher probability at the peak
+
+#and the same, but using Log-transformed fu density and family = gaussian  
+m.Fu.11b <- update(m.Fu.11, newdata = dBEF_nem21_noZero,
+                   Fu_per100gLog ~ sowndiv*treatment + (1|block),
+                   family="gaussian")
+summary(m.Fu.11b)
+pp_check(m.Fu.11b) #model underestimates, except for very high / very low values
+mcmc_plot(m.Fu.11b, type="pairs",
+          off_diag_fun="hex",
+          diag_fun="dens")
+
+##---
+
+#2.12a2 - Fu_per100gLog ~ sowndiv*treatment + SWC_gravimetric #
+m.Fu.12a2 <- brm(Fu_per100gLog ~ sowndiv*treatment + SWC_gravimetric,
+                 data = dBEF_nem21, family = "gaussian",
+                 chains = 3,
+                 cores = 3,
+                 iter = 2000, warmup = 1000,
+                 control = list(adapt_delta=0.9))
+summary(m.Fu.12a2)
+pp_check(m.Fu.12a2, ndraws=100) #include block:
+m.Fu.12a4 <- update(m.Fu.12a3,
+                    control = list(adapt_delta = 0.99))
+
+#---
+
+# 2.12a5 Fu_per100gLog ~ SWC_gravimetric #
+m.Fu.12a6 <- brm(Fu_per100gLog ~ SWC_gravimetric + (1|block),
+                 data = dBEF_nem21, family = "gaussian",
+                 chains = 3,
+                 cores = 3,
+                 iter = 2000, warmup = 1000,
+                 control = list(adapt_delta=0.9))
+m.Fu.12a7 <- update(m.Fu.12a6, 
+                    control = list(adapt_delta=0.99))
+
+pp_check(m.Fu.12a7, ndraws=100)
 
