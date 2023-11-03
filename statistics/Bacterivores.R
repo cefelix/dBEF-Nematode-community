@@ -8,6 +8,9 @@
   library(hexbin)
   library(GGally)
 
+# a seed:
+SEED = 22061996
+
 dBEF_nem <- read.csv("./dBEF_nem.csv", row.names = 1)
   dBEF_nemSH1 <- subset(dBEF_nem, SH == 1)
   dBEF_nemSH5 <- subset(dBEF_nem, SH == 5)
@@ -57,8 +60,18 @@ m.Ba.21b <- update(m.Ba.21,
 pp_check(m.Ba.21b, ndraws=100) #bad fit, lets standardize
 
 
+#### hurdle: Ba_per100gLog ~ sowndivLogStd*treatment + (1|block/plot), family = hurdle_gaussian ####
+m.Ba.hurdle31 <- brm(
+  bf(Ba_per100gLog.hurdle ~ sowndivLogStd*treatment + (1|block/plot),
+     hu ~ 1),
+  data = dBEF_nem21, 
+  family = hurdle_gaussian,
+  stanvars = stanvars, #necessary to use custom brms families!
+  chains = 3,
+  cores = 3,
+  iter = 2000, warmup = 1000,
+  seed = SEED,
+  control = list(adapt_delta=0.99))
 
 
-
-
-
+#### save hurdle models ####

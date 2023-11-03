@@ -11,9 +11,12 @@ library(GGally)
 dBEF_nem <- read.csv("./dBEF_nem.csv", row.names = 1)
 dBEF_nem %>%
   str()
-dBEF_nem$treatment <- as.factor(dBEF_nem$treatment)
-dBEF_nem <- dBEF_nem %>% # a colorcode of sowndiv for plotting
-  mutate(col.sowndiv = as.factor(sowndiv), .after=sowndiv)
+
+#convert characters to factors:
+  dBEF_nem$treatment <- as.factor(dBEF_nem$treatment)
+  dBEF_nem$plot <- as.factor(dBEF_nem$plot)
+  dBEF_nem <- dBEF_nem %>% # a colorcode of sowndiv for plotting
+    mutate(col.sowndiv = as.factor(sowndiv), .after=sowndiv)
 
 #adding "yearblock" which could be a random factor:
 dBEF_nem <- dBEF_nem %>%
@@ -56,7 +59,15 @@ dBEF_nem$Pr_per100gLog %>% density() %>% plot() #many zeros
 dBEF_nem$Om_per100gLog %>% density() %>% plot() #way too many zeros, bimodal?
 dBEF_nem$ind_per100gLog %>% density() %>% plot()
 
-#### standardization ####
+#densities non transformed:
+dBEF_nem$Fu_per100g %>% density() %>% plot() #normal
+dBEF_nem$Ba_per100g %>% density() %>% plot() #much probability on the right
+dBEF_nem$Pl_per100g %>% density() %>% plot() #normal
+dBEF_nem$Pr_per100g %>% density() %>% plot() #many zeros
+dBEF_nem$Om_per100g %>% density() %>% plot() #way too many zeros, bimodal?
+dBEF_nem$ind_per100g %>% density() %>% plot()
+
+#### response standardization ####
 #standardize each response density:
   scale_Ba <- (dBEF_nem$Ba_per100g %>% scale())[,1] 
   scale_Fu <- (dBEF_nem$Fu_per100g %>% scale())[,1] 
@@ -87,7 +98,20 @@ dBEF_nem$Om_per100gStd %>% density() %>% plot()
 
 #histograms:
 dBEF_nem$Ba_per100gStd %>% hist(breaks=30)
+
+#pairs:
 pairs(~Ba_per100g +  Fu_per100g + Pl_per100g + Om_per100g + Pr_per100g, data=dBEF_nem)
+pairs(~Ba_per100g + log(sowndiv) +  SWC_gravimetric, data=dBEF_nem)
+
+#### predictor standardization #####
+dBEF_nem <- dBEF_nem %>%
+  mutate(sowndivLog = log(sowndiv, base = 2),
+         .after = sowndiv)
+
+dBEF_nem <- dBEF_nem %>%
+  mutate(sowndivLogStd = ( (sowndivLog - mean(sowndivLog)) / sd(sowndivLog) ),
+         .after = sowndivLog)
+
 
 
 #### 1e-3 constant addition to zeros: ####
@@ -103,6 +127,70 @@ dBEF_nem <- dBEF_nem %>%
          .after=Pl_per100g) %>%
   mutate(Om_per100gZeroC = ifelse(Om_per100g == 0, 0.001, Om_per100g), 
          .after=Om_per100g) 
+
+#### log transformation while keeping the zeros for HURDLE models ####
+dBEF_nem <- dBEF_nem %>%
+  mutate(Pl_per100gLog.hurdle = ifelse(Pl_per100g == 0, 
+                                       0, log(Pl_per100g)),
+         .after = Pl_per100gLog) %>%
+  mutate(Fu_per100gLog.hurdle = ifelse(Fu_per100g == 0, 
+                                       0, log(Fu_per100g)),
+         .after = Fu_per100gLog) %>%
+  mutate(Ba_per100gLog.hurdle = ifelse(Ba_per100g == 0, 
+                                       0, log(Ba_per100g)),
+         .after = Ba_per100gLog) %>%
+  mutate(Pr_per100gLog.hurdle = ifelse(Pr_per100g == 0, 
+                                       0, log(Pr_per100g)),
+         .after = Pr_per100gLog) %>%
+  mutate(Om_per100gLog.hurdle = ifelse(Om_per100g == 0, 
+                                       0, log(Om_per100g)),
+         .after = Om_per100gLog) 
+
+
+#### creating a custom brms hurdle_gaussian family ####
+  #this is the family: hurdle_gaussian as coded by Andrew Heiss:
+  #https://www.andrewheiss.com/blog/2022/05/09/hurdle-lognormal-gaussian-brms/#exponentially-distributed-outcomes-with-zeros
+
+#1 - create a custom brms family:
+hurdle_gaussian <- 
+  # Create a custom family that is logit if y = 0, normal/gaussian if not
+  custom_family("hurdle_gaussian", 
+                dpars = c("mu", "sigma", "hu"),
+                links = c("identity", "log", "logit"),
+                lb = c(NA, 0, NA),
+                type = "real")
+
+#2 - stan code to handle the sampling (idk what exactly it does):
+
+stan_funs <- "
+    real hurdle_gaussian_lpdf(real y, real mu, real sigma, real hu) { 
+      if (y == 0) { 
+        return bernoulli_lpmf(1 | hu); 
+      } else { 
+        return bernoulli_lpmf(0 | hu) +  
+               normal_lpdf(y | mu, sigma); 
+      } 
+    }
+  "
+# Prepare Stan code for use in brm()
+stanvars <- stanvar(scode = stan_funs, block = "functions")
+
+#3 - post processing functions:  
+posterior_predict_hurdle_gaussian <- function(i, prep, ...) {
+  mu <- brms::get_dpar(prep, "mu", i = i)
+  sigma <- brms::get_dpar(prep, "sigma", i = i)
+  theta <- brms::get_dpar(prep, "hu", i = i)
+  
+  hu <- runif(prep$ndraws, 0, 1)
+  ifelse(hu < theta, 0, rnorm(prep$ndraws, mu,sigma))
+}
+
+posterior_epred_hurdle_gaussian <- function(prep) {
+  with(prep$dpars, mu * (1 - hu))
+}
+
+#4 - to use code, pass it to brm() using brm(... , stanvars = stanvars)  
+
 
 
 
