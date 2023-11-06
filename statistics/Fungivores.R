@@ -121,31 +121,9 @@ p.t3 <- ggplot(dBEF_nem21_t2, aes(x = log(sowndiv), y = Fu_per100g))+
 grid.arrange(p.all, p.t1, p.t2, p.t3)
   rm(dBEF_nem21_t1, dBEF_nem21_t2, dBEF_nem21_t3,
      p.all, p.t1, p.t2, p.t3)
-  
-#exploration of random factors
-  #soil dry weight:
-  ggplot(dBEF_nem21, aes(x=soilDW, y = Fu_per100g, col = block))+
-    geom_point()
-  #gravimetric water content
-  ggplot(dBEF_nem21, aes(x=SWC_gravimetric, y = Fu_per100g, col = block))+
-    geom_point() #the B4 sample to the very left is B4A13D2
-  #gravimetric water content against DW
-  ggplot(dBEF_nem21, aes(x=SWC_gravimetric, y = soilDW, col = block))+
-    geom_point()
-  
 
-#the already fit models:
-  load("./statistics/brms/231101_TrophicGuilds.RData")
-  # m.Fu.11:  density ~ sowndiv * treatment + (1|block), fam=lognormal, data = noZeros  
-  # m.Fu.11b: log(density) ~ sowndiv * treatment + (1|block), fam=gaussian , data = noZeros  
-  # m.Fu.12a: log(density) ~ sowndiv * treatment + (1|block), fam=gaussian , data = all
-  # m.Fu.12b: log(density) ~ sowndiv * treatment + soilWC + (1|block), fam=gaussian, data = all
-  # m.Fu.12c: log(density) ~ sowndiv * treatment, fam=gaussian , data = all
-  # m.Fu.13:  density ~ sowndiv * treatment, fam= hurdle_lognormal, data = 
-  
-  
 
-#### 2.12a - Fu_per100gLog ~ sowndiv*treatment + (1|block) AND ~sowndiv*treatment + (1|block/plot) ####
+#### OLD: Fu_per100gLog ~ sowndiv*treatment + (1|block) AND ~sowndiv*treatment + (1|block/plot) ####
 m.Fu.12 <- brm(Fu_per100gLog ~ sowndiv*treatment + (1|block),
                data = dBEF_nem21, family = "gaussian",
                chains = 3,
@@ -155,6 +133,7 @@ m.Fu.12 <- brm(Fu_per100gLog ~ sowndiv*treatment + (1|block),
   
 pp_check(m.Fu.12, ndraws=100) #overpredicting at low values 
                     #not accounting for zeros properly
+                    #has a good fit, but ignores plot nested in block
 
 # ...
 #lets NEST plot in block:
@@ -170,45 +149,10 @@ m.Fu.12_nestRE_b <- update(m.Fu.12_nestRE,
                            control = list(adapt_delta=0.99))
 
 pp_check(m.Fu.12_nestRE_b, ndraws = 100) #fit is worse than without nesting plot in block
-  
-#lets try to add priors to narrow the posterior predictions:
-    get_prior(Fu_per100gLog ~ sowndiv*treatment + (1|block/plot),
-              data = dBEF_nem21, family = "gaussian")
-summary(m.Fu.12_nestRE_b)
-    priors <- c(
-      prior(uniform(-100, 100), class="b"),
-      prior(student_t(3, 0, 2.5), class = "sd"),
-      prior(student_t(3, 0, 2.5), class = "sigma"),
-      prior(student_t(3, 5.6, 2.5), class = "intercept")
-    ) 
-  
-#model plotting:
-  #new data to create regression curve:
-  #thats only block1
-  nd <- tibble(sowndiv = seq(from = 1, 
-                             to = 60, 
-                             length.out = 30) %>% rep(., times = 3),
-               treatment = rep(1:3, each = 30),
-               block = rep("B4", 90))
-  #fitted values
-  f <-
-    fitted(m.Fu.12, newdata = nd) %>%
-    as_tibble() %>%
-    bind_cols(nd) %>%
-    mutate(treatment = as.factor(treatment)) # treatment has to a factor to be plotted
-  
-  #plotting fitted stuff
-  ggplot(dBEF_nem21, aes(x=log(sowndiv)))+
-    geom_jitter(aes(y = Fu_per100g, color = treatment), width = 0.125, alpha=0.5)+
-    geom_smooth(data = f,
-                aes(y = exp(Estimate),  #exp estimate to not plot logged data
-                    color = treatment),
-                stat = "identity")+
-    scale_x_continuous()+
-    ylab("Fungivores per 100g DW")+
-    theme_classic()
-  
-  
+
+save(m.Fu.12,
+     m.Fu.12_nestRE, m.Fu.12_nestRE_b,
+     file = "./statistics/brms/231103_Fu_outdated.RData")
 
   
 #### 2.12b - Fu_per100gLog ~ sowndiv*treatment + (Fu_per100gLog|block): ####

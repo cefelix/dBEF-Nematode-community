@@ -152,7 +152,7 @@ pp_check(m.Pl.nest12, ndraws = 100)
 
 
 
-#### hurdle: Pl_per100g ~ sowndivLogStd * treatment + (1|block/plot) ####
+#### hurdle: Pl_per100gLog ~ sowndivLogStd * treatment + (1|block/plot) ####
   #lets have a quick look at the data:
   dBEF_nem21$Pl_per100gLog %>% density() %>% plot()
   sum(dBEF_nem21$Pl_per100g == 0) #2 samples have zero herbivores

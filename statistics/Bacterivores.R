@@ -16,6 +16,8 @@ dBEF_nem <- read.csv("./dBEF_nem.csv", row.names = 1)
   dBEF_nemSH5 <- subset(dBEF_nem, SH == 5)
   dBEF_nemSH15 <- subset(dBEF_nem, SH == 15)
   dBEF_nemSH19 <- subset(dBEF_nem, SH == 19)
+  
+  dBEF_nem21 <- subset(dBEF_nem, year==2021)
 
 
 #### exploration ####
@@ -73,5 +75,8 @@ m.Ba.hurdle31 <- brm(
   seed = SEED,
   control = list(adapt_delta=0.99))
 
+pp_check(m.Ba.hurdle31, ndraws=100)
 
 #### save hurdle models ####
+save(m.Ba.hurdle31,
+     file="./statistics/brms/231105_Ba_hurdle.RData")
