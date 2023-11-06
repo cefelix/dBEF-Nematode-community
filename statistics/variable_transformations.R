@@ -49,6 +49,30 @@ dBEF_nem <- dBEF_nem %>%
   #log ind_per100g
   mutate(ind_per100gLog = log(ind_per100g),
          .after = ind_per100g)
+
+#log transformation for each cp-group:
+dBEF_nem <- dBEF_nem %>% 
+  #cp-1:
+  mutate(cp1_per100gLog.hurdle = ifelse(cp1_per100g == 0, 
+                                        0, log(cp1_per100g)),
+         .after = cp1_per100g) %>%
+  #cp-2:
+  mutate(cp2_per100gLog.hurdle = ifelse(cp2_per100g == 0, 
+                                        0, log(cp2_per100g)),
+         .after = cp2_per100g) %>%
+  #cp-3:
+  mutate(cp3_per100gLog.hurdle = ifelse(cp3_per100g == 0, 
+                                        0, log(cp3_per100g)),
+         .after = cp3_per100g) %>%
+  #cp-4:
+  mutate(cp4_per100gLog.hurdle = ifelse(cp4_per100g == 0, 
+                                        0, log(cp4_per100g)),
+         .after = cp4_per100g) %>%
+  #cp-5:
+  mutate(cp5_per100gLog.hurdle = ifelse(cp5_per100g == 0, 
+                                        0, log(cp5_per100g)),
+         .after = cp5_per100g) 
+
   
 
 #densities
@@ -103,7 +127,7 @@ dBEF_nem$Ba_per100gStd %>% hist(breaks=30)
 pairs(~Ba_per100g +  Fu_per100g + Pl_per100g + Om_per100g + Pr_per100g, data=dBEF_nem)
 pairs(~Ba_per100g + log(sowndiv) +  SWC_gravimetric, data=dBEF_nem)
 
-#### predictor standardization #####
+#### predictor standardization and log-transformation #####
 dBEF_nem <- dBEF_nem %>%
   mutate(sowndivLog = log(sowndiv, base = 2),
          .after = sowndiv)
@@ -111,6 +135,10 @@ dBEF_nem <- dBEF_nem %>%
 dBEF_nem <- dBEF_nem %>%
   mutate(sowndivLogStd = ( (sowndivLog - mean(sowndivLog)) / sd(sowndivLog) ),
          .after = sowndivLog)
+
+dBEF_nem <- dBEF_nem %>%
+  mutate(soilDW.Log = log(soilDW),
+         .after = soilDW)
 
 
 
