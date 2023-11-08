@@ -245,7 +245,7 @@ save(m.Pl.hurdle11, m.Pl.hurdle12,
      m.Pl.hurdle31, #Pl ~ sowndivLogStd, fam=hurdle_lognormal
      file="./statistics/brms/231107_Pl_hurdle.RData")
 
-load(file="./statistics/brms/231103_Pl_hurdle.RData")
+load(file="./statistics/brms/231107_Pl_hurdle.RData")
 
-
+conditional_effects(m.Pl.hurdle21)
 

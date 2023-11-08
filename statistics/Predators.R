@@ -143,5 +143,5 @@ save(m.Pr.hurdle11, #Pr.Log ~ sowndivLogStd, fam=hurdle_gaussian
      file = "./statistics/brms/231108_Pr_hurdle.RData")
 
 load(file = "./statistics/brms/231108_Pr_hurdle.RData")
-
+conditional_effects(m.Pr.hurdle51)
 

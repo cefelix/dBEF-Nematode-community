@@ -367,7 +367,7 @@ dBEF_nem21$ind_per100g %>% density() %>% plot()
 #https://github.com/paul-buerkner/brms/issues/98
   #offset() is usable as in other packages
 
-#### total_nematodes ~ sowndivLogStd*treatment + offset(log(soilDW)) + (1|block/plot), fam=poisson ####
+#### Poisson 21: total_nematodes ~ sowndivLogStd*treatment + offset(log(soilDW)) + (1|block/plot), fam=poisson ####
 #as the link function for poisson is log(), lets log transform offset variable:
 dBEF_nem21$soilDW %>% log() %>% density() %>% plot() #bimodal
   #lets check plotwise:
@@ -420,7 +420,7 @@ save(m.abun.PoisOffS.11, m.abun.PoisOffS.21,
      file = "./statistics/brms/231106_abundance_OffSet.RData")
 
 
-#### total_nematodes ~ sowndivLogStd*treatment + offset(log(soilDW)) + (1|block/plot), fam=negbinomial ####
+#### negBinom 11: total_nematodes ~ sowndivLogStd*treatment + offset(log(soilDW)) + (1|block/plot), fam=negbinomial ####
 m.abun.nBinomOffS.11 <- brm(total_nematodes ~ sowndivLogStd*treatment + offset(log(soilDW)) + (1|block/plot), 
                           data = dBEF_nem21, family = "negbinomial",
                           chains = 3,
@@ -442,18 +442,41 @@ m.abun.nBinomOffS.13 <- update(m.abun.nBinomOffS.12,
 
 
 
-summary(m.abun.nBinomOffS.12)
+summary(m.abun.nBinomOffS.13)
 pp_check(m.abun.nBinomOffS.13, ndraws = 100)
 
+#### negBinom 21: total_nematodes ~ sowndivLog*treatment + offset(log(soilDW)) + (1|block/plot), fam=negbinomial ####
+SEED = 22061996
+m.abun.nBinomOffS.21 <- brm(total_nematodes ~ sowndivLog*treatment + offset(log(soilDW)) + (1|block/plot), 
+                            data = dBEF_nem21, family = "negbinomial",
+                            chains = 3,
+                            cores = 3,
+                            iter = 3000, warmup = 1500,
+                            seed = SEED,
+                            control = list(adapt_delta = 0.9) ) 
+  #14 divergent transitions
+
+m.abun.nBinomOffS.22 <- update(m.abun.nBinomOffS.21,
+                               seed = SEED,
+                               control = list(adapt_delta = 0.999,
+                                              max_treedepth = 12)) 
+
+pp_check(m.abun.nBinomOffS.22, ndraws=100)
+summary(m.abun.nBinomOffS.22)
 
 #### save offset models ####
-save(m.abun.PoisOffS.11, m.abun.PoisOffS.21,
-     m.abun.PoisOffS.12, m.abun.PoisOffS.22,
-     m.abun.PoisOffS.13, m.abun.PoisOffS.23,
-     m.abun.PoisOffS.14, m.abun.PoisOffS.24,
-     m.abun.nBinomOffS.11,
-     m.abun.nBinomOffS.12,
+save(m.abun.PoisOffS.21, m.abun.PoisOffS.22, 
+     m.abun.PoisOffS.23, m.abun.PoisOffS.24,
+     m.abun.nBinomOffS.11, m.abun.nBinomOffS.12, 
      m.abun.nBinomOffS.13,
-     file="./statistics/brms/231106_abundance_OffSetb.RData")
+     m.abun.nBinomOffS.21, m.abun.nBinomOffS.22,
+     file="./statistics/brms/231108_abundance_OffSet.RData")
 
-load(file="./statistics/brms/231106_abundance_OffSetb.RData")
+load(file="./statistics/brms/231108_abundance_OffSet.RData")
+
+
+####plot the offset models####
+conditional_effects(m.abun.nBinomOffS.13)
+
+conditional_effects(m.abun.nBinomOffS.22, prob=0.85)
+

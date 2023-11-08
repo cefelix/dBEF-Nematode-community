@@ -127,5 +127,7 @@ save(m.Om.hurdle12,
      m.Om.hurdle43,m.Om.hurdle44,
      file = "./statistics/brms/231108_Om_hurdle.RData")
 
-load(file = "./statistics/brms/231105_Om_hurdle.RData")
+load(file = "./statistics/brms/231108_Om_hurdle.RData")
+
+conditional_effects(m.Om.hurdle21)
 

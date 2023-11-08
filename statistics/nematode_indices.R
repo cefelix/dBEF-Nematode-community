@@ -184,7 +184,7 @@ dBEF_nem21 <- dBEF_nem21 %>%
   
   #use a prior that restricts CR to be between [0,1]:
   
-#### hurdle SI: SI ~ sowndivLogStd*treatment + (1|block/plot), fam=hurdle_gaussian ####
+####SI 11 hurdle: SI ~ sowndivLogStd*treatment + (1|block/plot), fam=hurdle_gaussian ####
   m.SI.11 <-  brm(
     bf(SI ~ sowndivLogStd*treatment + (1|block/plot),
        hu ~ 1),
@@ -242,4 +242,10 @@ dBEF_nem21 <- dBEF_nem21 %>%
        m.MI.11, m.MI.12, #hurdled MI models, but unnecessary as no zeros in MI
        m.MI.21, #MI without hurdle term
        file = "./statistics/brms/231107_NematodeIndices.RData")
+load(file = "./statistics/brms/231107_NematodeIndices.RData")
 
+conditional_effects(m.SI.11)
+
+
+conditional_effects(m.MI.21)
+conditional_effects(m.MI.12)

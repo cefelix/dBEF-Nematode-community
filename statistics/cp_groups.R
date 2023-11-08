@@ -147,3 +147,6 @@ m.cp5.hurdle11 <- brm(
        m.cp4.hurdle11,
        m.cp5.hurdle11,
        file = "./statistics/brms/231106_cpGroups_hurdle.RData")
+  
+load(file = "./statistics/brms/231106_cpGroups_hurdle.RData")
+conditional_effects(m.cp5.hurdle11)
