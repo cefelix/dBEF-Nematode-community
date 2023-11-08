@@ -152,7 +152,7 @@ pp_check(m.Pl.nest12, ndraws = 100)
 
 
 
-#### hurdle: Pl_per100gLog ~ sowndivLogStd * treatment + (1|block/plot) ####
+#### WRONG hurdle: Pl_per100gLog ~ sowndivLogStd * treatment + (1|block/plot) fam=hurdle_lognormal####
   #lets have a quick look at the data:
   dBEF_nem21$Pl_per100gLog %>% density() %>% plot()
   sum(dBEF_nem21$Pl_per100g == 0) #2 samples have zero herbivores
@@ -196,12 +196,56 @@ m.Pl.hurdle14 <- update(m.Pl.hurdle13,
 
 pp_check(m.Pl.hurdle14, ndraws = 100)
 
+#### hurdle: Pl_per100gLog ~ sowndiv * treatment + (1|block/plot), fam=hurdle_gaussian ####
+SEED = 19111996
+
+m.Pl.hurdle21 <- brm(
+  bf(Pl_per100gLog.hurdle ~ sowndivLogStd*treatment + (1|block/plot),
+     hu ~ 1),
+  data = dBEF_nem21, 
+  family = hurdle_gaussian,
+  stanvars = stanvars, #necessary to use custom brms families!
+  chains = 3,
+  cores = 3,
+  iter = 2000, warmup = 1000,
+  seed = SEED,
+  control = list(adapt_delta=0.99))
+  #1 divergent transition
+
+m.Pl.hurdle22 <- update(m.Pl.hurdle21,
+                        control=list(adapt_delta=0.999))
+
+pp_check(m.Pl.hurdle22, ndraws=100)
+
+
+#### hurdle: Pl_per100g ~ sowndivLogStd * treatment + (1|block/plot), fam=hurdle_lognormal ####
+SEED = 19111996
+m.Pl.hurdle31 <- brm(
+  bf(Pl_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+     hu ~ 1),
+  data = dBEF_nem21, 
+  family = hurdle_lognormal,
+  stanvars = stanvars, #necessary to use custom brms families!
+  chains = 3,
+  cores = 3,
+  iter = 2000, warmup = 1000,
+  seed = SEED,
+  control = list(adapt_delta=0.99))
+
+pp_check(m.Pl.hurdle31, ndraws=100)+
+  xlim(0,3000)
+
+summary(m.Pl.hurdle31)
+
+
 #### saving Pl hurdle models ####
-save(m.Pl.hurdle11,
-     m.Pl.hurdle12,
-     m.Pl.hurdle13,
-     m.Pl.hurdle14,
-     file="./statistics/brms/231103_Pl_hurdle.RData")
+save(m.Pl.hurdle11, m.Pl.hurdle12, 
+     m.Pl.hurdle13, m.Pl.hurdle14, #Pl.Log ~ sowndivLogStd, fam=hurdle_lognormal
+     m.Pl.hurdle21, m.Pl.hurdle22, #Pl.Log~sowndivLogStd, fam=hurdle_gaussian
+     m.Pl.hurdle31, #Pl ~ sowndivLogStd, fam=hurdle_lognormal
+     file="./statistics/brms/231107_Pl_hurdle.RData")
+
+load(file="./statistics/brms/231103_Pl_hurdle.RData")
 
 
 

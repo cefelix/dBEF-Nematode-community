@@ -77,6 +77,23 @@ m.Ba.hurdle31 <- brm(
 
 pp_check(m.Ba.hurdle31, ndraws=100)
 
+#### hurdle: Ba_per100gLog ~ sowndiv*treatment + (1|block/plot), family = hurdle_gaussian 
+m.Ba.hurdle41 <- brm(
+  bf(Ba_per100gLog.hurdle ~ sowndiv*treatment + (1|block/plot),
+     hu ~ 1),
+  data = dBEF_nem21, 
+  family = hurdle_gaussian,
+  stanvars = stanvars, #necessary to use custom brms families!
+  chains = 3,
+  cores = 3,
+  iter = 2000, warmup = 1000,
+  seed = SEED,
+  control = list(adapt_delta=0.99))
+
+pp_check(m.Ba.hurdle41, ndraws=100)
 #### save hurdle models ####
 save(m.Ba.hurdle31,
-     file="./statistics/brms/231105_Ba_hurdle.RData")
+     m.Ba.hurdle41,
+     file="./statistics/brms/231107_Ba_hurdle.RData")
+
+load(file="./statistics/brms/231105_Ba_hurdle.RData")

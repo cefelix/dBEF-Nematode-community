@@ -220,5 +220,7 @@ posterior_epred_hurdle_gaussian <- function(prep) {
 #4 - to use code, pass it to brm() using brm(... , stanvars = stanvars)  
 
 
-
+####creating subset df's for '21 and '17 ####
+dBEF_nem21 <- subset(dBEF_nem, year==2021)
+dBEF_nem17 <- subset(dBEF_nem, year==2017)
 
