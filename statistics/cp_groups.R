@@ -139,3 +139,11 @@ m.cp5.hurdle11 <- brm(
   
   summary(m.cp5.hurdle11)
   pp_check(m.cp5.hurdle11, ndraws=100) # not a good fit
+  
+####save####
+  save(m.cp1.hurdle11,
+       m.cp2.hurdle11,
+       m.cp3.hurdle11,
+       m.cp4.hurdle11,
+       m.cp5.hurdle11,
+       file = "./statistics/brms/231106_cpGroups_hurdle.RData")

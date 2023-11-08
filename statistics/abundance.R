@@ -445,6 +445,8 @@ m.abun.nBinomOffS.13 <- update(m.abun.nBinomOffS.12,
 summary(m.abun.nBinomOffS.12)
 pp_check(m.abun.nBinomOffS.13, ndraws = 100)
 
+
+#### save offset models ####
 save(m.abun.PoisOffS.11, m.abun.PoisOffS.21,
      m.abun.PoisOffS.12, m.abun.PoisOffS.22,
      m.abun.PoisOffS.13, m.abun.PoisOffS.23,
@@ -453,3 +455,5 @@ save(m.abun.PoisOffS.11, m.abun.PoisOffS.21,
      m.abun.nBinomOffS.12,
      m.abun.nBinomOffS.13,
      file="./statistics/brms/231106_abundance_OffSetb.RData")
+
+load(file="./statistics/brms/231106_abundance_OffSetb.RData")
