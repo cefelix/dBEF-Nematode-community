@@ -6,7 +6,13 @@ library(bayesplot)
 library(ggplot2)
 library(gridExtra)
 library(hexbin)
-library(GGally)
+library(GGally)#
+library(emmeans)
+#use full history as reference!
+
+
+hurdle_gamma()
+
 
 # a seed:
 SEED = 22061996
@@ -92,9 +98,9 @@ pp_check(m.Pr.hurdle42, ndraws=100)+
 
 #### 51 hurdle: Pr_per100gLog.hurdle ~ sowndivLog*treatment + (1|block/plot), fam=hurdle_gaussian ####
 SEED = 19111996
-m.Pr.hurdle51 <- brm(
+m.Pr.hurdle51b <- brm(
   bf(Pr_per100gLog.hurdle ~ sowndivLog*treatment + (1|block/plot),
-     hu ~ 1),
+     hu ~ sowndivLog*treatment + (1|block/plot)), #should predict 
   data = dBEF_nem21, 
   family = hurdle_gaussian,
   stanvars = stanvars, #necessary to use custom brms families!
@@ -106,6 +112,15 @@ m.Pr.hurdle51 <- brm(
 
 pp_check(m.Pr.hurdle51, ndraws=100)
 
+
+emt = emtrends(m.Pr.hurdle51, "treatment", var="sowndivLog")
+summary(emt, point.est=mean)
+summary(emt, point.est=mean, level = .9) #get slopes
+
+emt.pairs <- pairs(emt)
+summary(emt.pairs, point.est=mean, level = .95) #get differences in slopes betweem treatments
+bayestestR::p_direction(emt.pairs) #probability of difference between the treatments in the output to be negative
+bayestestR::p_direction(m.Pr.hurdle51)
 #### 61 hurdle: Pr_per100gLog.hurdle ~ sowndivLog*treatment + (1|block/plot), fam=hurdle_gaussian ####
 SEED = 19111996
 m.Pr.hurdle61 <- brm(

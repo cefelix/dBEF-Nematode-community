@@ -86,6 +86,8 @@ m17.Pr.hurdle51 <- brm(
 
 pp_check(m17.Pr.hurdle51, ndraws=100)
 
+conditional_effects(Pr_per100gLog.hurdle)
+
 #### 61 hurdle: Pr_per100gLog.hurdle ~ sowndivLog*treatment + (1|block/plot), fam=hurdle_gaussian ####
 SEED = 19111996
 m17.Pr.hurdle61 <- brm(
@@ -121,7 +123,7 @@ save(#m.Pr.hurdle11, #Pr.Log ~ sowndivLogStd, fam=hurdle_gaussian
      file = "./statistics/17_remodelling/brms/231108_Pr17_hurdle.RData")
 
 
-#load(file = "./statistics/brms/231108_Pr_hurdle.RData")
+load(file = "./statistics/brms/231108_Pr17_hurdle.RData")
 pp_check(m.Pr.hurdle21, ndraws=100)
 conditional_effects(m17.Pr.hurdle51)
 

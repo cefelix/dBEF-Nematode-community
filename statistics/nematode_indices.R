@@ -66,8 +66,92 @@ ggplot(data = filter(dBEF_nem21, is.na(MI) == FALSE),
        aes(x = sowndivLog, y = MI , color = treatment))+
   geom_jitter(width=0.2)  
 
-#### hurdle EI: EI ~ sowndivLogStd*treatment + (1|block/plot), fam=hurdle_gaussian ####
+#### EI ~ sowndivLogStd*treatment + (1|block/plot), fam=hurdle_gamma ####
+m.EI.21 <- brm(
+  bf(EI ~ sowndivLogStd*treatment + (1|block/plot),
+     hu ~ 1),
+  data = dBEF_nem21, 
+  family = hurdle_gamma,
+  stanvars = stanvars, #necessary to use custom brms families!
+  chains = 3,
+  cores = 3,
+  iter = 2000, warmup = 1000,
+  seed = SEED,
+  control = list(adapt_delta=0.99)
+) # 1 divergent transition
+  #tail ESS too low
+pp_check(m.EI.21, ndraws=100)
+
+m.EI.22 <- update(m.EI.21, 
+                  iter=3000, warmup=1500,
+                  control = list(adapt_delta=0.999))
+pp_check(m.EI.22, ndraws=100)
+
+#hurdle against treatment:
+m.EI.31 <- brm(
+  bf(EI ~ sowndivLogStd*treatment + (1|block/plot),
+     hu ~ sowndivLogStd*treatment + (1|block/plot)),
+  data = dBEF_nem21, 
+  family = hurdle_gamma,
+  stanvars = stanvars, #necessary to use custom brms families!
+  chains = 3,
+  cores = 3,
+  iter = 2000, warmup = 1000,
+  seed = SEED,
+  control = list(adapt_delta=0.99)
+)
+pp_check(m.EI.31, ndraws=100)
+#still having probability mass at EI>100 -.-
+
+#### EI ~ sowndivLogStd*treatment + (1|block/plot), fam=zero_one_inflated_beta ####
+dBEF_nem21 <- dBEF_nem21 %>% 
+  mutate(EI_ZeroOne = EI/100,
+         .after = EI)
+
+m.EI.41 <- brm(EI_ZeroOne ~ sowndivLogStd*treatment + (1|block/plot),
+  data = dBEF_nem21, 
+  family = zero_one_inflated_beta,
+  stanvars = stanvars, #necessary to use custom brms families!
+  chains = 3,
+  cores = 3,
+  iter = 2000, warmup = 1000,
+  seed = SEED,
+  control = list(adapt_delta=0.99)
+) #2 divergent transitions
+
+m.EI.42 <- update(m.EI.41, 
+                  control=list(adapt_delta=0.999))
+
+pp_check(m.EI.42, ndraws=100)
+
+#### EI ~ sowndivLogStd*treatment + (1|block/plot), fam=Beta ####
+dBEF_nem21 <- dBEF_nem21 %>% 
+  mutate(EI_ZeroOne = EI/100,
+         .after = EI)
+
+dBEF_nem21_EI <- subset(dBEF_nem21, 
+                        EI_ZeroOne != 0 & EI_ZeroOne != 1)
+dBEF_nem21_EI$EI_ZeroOne %>% max()
+
+m.EI.51 <- brm(EI_ZeroOne ~ sowndivLogStd*treatment + (1|block/plot),
+               data = dBEF_nem21_EI, 
+               family = Beta,
+               stanvars = stanvars, #necessary to use custom brms families!
+               chains = 3,
+               cores = 3,
+               iter = 2000, warmup = 1000,
+               seed = SEED,
+               control = list(adapt_delta=0.99)
+) 
+pp_check(m.EI.51, ndraws=100)
+
+
+
+
+
+#### WRONG: EI ~ sowndivLogStd*treatment + (1|block/plot), fam=hurdle_gaussian ####
 #problem: EI is bounded between zero and 1
+
 
 m.EI.11 <-  brm(
   bf(EI ~ sowndivLogStd*treatment + (1|block/plot),
@@ -151,11 +235,32 @@ dBEF_nem21 <- dBEF_nem21 %>%
     control = list(adapt_delta=0.99)) 
   pp_check(m.EI.41, ndraws = 100) #same fit as non sqrt-transformed response
   
+  ####zero one inflated bet for fu ba proportions####
+  SEED = 123
+  m.CR_zeroone <- brm(
+    bf(Fu..Fu.Ba. ~ sowndivLogStd*treatment + (1|block/plot),
+       zoi ~ 1,
+       coi ~ 1),
+    data = dBEF_nem21, 
+    family = zero_one_inflated_beta,
+    stanvars = stanvars, #necessary to use custom brms families!
+    chains = 3,
+    cores = 3,
+    iter = 2000, warmup = 1000,
+    seed = SEED,
+    control = list(adapt_delta=0.99)) 
+    
+  
+  
 #### hurdle channel ratio:  CR ~ sowndivLogStd*treatment + (1|block/plot), fam=hurdle_gaussian ####
   #brm can't read Fu..Fu.Ba, so:
+  (dBEF_nem21$Fu..Fu.Ba. ==0) %>% sum()
+  #try: zero-1-inflated beta distribution
   dBEF_nem21 <- dBEF_nem21 %>% 
     mutate(CR = Fu..Fu.Ba.,
            .before = Fu..Fu.Ba.)
+  
+  
   
   m.CR.11 <-  brm(
     bf(CR ~ sowndivLogStd*treatment + (1|block/plot),
