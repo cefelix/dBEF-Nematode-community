@@ -140,7 +140,21 @@ dBEF_nem <- dBEF_nem %>%
   mutate(soilDW.Log = log(soilDW),
          .after = soilDW)
 
-
+#### re-level treatment so that 1 = +SH+PH, 2 = +SH-PH, 3 = -SH-PH ####
+a <- dBEF_nem
+for (i in 1:nrow(dBEF_nem)) {
+  if(dBEF_nem$treatment[i] == 1) {
+    dBEF_nem$treatment[i] = 3
+  }
+  else if(dBEF_nem$treatment[i] == 2) {
+    dBEF_nem$treatment[i] = 2
+  }
+  else if(dBEF_nem$treatment[i] == 3) {
+    dBEF_nem$treatment[i] = 1
+  }
+}
+dBEF_nem$treatment <- factor(dBEF_nem$treatment, levels = c("1", "2", "3"))
+dBEF_nem$treatment %>% str()
 
 #### 1e-3 constant addition to zeros: ####
 
