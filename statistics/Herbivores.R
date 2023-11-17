@@ -46,181 +46,39 @@ p.19 <- ggplot(dBEF_nemSH19, aes(y = Pl_per100g, x=log(sowndiv)) )+
 grid.arrange(p.1, p.5, p.15, p.19)
 rm(p.1, p.5, p.15, p.19)
 
-dBEF_nem$
 
-
-
-
-
-#### Pl_per100gLog ~ sowndiv*treatment + (1|block) ####
-m.Pl.31 <- brm(Pl_per100gLog ~ sowndiv*treatment + (1|block),
-               data = dBEF_nem21, family = "gaussian",
-               chains = 3,
-               cores = 3,
-               iter = 2000, warmup = 1000,
-               control = list(adapt_delta=0.9))
-pp_check(m.Pl.31, ndraws = 100)
-
-
-#### Pl_per100gLog ~ sowndiv*treatment + (1|block/plot) ####
-m.Pl.31b <- brm(Pl_per100gLog ~ sowndiv*treatment + (1|block/plot),
-               data = dBEF_nem21, family = "gaussian",
-               chains = 3,
-               cores = 3,
-               iter = 2000, warmup = 1000,
-               control = list(adapt_delta=0.9))
-update(m.Pl.31b,
-       control=)
-pp_check(m.Pl.31b, ndraws = 100)
-
-
-pr_uniform = prior(uniform(-100, 100), lb=-100, ub=100, class = "b")
-m.Pl.31.unifPrior <- brm(Pl_per100gLog ~ sowndiv*treatment + (1|block),
-                         data = dBEF_nem21, 
-                         iter = 1000,
-                         sample_prior = "only",
-                         prior=pr_uniform)
-pp_check(m.Pl.31.unifPrior, ndraws = 100)+
-  xlim(-10, 20)
-
-pr_gaussian = prior(normal(0, 5), class="b")
-m.Pl.31.unifPrior <- brm(Pl_per100gLog ~ sowndiv*treatment + (1|block),
-                         data = dBEF_nem21, 
-                         iter = 1000,
-                         sample_prior = "only",
-                         prior=pr_gaussian)
-pp_check(m.Pl.31.unifPrior, ndraws = 100)+
-  xlim(-10, 20)
-
-
-#lets set the default priors manually:
-get_prior(Pl_per100gLog ~ sowndiv*treatment + (1|block),
-          data = dBEF_nem21, family = "gaussian")
-#student_t(3, 0, 2.5) means a student t distribution with:
-#3 degrees of freedom, center of 0, range of -2.5 to +2.5
-priors <- c(
-  prior(uniform(-100, 100), class="b"),
-  prior("student_t(3, 0, 2.5)", class = "sd"),
-  prior("student_t(3, 0, 2.5)", class = "sigma"),
-  prior("student_t(3, 5.6, 2.5)", class = "intercept")
-) 
-
-curve(dnorm(x, 0, 1), from = -5, to=5)
-curve(dt(x, df=3), from=-5, to=5, col="red", add = TRUE)
-curve(dt(x, df=10), from=-5, to=5, col="green", add = TRUE)
-curve(dnorm(x, 0, 0.5), from = -5, to=5, col="pink", add=TRUE)
-
-#lets check 
-prior
-
-priors <- 
-  
-  #check out priors:
-  library(pubh)
-rnorm(1e4, mean=0, sd=4) %>% density() %>% plot()
-rnorm(1e4, mean=0, sd=4) %>% inv_logit() %>% density() %>% plot()
-
-
-#### Pl_per100g ~ sowndiv * treatment + (1|block), fam=lognormal ####
-#add small constant to zeros:
-dBEF_nem21 <- dBEF_nem21 %>% 
-  mutate(Pl_per100g  = ifelse(Pl_per100g == 0, 0.01, Pl_per100g ))
-
-m.Pl.32 <- brm(Pl_per100g ~ sowndiv*treatment + (1|block),
-               data = dBEF_nem21, family = "lognormal",
-               chains = 3,
-               cores = 3,
-               iter = 2000, warmup = 1000,
-               control = list(adapt_delta=0.9)) #2 divergent transitions -->
-#increase delta:
-m.Pl.33 <- update(m.Pl.32,
-                  control = list(adapt_delta=0.99))
-pp_check(m.Pl.33, ndraw=100)
-
-####Pl_per100g ~ sowndivLogStd * treatment + (1|block/plot) ####
-m.Pl.nest11 <- brm(Pl_per100gLog ~ sowndivLogStd*treatment + (1|block/plot),
+####Pl_per100gLog ~ sowndivLogStd * treatment + (1|block/plot), fam=gaussian ####
+m.Pl.11 <- brm(Pl_per100gLog ~ sowndivLogStd*treatment + (1|block/plot),
                    data = dBEF_nem21, family = "gaussian",
                    chains = 3,
                    cores = 3,
                    iter = 2000, warmup = 1000,
                    control = list(adapt_delta=0.9)) #7 divergent transitions
 
-m.Pl.nest12 <- update(m.Pl.nest11,
-                      control=list(adapt_delta=0.99))
+m.Pl.12 <- update(m.Pl.11,
+                  control=list(adapt_delta=0.99))
 
-pp_check(m.Pl.nest12, ndraws = 100)
-
-
-
-#### WRONG hurdle: Pl_per100gLog ~ sowndivLogStd * treatment + (1|block/plot) fam=hurdle_lognormal####
-  #lets have a quick look at the data:
-  dBEF_nem21$Pl_per100gLog %>% density() %>% plot()
-  sum(dBEF_nem21$Pl_per100g == 0) #2 samples have zero herbivores
-
-SEED <- 22061996
-
-dBEF_nem21$Pl_per100g %>% density %>% plot()
-dBEF_nem21$Pl_per100gLog %>% density %>% plot()
-
-dBEF_nem21 <- dBEF_nem21 %>%
-  mutate(Pl_per100gLog.hurdle = ifelse(Pl_per100g == 0, 
-                                       0, log(Pl_per100g)),
-         .after = Pl_per100gLog)
-
-m.Pl.hurdle11 <- brm(
-  bf(Pl_per100gLog.hurdle ~ sowndivLogStd*treatment + (1|block/plot),
-     hu ~ 1),
-  data = dBEF_nem21, 
-  family = "hurdle_lognormal",
-  chains = 3,
-  cores = 3,
-  iter = 2000, warmup = 1000,
-  seed = SEED,
-  control = list(adapt_delta=0.99))
+pp_check(m.Pl.12, ndraws = 100)
 
 
-m.Pl.hurdle12 <- update(m.Pl.hurdle11, 
-                             seed = SEED,
-                             iter = 3000, warmup=1500,
-                             control = list(adapt_delta=0.99))
+#### 21 Pl_per100gZeroC ~ sowndiv * treatment + (1|block), fam=lognormal ####
 
-m.Pl.hurdle13 <- update(m.Pl.hurdle12, 
-                             control = list(adapt_delta = 0.999))
+m.Pl.21 <- brm(Pl_per100gZeroC ~ sowndiv*treatment + (1|block),
+               data = dBEF_nem21, family = "lognormal",
+               chains = 3,
+               cores = 3,
+               iter = 2000, warmup = 1000,
+               control = list(adapt_delta=0.9)) #2 divergent transitions 
 
-m.Pl.hurdle14 <- update(m.Pl.hurdle13,
-                             iter = 4000, warmup=2000,
-                             control = list(adapt_delta = 0.9999))
-                             # still 4 divergent transitions -.-
-                             # maybe specify more restictive priors
+m.Pl.22 <- update(m.Pl.21,
+                  control = list(adapt_delta=0.99))
+
+pp_check(m.Pl.22, ndraw=100)
 
 
-pp_check(m.Pl.hurdle14, ndraws = 100)
-
-#### hurdle: Pl_per100gLog ~ sowndiv * treatment + (1|block/plot), fam=hurdle_gaussian ####
+#### 11a hurdle: Pl_per100g ~ sowndivLogStd * treatment + (1|block/plot), fam=hurdle_lognormal ####
 SEED = 19111996
-
-m.Pl.hurdle21 <- brm(
-  bf(Pl_per100gLog.hurdle ~ sowndivLogStd*treatment + (1|block/plot),
-     hu ~ 1),
-  data = dBEF_nem21, 
-  family = hurdle_gaussian,
-  stanvars = stanvars, #necessary to use custom brms families!
-  chains = 3,
-  cores = 3,
-  iter = 2000, warmup = 1000,
-  seed = SEED,
-  control = list(adapt_delta=0.99))
-  #1 divergent transition
-
-m.Pl.hurdle22 <- update(m.Pl.hurdle21,
-                        control=list(adapt_delta=0.999))
-
-pp_check(m.Pl.hurdle22, ndraws=100)
-
-
-#### hurdle: Pl_per100g ~ sowndivLogStd * treatment + (1|block/plot), fam=hurdle_lognormal ####
-SEED = 19111996
-m.Pl.hurdle31 <- brm(
+m.Pl.hurdle11a <- brm(
   bf(Pl_per100g ~ sowndivLogStd*treatment + (1|block/plot),
      hu ~ 1),
   data = dBEF_nem21, 
@@ -235,15 +93,14 @@ m.Pl.hurdle31 <- brm(
 pp_check(m.Pl.hurdle31, ndraws=100)+
   xlim(0,3000)
 
-summary(m.Pl.hurdle31)
+summary(m.Pl.hurdle11a)
 
 
-#### saving Pl hurdle models ####
-save(m.Pl.hurdle11, m.Pl.hurdle12, 
-     m.Pl.hurdle13, m.Pl.hurdle14, #Pl.Log ~ sowndivLogStd, fam=hurdle_lognormal
-     m.Pl.hurdle21, m.Pl.hurdle22, #Pl.Log~sowndivLogStd, fam=hurdle_gaussian
-     m.Pl.hurdle31, #Pl ~ sowndivLogStd, fam=hurdle_lognormal
-     file="./statistics/brms/231107_Pl_hurdle.RData")
+#### saving models ####
+save(m.Pl.11, m.Pl.12,
+     m.Pl.21, m.Pl.22,
+     m.Pl.hurdle11a, #Pl ~ sowndivLogStd, fam=hurdle_lognormal
+     file="./statistics/brms/231117_Pl.RData")
 
 load(file="./statistics/brms/231107_Pl_hurdle.RData")
 
