@@ -170,25 +170,6 @@ dBEF_nem <- dBEF_nem %>%
   mutate(Om_per100gZeroC = ifelse(Om_per100g == 0, 0.001, Om_per100g), 
          .after=Om_per100g) 
 
-#### log transformation while keeping the zeros for HURDLE models ####
-dBEF_nem <- dBEF_nem %>%
-  mutate(Pl_per100gLog.hurdle = ifelse(Pl_per100g == 0, 
-                                       0, log(Pl_per100g)),
-         .after = Pl_per100gLog) %>%
-  mutate(Fu_per100gLog.hurdle = ifelse(Fu_per100g == 0, 
-                                       0, log(Fu_per100g)),
-         .after = Fu_per100gLog) %>%
-  mutate(Ba_per100gLog.hurdle = ifelse(Ba_per100g == 0, 
-                                       0, log(Ba_per100g)),
-         .after = Ba_per100gLog) %>%
-  mutate(Pr_per100gLog.hurdle = ifelse(Pr_per100g == 0, 
-                                       0, log(Pr_per100g)),
-         .after = Pr_per100gLog) %>%
-  mutate(Om_per100gLog.hurdle = ifelse(Om_per100g == 0, 
-                                       0, log(Om_per100g)),
-         .after = Om_per100gLog) 
-
-
 #### creating a custom brms hurdle_gaussian family ####
   #this is the family: hurdle_gaussian as coded by Andrew Heiss:
   #https://www.andrewheiss.com/blog/2022/05/09/hurdle-lognormal-gaussian-brms/#exponentially-distributed-outcomes-with-zeros
