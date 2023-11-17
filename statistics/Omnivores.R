@@ -12,6 +12,7 @@ library(GGally)
 SEED = 19111996
 
 
+
 #### 11a hurdle: Om_per100g ~ sowndivLogStd*treatment + (1|block/plot), family = hurdle_lognormal ####
 m.Om.hurdle11a <- brm(
   bf(Om_per100g ~ sowndivLogStd*treatment + (1|block/plot),

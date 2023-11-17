@@ -46,6 +46,7 @@ rm(p.1, p.5, p.15, p.19)
 
 
 #### 11 Pl_per100gLog ~ sowndivLogStd * treatment + (1|block/plot), fam=gaussian ####
+
 m.Pl.11 <- brm(Pl_per100gLog ~ sowndivLogStd*treatment + (1|block/plot),
                    data = dBEF_nem21, family = "gaussian",
                    seed = SEED,
@@ -77,7 +78,6 @@ pp_check(m.Pl.22, ndraw=100)
 
 
 #### 11a hurdle: Pl_per100g ~ sowndivLogStd * treatment + (1|block/plot), fam=hurdle_lognormal ####
-
 m.Pl.hurdle11a <- brm(
   bf(Pl_per100g ~ sowndivLogStd*treatment + (1|block/plot),
      hu ~ 1),
