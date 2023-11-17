@@ -141,7 +141,6 @@ dBEF_nem <- dBEF_nem %>%
          .after = soilDW)
 
 #### re-level treatment so that 1 = +SH+PH, 2 = +SH-PH, 3 = -SH-PH ####
-a <- dBEF_nem
 for (i in 1:nrow(dBEF_nem)) {
   if(dBEF_nem$treatment[i] == 1) {
     dBEF_nem$treatment[i] = 3

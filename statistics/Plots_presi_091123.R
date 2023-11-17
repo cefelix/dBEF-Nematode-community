@@ -10,19 +10,24 @@ library(modelr)
   #https://discourse.mc-stan.org/t/change-aesthetics-conditional-effects/13500/5
 
 ####Predators 2021####
-load("./statistics/brms/231108_Pr_hurdle.RData")
-#best: m.Pr.hurdle51, log(pr)~log(sowndiv)
+load("./statistics/brms/231117_Pr.RData")
 
-#get model predictions for regression plot   
-  predictions <- conditional_effects(m.Pr.hurdle51)[[3]]
+#linear regression from 1-60 species:  
+  predictions <- conditional_effects(m.Pr.hurdle21b)[[3]]
   predictions$estimate__
 
   ggplot(dBEF_nem21, aes(x=sowndivLog, y=Pr_per100g, col=treatment) )+
     geom_jitter(width=0.3)+
-    geom_smooth(data=predictions, aes(x= sowndivLog, y=exp(estimate__), col=treatment))
+    geom_smooth(data=predictions, aes(x= sowndivLog, y=estimate__, col=treatment))
   
-  rm(m.Pr.hurdle11, m.Pr.hurdle21, m.Pr.hurdle22, m.Pr.hurdle31, 
-     m.Pr.hurdle42, m.Pr.hurdle51, m.Pr.hurdle61)
+  
+#from 1-16 species  
+  predictions <- conditional_effects(m.Fu.hurdle21a)[[3]]
+  predictions$estimate__
+  
+  ggplot(dBEF_nem21, aes(x=sowndivLog, y=Fu_per100g, col=treatment) )+
+    geom_jitter(width=0.3)+
+    geom_smooth(data=predictions, aes(x= sowndivLog, y=estimate__, col=treatment))
 
   
 ####Predators 2017####
@@ -228,7 +233,7 @@ ggsave(filename = "./plots presi/Hillq1_withou60sp1_21_withCI.png" ,plot = p)
 pp_check(m.Pr.hurdle51, ndraws=100)
 
 
-emt = emtrends(m.Pr.hurdle51, "treatment", var="sowndivLog")
+emt = emtrends(m.Pr.hurdle21b, "treatment", var="sowndivLog")
 summary(emt, point.est=mean)
 summary(emt, point.est=mean, level = .9) #get slopes
 
@@ -236,6 +241,8 @@ emt.pairs <- pairs(emt)
 summary(emt.pairs, point.est=mean, level = .95) #get differences in slopes betweem treatments
 bayestestR::p_direction(emt.pairs) #probability of difference between the treatments in the output to be negative
 bayestestR::p_direction(m.Pr.hurdle51)
+
+#try beta distribution to fit indices
 
 #dont log transform only part of data
 # -> use either hurdle_lognormal or

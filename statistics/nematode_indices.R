@@ -124,6 +124,31 @@ m.EI.42 <- update(m.EI.41,
 
 pp_check(m.EI.42, ndraws=100)
 
+blob <- dBEF_nem21_EI %>% 
+  filter(EI_ZeroOne > 0.49 & EI_ZeroOne < 0.51) #%>%
+  pull(EI_ZeroOne) %>%
+  density() %>%
+  plot()
+
+nrow(dBEF_nem21)  
+(dBEF_nem21$Ba1 == 0) %>% sum() #116 out of 240
+(dBEF_nem21$Ba2 == 0) #22 out of 240   
+
+#only the zero Ba1 subset:
+dBEF_nem21_EI %>% 
+  filter(Ba1 == 0) %>%
+pull(EI_ZeroOne) %>%
+  density() %>%
+  plot()
+
+#only the non-zero Ba1 subset:
+dBEF_nem21_EI %>% 
+  filter(Ba1 != 0) %>%
+  pull(EI_ZeroOne) %>%
+  density() %>%
+  plot()
+
+
 #### EI ~ sowndivLogStd*treatment + (1|block/plot), fam=Beta ####
 dBEF_nem21 <- dBEF_nem21 %>% 
   mutate(EI_ZeroOne = EI/100,
@@ -354,3 +379,6 @@ conditional_effects(m.SI.11)
 
 conditional_effects(m.MI.21)
 conditional_effects(m.MI.12)
+
+
+
