@@ -91,6 +91,8 @@ grid.arrange(p.all, p.t1, p.t2, p.t3)
 
 
 #### 11a hurdle: Fu_per100g ~ sowndivLogStd*treatment + (1|block/plot), hu~1, family = hurdle_lognormal ####
+SEED = 22061996
+  
 m.Fu.hurdle11a <- brm(
   bf(Fu_per100g ~ sowndivLogStd*treatment + (1|block/plot),
      hu ~ 1),
@@ -108,11 +110,24 @@ pp_check(m.Fu.hurdle11, ndraws = 100)+
 m.Fu.hurdle12a <- update(m.Fu.hurdle11,
                         control = list(adapt_delta=0.999))
 
+#### 11b hurdle: Fu_per100g ~ sowndivLogStd*treatment + (1|block/plot), hu~term, family = hurdle_lognormal ####
+SEED = 22061996
 
-
+m.Fu.hurdle11b <- brm(
+  bf(Fu_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+     hu ~ sowndivLogStd*treatment + (1|block/plot)),
+  data = dBEF_nem21, 
+  family = "hurdle_lognormal",
+  chains = 3,
+  cores = 3,
+  iter = 2000, warmup = 1000,
+  seed = SEED,
+  control = list(adapt_delta=0.99))
 
 
 #### 21a  hurdle: Fu_per100g ~ sowndivLog*treatment + (1|block/plot), hu~1, family = hurdle_lognormal ####
+SEED = 22061996
+
 m.Fu.hurdle21a <- brm(
   bf(Fu_per100g ~ sowndivLog*treatment + (1|block/plot),
      hu ~ 1),
@@ -129,6 +144,7 @@ pp_check(m.Fu.hurdle21a, ndraws = 100)+
 
 
 #### 21b  hurdle: Fu_per100g ~ sowndivLog*treatment + (1|block/plot), hu~term, family = hurdle_lognormal ####
+SEED = 22061996
 
 m.Fu.hurdle21b <- brm(
   bf(Fu_per100g ~ sowndivLog*treatment + (1|block/plot),
@@ -151,12 +167,14 @@ m.Fu.hurdle22b <- update(m.Fu.hurdle21b,
 
 loo(m.Fu.hurdle21a, m.Fu.hurdle21b)
 
-####31a hurdle: Fu_per100g ~ sowndivLog*treatment + (1|block/plot), hu~1, family = hurdle_lognormal, no 60 sp plots ####
+####31a hurdle: Fu_per100g ~ sowndivLogStd*treatment + (1|block/plot), hu~1, family = hurdle_lognormal, no 60 sp plots ####
+SEED = 22061996
+
 dat = dBEF_nem21 %>% 
   filter(sowndiv != 60)
 
 m.Fu.hurdle31a <- brm(
-  bf(Fu_per100g ~ sowndivLog*treatment + (1|block/plot),
+  bf(Fu_per100g ~ sowndivLogStd*treatment + (1|block/plot),
      hu ~ 1),
   data = dat, 
   family = hurdle_lognormal,
@@ -170,13 +188,67 @@ pp_check(m.Fu.hurdle31a, ndraws=100)+
   xlim(0,3000)
 summary(m.Fu.hurdle31a)
 
+####31a_Fu2-4 hurdle: Fu2-4 ~ sowndivLogStd*treatment + (1|block/plot), hu~1, family = hurdle_lognormal, no 60 sp plots ####
+SEED = 22061996
+dat = dBEF_nem21 %>% 
+  filter(sowndiv != 60)
 
-####31b hurdle: Fu_per100g ~ sowndivLog*treatment + (1|block/plot), hu~term, family = hurdle_lognormal, no 60 sp plots ####
+(dat$Fu2!=0) %>% sum() #216 of 228
+(dat$Fu3!=0) %>% sum() #169
+(dat$Fu4!=0) %>% sum() #160
+(dat$Fu5!=0) %>% sum() #0
+
+m.Fu2.hurdle31a <- brm(
+  bf(Fu2 ~ sowndivLogStd*treatment + (1|block/plot),
+     hu ~ 1),
+  data = dat, 
+  family = hurdle_lognormal,
+  chains = 3,
+  cores = 3,
+  iter = 2000, warmup = 1000,
+  seed = SEED,
+  control = list(adapt_delta=0.99)) #all good
+
+m.Fu3.hurdle31a <- brm(
+  bf(Fu3 ~ sowndivLogStd*treatment + (1|block/plot),
+     hu ~ 1),
+  data = dat, 
+  family = hurdle_lognormal,
+  chains = 3,
+  cores = 3,
+  iter = 2000, warmup = 1000,
+  seed = SEED,
+  control = list(adapt_delta=0.99))
+  #4 divergent transitions
+
+m.Fu3.hurdle32a <- update(m.Fu3.hurdle31a,
+                          control = list(adapt_delta=0.999)) #all good
+
+m.Fu4.hurdle31a <- brm(
+  bf(Fu4 ~ sowndivLogStd*treatment + (1|block/plot),
+     hu ~ 1),
+  data = dat, 
+  family = hurdle_lognormal,
+  chains = 3,
+  cores = 3,
+  iter = 2000, warmup = 1000,
+  seed = SEED,
+  control = list(adapt_delta=0.99))
+  #1 divergent transition
+
+m.Fu4.hurdle32a <- update(m.Fu4.hurdle31a,
+                          control = list(adapt_delta=0.999)) #all good
+
+
+
+####31b hurdle: Fu_per100g ~ sowndivLogStd*treatment + (1|block/plot), hu~term, family = hurdle_lognormal, no 60 sp plots ####
+SEED = 22061996
+
 dat = dBEF_nem21 %>% 
   filter(sowndiv != 60)
 
 m.Fu.hurdle31b <- brm(
-  bf(Fu_per100g ~ sowndivLog*treatment + (1|block/plot),
+  bf(Fu_per100g ~ sowndivLogStd*treatment + (1|block/plot),
      hu ~ sowndivLog*treatment + (1|block/plot)),
   data = dat, 
   family = hurdle_lognormal,
@@ -186,18 +258,24 @@ m.Fu.hurdle31b <- brm(
   seed = SEED,
   control = list(adapt_delta=0.99))
 
+m.Fu.hurdle33b <- update(m.Fu.hurdle32b, 
+                         iter = 4000, warmup = 2000,
+                         control=list(adapt_delta=0.9999,
+                                      max_treedepth=15))
+
 pp_check(m.Fu.hurdle31b, ndraws=100)
 summary(m.Fu.hurdle31b)
 
 conditional_effects(m.Fu.hurdle31b)
 
-#### 31c hurdle: Fu_per100g ~ sowndivLog*treatment + (1|block/plot), hu~treatment, family = hurdle_lognormal, no 60 sp plots ####
+####31b_Fu2-4 hurdle: Fu2-4 ~ sowndivLogStd*treatment + (1|block/plot), hu~term, family = hurdle_lognormal, no 60 sp plots ####
+SEED = 22061996
 dat = dBEF_nem21 %>% 
   filter(sowndiv != 60)
 
-m.Fu.hurdle31c <- brm(
-  bf(Fu_per100g ~ sowndivLog*treatment + (1|block/plot),
-     hu ~ treatment + (1|block/plot)),
+m.Fu2.hurdle31b <- brm(
+  bf(Fu2 ~ sowndivLogStd*treatment + (1|block/plot),
+     hu ~ sowndivLogStd*treatment + (1|block/plot)),
   data = dat, 
   family = hurdle_lognormal,
   chains = 3,
@@ -205,15 +283,63 @@ m.Fu.hurdle31c <- brm(
   iter = 2000, warmup = 1000,
   seed = SEED,
   control = list(adapt_delta=0.99))
+  #all good
+
+m.Fu3.hurdle31b <- brm(
+  bf(Fu3 ~ sowndivLogStd*treatment + (1|block/plot),
+     hu ~ sowndivLogStd*treatment + (1|block/plot)),
+  data = dat, 
+  family = hurdle_lognormal,
+  chains = 3,
+  cores = 3,
+  iter = 2000, warmup = 1000,
+  seed = SEED,
+  control = list(adapt_delta=0.99))
+  #all good
+
+m.Fu4.hurdle31b <- brm(
+  bf(Fu4 ~ sowndivLogStd*treatment + (1|block/plot),
+     hu ~ sowndivLogStd*treatment + (1|block/plot)),
+  data = dat, 
+  family = hurdle_lognormal,
+  chains = 3,
+  cores = 3,
+  iter = 2000, warmup = 1000,
+  seed = SEED,
+  control = list(adapt_delta=0.99))
+  #9 divergent transitions
+
+m.Fu4.hurdle32b <- update(m.Fu4.hurdle31b,
+                          control = list(adapt_delta=0.999)) #all good
+
+
+#### 31c hurdle: Fu_per100g ~ sowndivLogStd*treatment + (1|block/plot), hu~treatment, family = hurdle_lognormal, no 60 sp plots ####
+SEED = 22061996
+
+dat = dBEF_nem21 %>% 
+  filter(sowndiv != 60)
+
+m.Fu.hurdle31c <- brm(
+  bf(Fu_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+     hu ~ treatment + (1|block/plot)),
+  data = dat, 
+  family = hurdle_lognormal,
+  chains = 3,
+  cores = 3,
+  iter = 2000, warmup = 1000,
+  seed = SEED,
+  control = list(adapt_delta=0.99)) #all good
 
 pp_check(m.Fu.hurdle31c, ndraws=100)
 
-#### 31d hurdle: Fu_per100g ~ sowndivLog*treatment + (1|block/plot), hu~sowndiv, family = hurdle_lognormal, no 60 sp plots ####
+#### 31d hurdle: Fu_per100g ~ sowndivLogStd*treatment + (1|block/plot), hu~sowndiv, family = hurdle_lognormal, no 60 sp plots ####
+SEED = 22061996
+
 dat = dBEF_nem21 %>% 
   filter(sowndiv != 60)
 
 m.Fu.hurdle31d <- brm(
-  bf(Fu_per100g ~ sowndivLog*treatment + (1|block/plot),
+  bf(Fu_per100g ~ sowndivLogStd*treatment + (1|block/plot),
      hu ~ sowndivLog + (1|block/plot)),
   data = dat, 
   family = hurdle_lognormal,
@@ -223,7 +349,7 @@ m.Fu.hurdle31d <- brm(
   seed = SEED,
   control = list(adapt_delta=0.99))
 
-pp_check(m.Fu.hurdle31d, ndraws=100)
+pp_check(m.Fu.hurdle31d, ndraws=100) #all good
 
 #### compare the different hurdle model predictions: ####
 
@@ -274,17 +400,28 @@ loo(m.Fu.hurdle31a, m.Fu.hurdle31b,
 
 
 ####saving models####
-save(#m.Fu.hurdle11a, m.Fu.hurdle12a,
+save(m.Fu.hurdle11a,
+     m.Fu.hurdle11b,
      m.Fu.hurdle21a,
      m.Fu.hurdle21b, #m.Fu.hurdle22b,
+     
      m.Fu.hurdle31a,
-     m.Fu.hurdle31b,
+       m.Fu2.hurdle31a,
+       m.Fu3.hurdle31a, m.Fu3.hurdle32a,
+       m.Fu4.hurdle31a, m.Fu4.hurdle32a,
+      
+     m.Fu.hurdle31b, m.Fu.hurdle32b,
+       m.Fu2.hurdle31b,
+       m.Fu3.hurdle31b,
+       m.Fu4.hurdle31b,m.Fu4.hurdle32b,
+     
      m.Fu.hurdle31c,
      m.Fu.hurdle31d,
-     file="./statistics/brms/231117_Fu.RData")
+     file="./statistics/brms/231122_Fu.RData")
 
-load(file="./statistics/brms/231107_Fu_hurdle.RData")
-conditional_effects(m.Fu.hurdle51)
+load(file="./statistics/brms/231121_Fu.RData")
+conditional_effects(m.Fu2.hurdle31b)
+pp_check(m.Fu4.hurdle31b, ndraws = 100)+xlim(0,1000)
 
 
 
