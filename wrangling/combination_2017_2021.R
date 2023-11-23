@@ -346,6 +346,47 @@ dBEF_nem <- dBEF_nem %>%
   taxa <- c(grep("Acrobeles", colnames(dBEF_nem)):ncol(dBEF_nem))
   dBEF_nem <- dBEF_nem %>%
     mutate(Shannon_H = diversity(.[taxa], index = "shannon"), .before = "Acrobeles" ) 
+  
+  #shannon's H' for trophic guilds
+  nemaplex.Pl <- subset(nemaplex, feeding==1) #26 taxa
+    nemaplex.Fu <- subset(nemaplex, feeding==2) #10 taxa
+    nemaplex.Ba <- subset(nemaplex, feeding==3) #20
+    nemaplex.Pr <- subset(nemaplex, feeding==5) #13
+    nemaplex.Om <- subset(nemaplex, feeding==8) #10
+
+    #extracting the column numbers of the respective trophic guild:
+    Pl.cols=NULL
+    Fu.cols=NULL
+    Ba.cols=NULL
+    Pr.cols=NULL
+    Om.cols=NULL
+      for(i in 1:ncol(dBEF_nem)){
+        if(colnames(dBEF_nem[i]) %in% rownames(nemaplex.Pl)){
+          #print(i)
+          #print(colnames(dBEF_nem[i])) 
+          Pl.cols = append(Pl.cols,i) # Pl.cols: indices of Pl feeding species 
+        }
+        else if(colnames(dBEF_nem[i]) %in% rownames(nemaplex.Fu)){
+          Fu.cols = append(Fu.cols,i) # indices of Fu feeding species 
+        }
+        else if(colnames(dBEF_nem[i]) %in% rownames(nemaplex.Ba)){
+          Ba.cols = append(Ba.cols,i) # indices of Ba feeding species 
+        }
+        else if(colnames(dBEF_nem[i]) %in% rownames(nemaplex.Pr)){
+          Pr.cols = append(Pr.cols,i) # indices of Pr feeding species 
+        }
+        else if(colnames(dBEF_nem[i]) %in% rownames(nemaplex.Om)){
+          Om.cols = append(Om.cols,i) # indices of Om feeding species 
+        }
+      }
+    #now calculate shannon H' for each guild:
+    dBEF_nem <- dBEF_nem %>%
+      mutate(Shannon_H.Pl = diversity(.[Pl.cols], index = "shannon"), .after = Shannon_H) %>%
+      mutate(Shannon_H.Fu = diversity(.[Fu.cols], index = "shannon"), .after = Shannon_H) %>%
+      mutate(Shannon_H.Ba = diversity(.[Ba.cols], index = "shannon"), .after = Shannon_H) %>%
+      mutate(Shannon_H.Pr = diversity(.[Pr.cols], index = "shannon"), .after = Shannon_H) %>%
+      mutate(Shannon_H.Om = diversity(.[Om.cols], index = "shannon"), .after = Shannon_H) 
+    
     
   #species number:
   taxa <- c(grep("Acrobeles", colnames(dBEF_nem)):ncol(dBEF_nem))
@@ -353,11 +394,40 @@ dBEF_nem <- dBEF_nem %>%
   dBEF_nem <- dBEF_nem %>%
     mutate(Hill_q0 = rowSums(presence == TRUE), .before = "Acrobeles")
     rm(presence)
+    
+    #species number in trophic guilds:
+    #Pl
+      presence <- dBEF_nem[Pl.cols] > 0
+      dBEF_nem <- dBEF_nem %>%
+        mutate(Hill_q0.Pl = rowSums(presence == TRUE), .after = Hill_q0)
+    #Fu
+      presence <- dBEF_nem[Fu.cols] > 0
+      dBEF_nem <- dBEF_nem %>%
+        mutate(Hill_q0.Fu = rowSums(presence == TRUE), .after = Hill_q0)
+    #Ba
+      presence <- dBEF_nem[Ba.cols] > 0
+      dBEF_nem <- dBEF_nem %>%
+        mutate(Hill_q0.Ba = rowSums(presence == TRUE), .after = Hill_q0)
+    #Pr
+      presence <- dBEF_nem[Pr.cols] > 0
+      dBEF_nem <- dBEF_nem %>%
+        mutate(Hill_q0.Pr = rowSums(presence == TRUE), .after = Hill_q0)
+    #Om
+      presence <- dBEF_nem[Om.cols] > 0
+      dBEF_nem <- dBEF_nem %>%
+        mutate(Hill_q0.Om = rowSums(presence == TRUE), .after = Hill_q0)
+    rm(presence)
 
   #effective species number (exp(H'), Hill number with q=1):
   taxa <- c(grep("Acrobeles", colnames(dBEF_nem)):ncol(dBEF_nem))
   dBEF_nem <- dBEF_nem %>%
-    mutate(Hill_q1 = exp(.$Shannon_H), .before = "Acrobeles")
+    mutate(Hill_q1 = exp(.$Shannon_H), .before = "Acrobeles") %>%
+    mutate(Hill_q1.Pl = exp(.$Shannon_H.Pl), .after = Shannon_H) %>%
+    mutate(Hill_q1.Fu = exp(.$Shannon_H.Fu), .after = Shannon_H) %>%
+    mutate(Hill_q1.Ba = exp(.$Shannon_H.Ba), .after = Shannon_H) %>%
+    mutate(Hill_q1.Pr = exp(.$Shannon_H.Pr), .after = Shannon_H) %>%
+    mutate(Hill_q1.Om = exp(.$Shannon_H.Om), .after = Shannon_H) 
+    
 
   #nematode specific indices from maRcel
   taxa <- c(grep("Acrobeles", colnames(dBEF_nem)):ncol(dBEF_nem))
