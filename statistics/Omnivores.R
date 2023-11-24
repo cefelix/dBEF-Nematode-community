@@ -204,6 +204,46 @@ m.Om5.hurdle31b <- brm(
   seed = SEED,
   control = list(adapt_delta=0.99)) #pointless, 1 sample !=0
 
+#### 41a hurdle: Om_per100g ~ sowndivLog*treatment + (1|block/plot), hu~1, fam=hurdle_lognormal, no 60 sp. plots ####
+dat = dBEF_nem21 %>% filter(sowndiv != 60)
+SEED=19111996
+
+m.Om.hurdle41a <- brm(
+  bf(Om_per100g ~ sowndivLog*treatment + (1|block/plot),
+     hu ~  1),
+  data = dat, 
+  family = hurdle_lognormal,
+  chains = 3,
+  cores = 3,
+  iter = 2000, warmup = 1000,
+  seed = SEED,
+  control = list(adapt_delta=0.99)) #4 divergent transitions
+
+m.Om.hurdle42a <- update(m.Om.hurdle41a,
+                         control=list(adapt_delta=0.9999))
+
+pp_check(m.Om.hurdle41a, ndraws = 100)
+
+#### 41b hurdle: Om_per100g ~ sowndivLog*treatment + (1|block/plot), hu~term, fam=hurdle_lognormal, no 60 sp. plots ####
+dat = dBEF_nem21 %>% filter(sowndiv != 60)
+
+m.Om.hurdle41b <- brm(
+  bf(Om_per100g ~ sowndivLog*treatment + (1|block/plot),
+     hu ~  sowndivLog*treatment + (1|block/plot)),
+  data = dat, 
+  family = hurdle_lognormal,
+  chains = 3,
+  cores = 3,
+  iter = 2000, warmup = 1000,
+  seed = SEED,
+  control = list(adapt_delta=0.99)) # 1 divergent transitions
+
+m.Om.hurdle42b <- update(m.Om.hurdle41b,
+                         control=list(adapt_delta=0.9999)) 
+
+pp_check(m.Om.hurdle41b, ndraws = 100)
+
+
 #### saving modles ####
 
 save(m.Om.hurdle11a, 
@@ -217,7 +257,10 @@ save(m.Om.hurdle11a,
        m.Om4.hurdle31b,
        m.Om5.hurdle31b, #pointless as only 1 samples !=0
      
-     file = "./statistics/brms/231122_Om.RData")
+     m.Om.hurdle41a, m.Om.hurdle42a,
+     m.Om.hurdle41b, m.Om.hurdle42b,
+     
+     file = "./statistics/brms/231124_Om.RData")
 
 load(file = "./statistics/brms/231122_Om.RData")
 

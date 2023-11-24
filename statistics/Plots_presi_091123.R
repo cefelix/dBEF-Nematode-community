@@ -9,6 +9,11 @@ library(modelr)
 #how to extract data from conditonal_effects():
   #https://discourse.mc-stan.org/t/change-aesthetics-conditional-effects/13500/5
 
+#apparently, conditional_effects "computes the mean of posterior predictive distribution", 
+#thus it "includes both hurdle and pure log normal part" (Paul Buerkner):
+#https://discourse.mc-stan.org/t/brms-does-the-lognormal-part-of-the-hurdle-lognormal-regression-include-zeros-into-analysis/18136/3
+
+
 ####Predators 2021####
 load("./statistics/brms/231117_Pr.RData")
 
@@ -248,5 +253,9 @@ bayestestR::p_direction(m.Pr.hurdle51)
 # -> use either hurdle_lognormal or
 #hurdle_gamma
 
+ggplot(data = dBEF_nem21, aes(x=sowndivLog, y=Hill_q0, col=treatment))+
+  geom_jitter(width=0.3)
 
+dat=subset(dBEF_nem21, sowndiv!=60)
+dat$sowndivLogStd %>% density() %>% plot()
 

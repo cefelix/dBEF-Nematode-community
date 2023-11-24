@@ -351,6 +351,51 @@ m.Fu.hurdle31d <- brm(
 
 pp_check(m.Fu.hurdle31d, ndraws=100) #all good
 
+#### 41a hurdle: Fu_per100g ~ sowndivLog*treatment + (1|block/plot), hu~1, family = hurdle_lognormal, no 60 sp plots ####
+SEED = 22061996
+
+dat = dBEF_nem21 %>% 
+  filter(sowndiv != 60)
+
+m.Fu.hurdle41a <- brm(
+  bf(Fu_per100g ~ sowndivLog*treatment + (1|block/plot),
+     hu ~ 1),
+  data = dat, 
+  family = hurdle_lognormal,
+  chains = 3,
+  cores = 3,
+  iter = 2000, warmup = 1000,
+  seed = SEED,
+  control = list(adapt_delta=0.99)) #all good
+
+pp_check(m.Fu.hurdle41a, ndraws=100) 
+
+#### 41b hurdle: Fu_per100g ~ sowndivLog*treatment + (1|block/plot), hu~term, family = hurdle_lognormal, no 60 sp plots ####
+SEED = 22061996
+
+dat = dBEF_nem21 %>% 
+  filter(sowndiv != 60)
+
+m.Fu.hurdle41b <- brm(
+  bf(Fu_per100g ~ sowndivLog*treatment + (1|block/plot),
+     hu ~ sowndivLog*treatment + (1|block/plot)),
+  data = dat, 
+  family = hurdle_lognormal,
+  chains = 3,
+  cores = 3,
+  iter = 2000, warmup = 1000,
+  seed = SEED,
+  control = list(adapt_delta=0.99))
+
+m.Fu.hurdle42b <- update(m.Fu.hurdle41b,
+                         iter = 3000, warmup = 1500,
+                         control = list(adapt_delta=0.999, max_treedepth = 15))
+#1: In doTryCatch(return(expr), name, parentenv, handler) :Neustart einer unterbrochenen promise evaluation
+#2 divergent transitions, bulk ESS too low
+
+pp_check(m.Fu.hurdle42b, ndraws=100)+
+  xlim(0,3000)
+
 #### compare the different hurdle model predictions: ####
 
 #1 to 60 sp
@@ -417,9 +462,13 @@ save(m.Fu.hurdle11a,
      
      m.Fu.hurdle31c,
      m.Fu.hurdle31d,
-     file="./statistics/brms/231122_Fu.RData")
+     
+     m.Fu.hurdle41a, 
+     m.Fu.hurdle41b, m.Fu.hurdle42b,
+     
+     file="./statistics/brms/231124_Fu.RData")
 
-load(file="./statistics/brms/231121_Fu.RData")
+load(file="./statistics/brms/231122_Fu.RData")
 conditional_effects(m.Fu2.hurdle31b)
 pp_check(m.Fu4.hurdle31b, ndraws = 100)+xlim(0,1000)
 

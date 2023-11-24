@@ -48,7 +48,7 @@ rm(p.1, p.5, p.15, p.19,
 
 
 
-#### 11a hurdle: Ba_per100g ~ sowndivLog*treatment + (1|block/plot), hu~1, family = hurdle_lognormal ####
+#### 11a hurdle: Ba_per100g ~ sowndivLogStd*treatment + (1|block/plot), hu~1, family = hurdle_lognormal ####
 SEED = 22061996
 m.Ba.hurdle11a <- brm(
   bf(Ba_per100g ~ sowndivLogStd*treatment + (1|block/plot),
@@ -65,7 +65,7 @@ m.Ba.hurdle11a <- brm(
 pp_check(m.Ba.hurdle11a, ndraws=100)+
   xlim(0,1000)
 
-#### 11b hurdle: Ba_per100g ~ sowndivLog*treatment + (1|block/plot), hu~term, family = hurdle_lognormal ####
+#### 11b hurdle: Ba_per100g ~ sowndivLogStd*treatment + (1|block/plot), hu~term, family = hurdle_lognormal ####
 SEED = 22061996
 m.Ba.hurdle11b <- brm(
   bf(Ba_per100g ~ sowndivLogStd*treatment + (1|block/plot),
@@ -80,7 +80,7 @@ m.Ba.hurdle11b <- brm(
   control = list(adapt_delta=0.99))
 
 
-#### 31a hurdle: Ba_per100g ~ sowndivLog*treatment + (1|block/plot), hu~1, family = hurdle_lognormal, no 60 sp. plots ####
+#### 31a hurdle: Ba_per100g ~ sowndivLogStd*treatment + (1|block/plot), hu~1, family = hurdle_lognormal, no 60 sp. plots ####
 SEED = 22061996
 dat <- subset(dBEF_nem21, sowndiv != 60)
 
@@ -99,7 +99,7 @@ m.Ba.hurdle31a <- brm(
 pp_check(m.Ba.hurdle11a, ndraws=100)+
   xlim(0,1000)
 
-#### 31a_Ba1-4 hurdle: Ba1-4 ~ sowndivLog*treatment + (1|block/plot), hu~1, family = hurdle_lognormal, no 60 sp. plots ####
+#### 31a_Ba1-4 hurdle: Ba1-4 ~ sowndivLogStd*treatment + (1|block/plot), hu~1, family = hurdle_lognormal, no 60 sp. plots ####
 SEED = 22061996
 dat <- subset(dBEF_nem21, sowndiv != 60)
 
@@ -127,6 +127,8 @@ m.Ba1.hurdle31a <- brm(
   
   m.Ba1.hurdle33a <- update(m.Ba1.hurdle31a, 
                             control=list(adapt_delta=0.9999))
+  pp_check(m.Ba1.hurdle32a, ndraws = 100)+
+    xlim(0,200) #thats okay
 
 m.Ba2.hurdle31a <- brm(
   bf(Ba2 ~ sowndivLogStd*treatment + (1|block/plot),
@@ -138,6 +140,9 @@ m.Ba2.hurdle31a <- brm(
   iter = 2000, warmup = 1000,
   seed = SEED,
   control = list(adapt_delta=0.99)) 
+
+pp_check(m.Ba2.hurdle31a, ndraws = 100)+
+  xlim(0,600) #okay
 
 m.Ba3.hurdle31a <- brm(
   bf(Ba3 ~ sowndivLogStd*treatment + (1|block/plot),
@@ -156,6 +161,8 @@ m.Ba3.hurdle32a <- update(m.Ba3.hurdle31a,
                                          max_treedepth=12))
  #72 divergent transizions
 
+pp_check(m.Ba3.hurdle32a, ndraws = 100)+xlim(0,10) #that's completely off
+
 
 m.Ba4.hurdle31a <- brm(
   bf(Ba4 ~ sowndivLogStd*treatment + (1|block/plot),
@@ -168,7 +175,10 @@ m.Ba4.hurdle31a <- brm(
   seed = SEED,
   control = list(adapt_delta=0.99)) 
 
-#### 31b hurdle: Ba_per100g ~ sowndivLog*treatment + (1|block/plot), hu~term, family = hurdle_lognormal, no 60 sp. plots ####
+pp_check(m.Ba4.hurdle31a, ndraws = 100)+
+  xlim(0,50) #bearable
+
+#### 31b hurdle: Ba_per100g ~ sowndivLogStd*treatment + (1|block/plot), hu~term, family = hurdle_lognormal, no 60 sp. plots ####
 SEED = 22061996
 dat <- subset(dBEF_nem21, sowndiv != 60)
 
@@ -184,7 +194,10 @@ m.Ba.hurdle31b <- brm(
   seed = SEED,
   control = list(adapt_delta=0.99))
 
-#### 31b_Ba1-4 hurdle: Ba1-4 ~ sowndivLog*treatment + (1|block/plot), hu~term, family = hurdle_lognormal, no 60 sp. plots ####
+pp_check(m.Ba.hurdle31b, ndraws=100)+
+  xlim(0,1000)
+
+#### 31b_Ba1-4 hurdle: Ba1-4 ~ sowndivLogStd*treatment + (1|block/plot), hu~term, family = hurdle_lognormal, no 60 sp. plots ####
 SEED = 22061996
 dat <- subset(dBEF_nem21, sowndiv != 60)
 
@@ -250,6 +263,44 @@ m.Ba4.hurdle32b <- update(m.Ba4.hurdle31b,
                           control=list(adapt_delta=0.999)) 
 #all good
 
+#### 41a hurdle: Ba_per100g ~ sowndivLog*treatment + (1|block/plot), hu~1, family = hurdle_lognormal, no 60 sp. plots ####
+SEED = 22061996
+dat <- subset(dBEF_nem21, sowndiv != 60)
+
+m.Ba.hurdle41a <- brm(
+  bf(Ba_per100g ~ sowndivLog*treatment + (1|block/plot),
+     hu ~ 1),
+  data = dat, 
+  family = hurdle_lognormal,
+  stanvars = stanvars, #necessary to use custom brms families!
+  chains = 3,
+  cores = 3,
+  iter = 2000, warmup = 1000,
+  seed = SEED,
+  control = list(adapt_delta=0.99))
+
+pp_check(m.Ba.hurdle41a, ndraws=100)+
+  xlim(0,1000)
+
+#### 41b hurdle: Ba_per100g ~ sowndivLog*treatment + (1|block/plot), hu~term, family = hurdle_lognormal, no 60 sp. plots ####
+SEED = 22061996
+dat <- subset(dBEF_nem21, sowndiv != 60)
+
+m.Ba.hurdle41b <- brm(
+  bf(Ba_per100g ~ sowndivLog*treatment + (1|block/plot),
+     hu ~ sowndivLog*treatment + (1|block/plot)),
+  data = dat, 
+  family = hurdle_lognormal,
+  stanvars = stanvars, #necessary to use custom brms families!
+  chains = 3,
+  cores = 3,
+  iter = 2000, warmup = 1000,
+  seed = SEED,
+  control = list(adapt_delta=0.99))
+
+pp_check(m.Ba.hurdle41b, ndraws = 100)+
+  xlim(0,1000)
+
 
 
 #### save hurdle models ####
@@ -266,7 +317,10 @@ save(m.Ba.hurdle11a,
        m.Ba3.hurdle31b, m.Ba3.hurdle32b,
        m.Ba4.hurdle31b, m.Ba4.hurdle32b, 
      
-     file="./statistics/brms/231122_Ba.RData")
+     m.Ba.hurdle41a,
+     m.Ba.hurdle41b,
+     
+     file="./statistics/brms/231124_Ba.RData")
 
-load(file="./statistics/brms/231121_Ba.RData")
+load(file="./statistics/brms/231122_Ba.RData")
 conditional_effects(m.Ba.hurdle11)
