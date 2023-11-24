@@ -249,6 +249,48 @@ m.Pl5.hurdle31b <- brm(
   control = list(adapt_delta=0.99))
   #3000 transitions exceeded max_treedepth, max Rhat=3.69, bulk/tail ESS too low
 
+#### 41a hurdle: Pl_per100g ~ sowndivLog*treatment + (1|block/plot), hu~1, family = hurdle_lognormal, no 60 sp. plots ####
+SEED = 22061996
+dat <- subset(dBEF_nem21, sowndiv != 60)
+
+m.Pl.hurdle41a <- brm(
+  bf(Ba_per100g ~ sowndivLog*treatment + (1|block/plot),
+     hu ~ 1),
+  data = dat, 
+  family = hurdle_lognormal,
+  stanvars = stanvars, #necessary to use custom brms families!
+  chains = 3,
+  cores = 3,
+  iter = 2000, warmup = 1000,
+  seed = SEED,
+  control = list(adapt_delta=0.99))
+
+pp_check(m.Pl.hurdle41a, ndraws=100)
+
+#### 41b hurdle: Pl_per100g ~ sowndivLog*treatment + (1|block/plot), hu~term, family = hurdle_lognormal, no 60 sp. plots ####
+SEED = 22061996
+dat <- subset(dBEF_nem21, sowndiv != 60)
+
+m.Pl.hurdle41b <- brm(
+  bf(Pl_per100g ~ sowndivLog*treatment + (1|block/plot),
+     hu ~ sowndivLog*treatment + (1|block/plot)),
+  data = dat, 
+  family = hurdle_lognormal,
+  stanvars = stanvars, #necessary to use custom brms families!
+  chains = 3,
+  cores = 3,
+  iter = 2000, warmup = 1000,
+  seed = SEED,
+  control = list(adapt_delta=0.99)) #82 divergent transitions, 1 exceeded max_treedepth, bulk/tail ESS too low
+
+m.Pl.hurdle42b <- update(m.Pl.hurdle41b,
+                         iter = 4000, warmup = 2000,
+                         control = list(adapt_delta=0.999, 
+                                        max_treedepth=12)) #82 divergent transitions, bulk/tail ESS too low
+
+pp_check(m.Pl.hurdle41b, ndraws=100)+
+  xlim(0, 2000)
+
 
 #### saving models ####
 save(m.Pl.hurdle11a, 
@@ -264,7 +306,10 @@ save(m.Pl.hurdle11a,
        m.Pl3.hurdle31b,
        m.Pl4.hurdle31b,
        m.Pl5.hurdle31b, #pointless as only 4 samples !=0
-     file="./statistics/brms/231122_Pl.RData")
+     
+     m.Pl.hurdle41a,
+     m.Pl.hurdle41b, m.Pl.hurdle42b,
+     file="./statistics/brms/231124_Pl.RData")
 
 load(file="./statistics/brms/231122_Pl.RData")
 
