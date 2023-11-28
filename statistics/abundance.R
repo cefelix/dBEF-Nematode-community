@@ -420,30 +420,52 @@ save(m.abun.PoisOffS.11, m.abun.PoisOffS.21,
      file = "./statistics/brms/231106_abundance_OffSet.RData")
 
 
-#### negBinom 11: total_nematodes ~ sowndivLogStd*treatment + offset(log(soilDW)) + (1|block/plot), fam=negbinomial ####
-m.abun.nBinomOffS.11 <- brm(total_nematodes ~ sowndivLogStd*treatment + offset(log(soilDW)) + (1|block/plot), 
-                          data = dBEF_nem21, family = "negbinomial",
+#### negBinom 31: total_nematodes ~ sowndivLogStd*treatment + offset(log(soilDW)) + (1|block/plot), fam=negbinomial, -60sp ####
+SEED = 22061996
+dat = dBEF_nem21 %>% 
+  filter(sowndiv != 60)
+#standardize:  
+dat <- dat %>% mutate(sowndivLogStd = ( (sowndivLog - mean(sowndivLog)) / sd(sowndivLog) ),
+                      .after = sowndivLog)
+
+
+m.abun.nBinomOffS.31 <- brm(total_nematodes ~ sowndivLogStd*treatment + offset(log(soilDW)) + (1|block/plot), 
+                          data = dat, family = "negbinomial",
                           chains = 3,
                           cores = 3,
                           iter = 3000, warmup = 1500,
                           seed = SEED,
-                          control = list(adapt_delta = 0.9) ) 
-                          #9 divergent transitions
-
-m.abun.nBinomOffS.12 <- update(m.abun.nBinomOffS.11,
-                             seed = SEED,
-                             control = list(adapt_delta = 0.999,
-                                            max_treedepth = 12)) 
-
-m.abun.nBinomOffS.13 <- update(m.abun.nBinomOffS.12,
-                               seed = SEED,
-                               control = list(adapt_delta = 0.999,
-                                              max_treedepth = 15)) 
+                          control = list(adapt_delta = 0.99) ) 
+                          #all good
 
 
 
-summary(m.abun.nBinomOffS.13)
-pp_check(m.abun.nBinomOffS.13, ndraws = 100)
+pp_check(m.abun.nBinomOffS.31, ndraws = 100)
+
+#### negBinom 31 vog: total_nematodes ~ sowndivLogStd*treatment + offset(log(soilDW)) + (1|block/plot), fam=negbinomial, -60sp, year =2017 ####
+SEED = 22061996
+dat = dBEF_nem17 %>% 
+  filter(sowndiv != 60)
+#standardize:  
+dat <- dat %>% mutate(sowndivLogStd = ( (sowndivLog - mean(sowndivLog)) / sd(sowndivLog) ),
+                      .after = sowndivLog)
+
+
+m.abun.nBinomOffS.31vog <- brm(total_nematodes ~ sowndivLogStd*treatment + offset(log(soilDW)) + (1|block/plot), 
+                            data = dat, family = "negbinomial",
+                            chains = 3,
+                            cores = 3,
+                            iter = 3000, warmup = 1500,
+                            seed = SEED,
+                            control = list(adapt_delta = 0.99) ) 
+#all good
+
+pp_check(m.abun.nBinomOffS.31vog, ndraws = 100)
+
+#save both nbinom offset models
+save(m.abun.nBinomOffS.31,
+     m.abun.nBinomOffS.31vog,
+     file = "./statistics/brms/231127_abundance_OffSet.RData")
 
 #### negBinom 21: total_nematodes ~ sowndivLog*treatment + offset(log(soilDW)) + (1|block/plot), fam=negbinomial ####
 SEED = 22061996

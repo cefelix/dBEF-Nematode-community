@@ -82,6 +82,15 @@ dat %>% filter(is.na(Hill_q1.Fu)==FALSE) %>% pull(Hill_q1.Fu) %>% density %>% pl
   
   pp_check(m.41.Hill_q1, ndraws=100)
   
+  m.41b.Hill_q1 <- brm(Hill_q1 ~ sowndivLog*treatment + (1|block/plot), 
+                      data = dat, family = "gamma",
+                      chains = 3,
+                      cores = 3,
+                      iter = 2000, warmup = 1000,
+                      seed = SEED,
+                      control = list(adapt_delta = 0.99) ) 
+  pp_check(m.41b.Hill_q1, ndraws=100)
+  
 #for Fu  
   dat %>% filter(is.na(Hill_q1.Fu)==FALSE) %>% pull(Hill_q1.Fu) %>% density %>% plot()
   m.41.Hill_q1.Fu <- brm(Hill_q1.Fu ~ sowndivLog*treatment + (1|block/plot), 
@@ -102,6 +111,8 @@ dat %>% filter(is.na(Hill_q1.Fu)==FALSE) %>% pull(Hill_q1.Fu) %>% density %>% pl
                          control = list(adapt_delta = 0.99) ) #all good
   pp_check(m.41b.Hill_q1.Fu, ndraws=100) #better than the gaussian
   conditional_effects(m.41b.Hill_q1.Fu)
+  
+  loo(m.41.Hill_q1.Fu, m.41b.Hill_q1.Fu)
   
   #for Ba 
   dat %>% filter(is.na(Hill_q1.Ba)==FALSE) %>% pull(Hill_q1.Ba) %>% density %>% plot()
@@ -195,7 +206,9 @@ dat %>% filter(is.na(Hill_q1.Fu)==FALSE) %>% pull(Hill_q1.Fu) %>% density %>% pl
   conditional_effects( m.41b.Hill_q1.Om)
 
 ####save ####
-save( m.41.Hill_q1.Fu,
+save( m.41.Hill_q1,
+        #m.41b.Hill_q1, 
+      m.41.Hill_q1.Fu,
         m.41b.Hill_q1.Fu,
       m.41.Hill_q1.Ba,
         m.41b.Hill_q1.Ba,
@@ -205,7 +218,7 @@ save( m.41.Hill_q1.Fu,
         m.41b.Hill_q1.Pr,
       m.41.Hill_q1.Om, m.42.Hill_q1.Om,
         m.41b.Hill_q1.Om,
-     file = "./statistics/brms/231124_Hill.RData" )
+     file = "./statistics/brms/231127_Hill.RData" )
 
-load(file = "./statistics/brms/231108_hillNumbers.RData" )
+load(file = "./statistics/brms/231124_Hill.RData" )
 conditional_effects(m.41.Hill_q1 , prob=0.89)

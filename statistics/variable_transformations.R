@@ -133,10 +133,6 @@ dBEF_nem <- dBEF_nem %>%
          .after = sowndiv)
 
 dBEF_nem <- dBEF_nem %>%
-  mutate(sowndivLogStd = ( (sowndivLog - mean(sowndivLog)) / sd(sowndivLog) ),
-         .after = sowndivLog)
-
-dBEF_nem <- dBEF_nem %>%
   mutate(soilDW.Log = log(soilDW),
          .after = soilDW)
 

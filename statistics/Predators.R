@@ -81,7 +81,13 @@ pp_check(m.Pr.hurdle21b, ndraws=100)+
   
   
 #### 31a hurdle: Pr_per100g ~ sowndivLogStd*treatment + (1|block/plot), hu~1, fam=hurdle_lognormal, no 60 sp. plots ####
+  SEED = 19111996
   dat = dBEF_nem21 %>% filter(sowndiv != 60)
+  #standardize:  
+  dat <- dat %>% mutate(sowndivLogStd = ( (sowndivLog - mean(sowndivLog)) / sd(sowndivLog) ),
+                        .after = sowndivLog)
+  (dat$Pr_per100g !=0) %>% sum() #171
+  
   
   m.Pr.hurdle31a <- brm(
     bf(Pr_per100g ~ sowndivLogStd*treatment + (1|block/plot),
@@ -92,35 +98,18 @@ pp_check(m.Pr.hurdle21b, ndraws=100)+
     cores = 3,
     iter = 2000, warmup = 1000,
     seed = SEED,
-    control = list(adapt_delta=0.99)) # 2 divergent transitions
-  
-  m.Pr.hurdle32a <- update(m.Pr.hurdle31a,
-                           control=list(adapt_delta=0.999))
+    control = list(adapt_delta=0.99)) # all good
   
   pp_check(m.Pr.hurdle31a, ndraws = 100)
   
 #### 31a_Pr3-5 hurdle: Pr3-5 ~ sowndivLogStd*treatment + (1|block/plot), hu~1, fam=hurdle_lognormal, no 60 sp. plots ####
   SEED = 19111996
   dat = dBEF_nem21 %>% filter(sowndiv != 60)
-  
-  m.Pr3.hurdle31a <- brm(
-    bf(Pr3 ~ sowndivLogStd*treatment + (1|block/plot),
-       hu ~  1),
-    data = dat, 
-    family = hurdle_lognormal,
-    chains = 3,
-    cores = 3,
-    iter = 2000, warmup = 1000,
-    seed = SEED,
-    control = list(adapt_delta=0.99)) 
-    #max_treedepth exceeded 6 times, largest Rhat = 3.47
-    
-  m.Pr3.hurdle32a <- update(m.Pr3.hurdle31a,
-                            iter = 15000, warmup = 5000,
-                            control = list(max_treedepth=18))
-  #15 transitions exceeded max_treedepth, max Rhat=2.71, bulk/tail ESS too low!
-    (dat$Pr3!=0) %>% sum() #0 of 228 !=0  
-      #you can let models run for ages with that^^
+  dat <- dat %>% mutate(sowndivLogStd = ( (sowndivLog - mean(sowndivLog)) / sd(sowndivLog) ),
+                        .after = sowndivLog)
+  (dat$Pr3!=0) %>% sum() #0
+  (dat$Pr4!=0) %>% sum() #166
+  (dat$Pr5!=0) %>% sum() #23
   
   m.Pr4.hurdle31a <- brm(
     bf(Pr4 ~ sowndivLogStd*treatment + (1|block/plot),
@@ -131,11 +120,11 @@ pp_check(m.Pr.hurdle21b, ndraws=100)+
     cores = 3,
     iter = 2000, warmup = 1000,
     seed = SEED,
-    control = list(adapt_delta=0.99)) 
-    (dat$Pr4!=0) %>% sum() #166 of 228 !=0 
+    control = list(adapt_delta=0.99)) #2 divergent transitions
   
-  
-  
+  m.Pr4.hurdle32a <- update(m.Pr4.hurdle31a,
+                            control = list(adapt_delta=0.999)) #1 divergent transition
+
   m.Pr5.hurdle31a <- brm(
     bf(Pr5 ~ sowndivLogStd*treatment + (1|block/plot),
        hu ~  1),
@@ -146,15 +135,12 @@ pp_check(m.Pr.hurdle21b, ndraws=100)+
     iter = 2000, warmup = 1000,
     seed = SEED,
     control = list(adapt_delta=0.99)) 
-  #2 divergent transitions, bulk ESS too low
+  #1 divergent transition
   
   m.Pr5.hurdle32a <- update(m.Pr5.hurdle31a,
-                            iter = 5000, warmup = 2000,
-                            control = list(adapt_delta=0.99999,
-                                           max_treedepth=15))
-  #26 divergent transitions, tail ESS too low
-  (dat$Pr5!=0) %>% sum() #23 of 228
-    #probably too little to fit a hurdle model
+                            iter = 4000, warmup = 2000,
+                            control = list(adapt_delta=0.9999))
+  #3 divergent transitions
   
 
 #### 31b hurdle: Pr_per100g ~ sowndivLogStd*treatment + (1|block/plot), hu~term, fam=hurdle_lognormal, no 60 sp. plots ####
@@ -169,7 +155,7 @@ pp_check(m.Pr.hurdle21b, ndraws=100)+
     cores = 3,
     iter = 2000, warmup = 1000,
     seed = SEED,
-    control = list(adapt_delta=0.99))
+    control = list(adapt_delta=0.99)) #all good
   
   pp_check(m.Pr.hurdle31b, ndraws = 100)
   
@@ -191,7 +177,10 @@ pp_check(m.Pr.hurdle21b, ndraws=100)+
     cores = 3,
     iter = 2000, warmup = 1000,
     seed = SEED,
-    control = list(adapt_delta=0.99)) 
+    control = list(adapt_delta=0.99)) #all good
+  
+  pp_check(m.Pr4.hurdle31b, ndraws=100)+
+    xlim(0,200)
   
   m.Pr5.hurdle31b <- brm(
     bf(Pr5 ~ sowndivLogStd*treatment + (1|block/plot),
@@ -202,13 +191,8 @@ pp_check(m.Pr.hurdle21b, ndraws=100)+
     cores = 3,
     iter = 2000, warmup = 1000,
     seed = SEED,
-    control = list(adapt_delta=0.99))
-  
-  
-  m.Pr5.hurdle32b <- update(m.Pr5.hurdle31b,
-                            iter = 4000, warmup = 2000,
-                            control = list(adapt_delta=0.9999))
-  #10 divergent transitions, bulk ESS too low
+    control = list(adapt_delta=0.99)) 
+  #2 divergent transitions, 1000 after warmup exceeded max_treedepth, bulk/tail ESS too low
   
   
 #### 41a hurdle: Pr_per100g ~ sowndivLog*treatment + (1|block/plot), hu~1, fam=hurdle_lognormal, no 60 sp. plots ####
@@ -263,19 +247,18 @@ pp_check(m.Pr.hurdle21b, ndraws=100)+
   
   
 #### save hurdle models ####
-save(m.Pr.hurdle11a,
-     m.Pr.hurdle21a,
-     m.Pr.hurdle21b,
-     m.Pr.hurdle31a, m.Pr.hurdle32a,
-       m.Pr3.hurdle31a,
-       m.Pr4.hurdle31a,
-       m.Pr5.hurdle31a,
+save(#m.Pr.hurdle11a,
+     #m.Pr.hurdle21a,
+     #m.Pr.hurdle21b,
+     m.Pr.hurdle31a, #m.Pr.hurdle32a,
+       m.Pr4.hurdle31a, m.Pr4.hurdle32a,
+       m.Pr5.hurdle31a, m.Pr5.hurdle32a,
      m.Pr.hurdle31b,
       m.Pr4.hurdle31b,
-      m.Pr5.hurdle31b,  m.Pr5.hurdle32b, 
-     m.Pr.hurdle41a,
-     m.Pr.hurdle41b,
-     file = "./statistics/brms/231124_Pr.RData")
+      m.Pr5.hurdle31b,  
+     #m.Pr.hurdle41a,
+     #m.Pr.hurdle41b,
+     file = "./statistics/brms/231127_Pr.RData")
 
 load(file = "./statistics/brms/231122_Pr.RData")
 

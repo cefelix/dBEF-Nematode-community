@@ -169,9 +169,11 @@ loo(m.Fu.hurdle21a, m.Fu.hurdle21b)
 
 ####31a hurdle: Fu_per100g ~ sowndivLogStd*treatment + (1|block/plot), hu~1, family = hurdle_lognormal, no 60 sp plots ####
 SEED = 22061996
-
 dat = dBEF_nem21 %>% 
   filter(sowndiv != 60)
+#standardize:  
+dat <- dat %>% mutate(sowndivLogStd = ( (sowndivLog - mean(sowndivLog)) / sd(sowndivLog) ),
+                      .after = sowndivLog)
 
 m.Fu.hurdle31a <- brm(
   bf(Fu_per100g ~ sowndivLogStd*treatment + (1|block/plot),
@@ -192,7 +194,11 @@ summary(m.Fu.hurdle31a)
 SEED = 22061996
 dat = dBEF_nem21 %>% 
   filter(sowndiv != 60)
+#standardize:  
+dat <- dat %>% mutate(sowndivLogStd = ( (sowndivLog - mean(sowndivLog)) / sd(sowndivLog) ),
+                      .after = sowndivLog)
 
+(dat$Fu!=0) %>% sum() #0
 (dat$Fu2!=0) %>% sum() #216 of 228
 (dat$Fu3!=0) %>% sum() #169
 (dat$Fu4!=0) %>% sum() #160
@@ -209,6 +215,10 @@ m.Fu2.hurdle31a <- brm(
   seed = SEED,
   control = list(adapt_delta=0.99)) #all good
 
+rstan::get_num_upars(m.Fu2.hurdle31a$fit) #90
+pp_check(m.Fu2.hurdle31a, ndraws = 100)+
+  xlim(0,800)
+
 m.Fu3.hurdle31a <- brm(
   bf(Fu3 ~ sowndivLogStd*treatment + (1|block/plot),
      hu ~ 1),
@@ -224,6 +234,9 @@ m.Fu3.hurdle31a <- brm(
 m.Fu3.hurdle32a <- update(m.Fu3.hurdle31a,
                           control = list(adapt_delta=0.999)) #all good
 
+pp_check(m.Fu3.hurdle32a, ndraws = 100)+
+  xlim(0,300)
+
 m.Fu4.hurdle31a <- brm(
   bf(Fu4 ~ sowndivLogStd*treatment + (1|block/plot),
      hu ~ 1),
@@ -238,6 +251,8 @@ m.Fu4.hurdle31a <- brm(
 
 m.Fu4.hurdle32a <- update(m.Fu4.hurdle31a,
                           control = list(adapt_delta=0.999)) #all good
+pp_check(m.Fu4.hurdle32a, ndraws = 100)+
+  xlim(0,300)
 
 
 
@@ -246,6 +261,10 @@ SEED = 22061996
 
 dat = dBEF_nem21 %>% 
   filter(sowndiv != 60)
+#standardize:  
+dat <- dat %>% mutate(sowndivLogStd = ( (sowndivLog - mean(sowndivLog)) / sd(sowndivLog) ),
+                      .after = sowndivLog)
+
 
 m.Fu.hurdle31b <- brm(
   bf(Fu_per100g ~ sowndivLogStd*treatment + (1|block/plot),
@@ -256,15 +275,28 @@ m.Fu.hurdle31b <- brm(
   cores = 3,
   iter = 2000, warmup = 1000,
   seed = SEED,
-  control = list(adapt_delta=0.99))
+  control = list(adapt_delta=0.99)) #3 divergent transitions, 2993 exceeded max_treedepth, bulk/tail ESS too low
 
-m.Fu.hurdle33b <- update(m.Fu.hurdle32b, 
-                         iter = 4000, warmup = 2000,
-                         control=list(adapt_delta=0.9999,
-                                      max_treedepth=15))
+m.Fu.hurdle32b <- update(m.Fu.hurdle31b,
+                         iter = 3000, warmup = 1500,
+                         control = list(adapt_delta=0.999,
+                         max_treedepth=12)) 
+ #9 divergent transitions, 3190 exceeded max_treedepth, bulk/tail ESS too low
 
-pp_check(m.Fu.hurdle31b, ndraws=100)
-summary(m.Fu.hurdle31b)
+m.Fu.hurdle33b <- update(m.Fu.hurdle31b,
+                         iter = 4000, warmup = 1500,
+                         control = list(adapt_delta=0.9999,
+                                        max_treedepth=15)) 
+  #5 divergent transitions, bulk/tail ESS too low
+
+m.Fu.hurdle34b <- update(m.Fu.hurdle31b,
+                         iter = 6000, warmup = 1500,
+                         control = list(adapt_delta=0.99999,
+                                        max_treedepth=15)) 
+#18 divergent transitions, bulk/tail ESS too low
+
+pp_check(m.Fu.hurdle33b, ndraws=100)
+summary(m.Fu.hurdle34b)
 
 conditional_effects(m.Fu.hurdle31b)
 
@@ -272,6 +304,10 @@ conditional_effects(m.Fu.hurdle31b)
 SEED = 22061996
 dat = dBEF_nem21 %>% 
   filter(sowndiv != 60)
+#standardize:  
+dat <- dat %>% mutate(sowndivLogStd = ( (sowndivLog - mean(sowndivLog)) / sd(sowndivLog) ),
+                      .after = sowndivLog)
+
 
 m.Fu2.hurdle31b <- brm(
   bf(Fu2 ~ sowndivLogStd*treatment + (1|block/plot),
@@ -284,6 +320,9 @@ m.Fu2.hurdle31b <- brm(
   seed = SEED,
   control = list(adapt_delta=0.99))
   #all good
+rstan::get_num_upars(m.Fu2.hurdle31b$fit) #177
+pp_check(m.Fu2.hurdle31b, ndraws=100)+
+  xlim(0,2000)
 
 m.Fu3.hurdle31b <- brm(
   bf(Fu3 ~ sowndivLogStd*treatment + (1|block/plot),
@@ -296,6 +335,9 @@ m.Fu3.hurdle31b <- brm(
   seed = SEED,
   control = list(adapt_delta=0.99))
   #all good
+pp_check(m.Fu3.hurdle31b, ndraws=100)+
+  xlim(0,500)
+
 
 m.Fu4.hurdle31b <- brm(
   bf(Fu4 ~ sowndivLogStd*treatment + (1|block/plot),
@@ -310,92 +352,71 @@ m.Fu4.hurdle31b <- brm(
   #9 divergent transitions
 
 m.Fu4.hurdle32b <- update(m.Fu4.hurdle31b,
-                          control = list(adapt_delta=0.999)) #all good
+                          control = list(adapt_delta=0.999)) #1 divergent transition
+
+m.Fu4.hurdle33b <- update(m.Fu4.hurdle31b,
+                          control = list(adapt_delta=0.99999)) #all fine
+pp_check(m.Fu4.hurdle33b, ndraws=100)+
+  xlim(0,400)
 
 
-#### 31c hurdle: Fu_per100g ~ sowndivLogStd*treatment + (1|block/plot), hu~treatment, family = hurdle_lognormal, no 60 sp plots ####
+#### 41a hurdle: Fu_per100g ~ sowndivLogStd*treatment + (1|block/plot), hu~1, family = hurdle_gamma, no 60 sp plots ####
 SEED = 22061996
-
 dat = dBEF_nem21 %>% 
   filter(sowndiv != 60)
+#standardize:  
+dat <- dat %>% mutate(sowndivLogStd = ( (sowndivLog - mean(sowndivLog)) / sd(sowndivLog) ),
+                      .after = sowndivLog)
 
-m.Fu.hurdle31c <- brm(
-  bf(Fu_per100g ~ sowndivLogStd*treatment + (1|block/plot),
-     hu ~ treatment + (1|block/plot)),
-  data = dat, 
-  family = hurdle_lognormal,
-  chains = 3,
-  cores = 3,
-  iter = 2000, warmup = 1000,
-  seed = SEED,
-  control = list(adapt_delta=0.99)) #all good
-
-pp_check(m.Fu.hurdle31c, ndraws=100)
-
-#### 31d hurdle: Fu_per100g ~ sowndivLogStd*treatment + (1|block/plot), hu~sowndiv, family = hurdle_lognormal, no 60 sp plots ####
-SEED = 22061996
-
-dat = dBEF_nem21 %>% 
-  filter(sowndiv != 60)
-
-m.Fu.hurdle31d <- brm(
-  bf(Fu_per100g ~ sowndivLogStd*treatment + (1|block/plot),
-     hu ~ sowndivLog + (1|block/plot)),
-  data = dat, 
-  family = hurdle_lognormal,
-  chains = 3,
-  cores = 3,
-  iter = 2000, warmup = 1000,
-  seed = SEED,
-  control = list(adapt_delta=0.99))
-
-pp_check(m.Fu.hurdle31d, ndraws=100) #all good
-
-#### 41a hurdle: Fu_per100g ~ sowndivLog*treatment + (1|block/plot), hu~1, family = hurdle_lognormal, no 60 sp plots ####
-SEED = 22061996
-
-dat = dBEF_nem21 %>% 
-  filter(sowndiv != 60)
 
 m.Fu.hurdle41a <- brm(
-  bf(Fu_per100g ~ sowndivLog*treatment + (1|block/plot),
+  bf(Fu_per100g ~ sowndivLogStd*treatment + (1|block/plot),
      hu ~ 1),
   data = dat, 
-  family = hurdle_lognormal,
+  family = hurdle_gamma,
   chains = 3,
   cores = 3,
   iter = 2000, warmup = 1000,
   seed = SEED,
   control = list(adapt_delta=0.99)) #all good
 
-pp_check(m.Fu.hurdle41a, ndraws=100) 
+pp_check(m.Fu.hurdle41a, ndraws=100)
+rstan::get_num_upars(m.Fu.hurdle41a$fit) #90
 
-#### 41b hurdle: Fu_per100g ~ sowndivLog*treatment + (1|block/plot), hu~term, family = hurdle_lognormal, no 60 sp plots ####
+#### 41b hurdle: Fu_per100g ~ sowndivLogStd*treatment + (1|block/plot), hu~term, family = hurdle_gamma, no 60 sp plots ####
 SEED = 22061996
 
 dat = dBEF_nem21 %>% 
   filter(sowndiv != 60)
+dat <- dat %>% mutate(sowndivLogStd = ( (sowndivLog - mean(sowndivLog)) / sd(sowndivLog) ),
+                      .after = sowndivLog)
 
 m.Fu.hurdle41b <- brm(
-  bf(Fu_per100g ~ sowndivLog*treatment + (1|block/plot),
-     hu ~ sowndivLog*treatment + (1|block/plot)),
+  bf(Fu_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+     hu ~ sowndivLogStd*treatment + (1|block/plot)),
   data = dat, 
-  family = hurdle_lognormal,
+  family = hurdle_gamma,
   chains = 3,
   cores = 3,
   iter = 2000, warmup = 1000,
   seed = SEED,
-  control = list(adapt_delta=0.99))
+  control = list(adapt_delta=0.99)) #20 divergent transitions, 2978 exceeded max_treedepth, bulk/tail ESS too low
 
 m.Fu.hurdle42b <- update(m.Fu.hurdle41b,
                          iter = 3000, warmup = 1500,
-                         control = list(adapt_delta=0.999, max_treedepth = 15))
-#1: In doTryCatch(return(expr), name, parentenv, handler) :Neustart einer unterbrochenen promise evaluation
-#2 divergent transitions, bulk ESS too low
+                         control = list(adapt_delta=0.999,
+                                        max_treedepth=12)) 
+  #9 divergent transitions, 28 exceeded max_treedepth, bulk/tail ESS too low
+m.Fu.hurdle43b <- update(m.Fu.hurdle41b,
+                         iter = 4000, warmup = 1500,
+                         control = list(adapt_delta=0.99999,
+                                        max_treedepth=15))
+  #69 divergent transitions, bulk/tail ESS too low
+rstan::get_num_upars(m.Fu.hurdle43b$fit) #177
 
-pp_check(m.Fu.hurdle42b, ndraws=100)+
-  xlim(0,3000)
 
+
+pp_check(m.Fu.hurdle41b, ndraws=100) #all good
 #### compare the different hurdle model predictions: ####
 
 #1 to 60 sp
@@ -445,30 +466,27 @@ loo(m.Fu.hurdle31a, m.Fu.hurdle31b,
 
 
 ####saving models####
-save(m.Fu.hurdle11a,
-     m.Fu.hurdle11b,
-     m.Fu.hurdle21a,
-     m.Fu.hurdle21b, #m.Fu.hurdle22b,
+save(#m.Fu.hurdle11a,
+     #m.Fu.hurdle11b,
+     #m.Fu.hurdle21a,
+     #m.Fu.hurdle21b, #m.Fu.hurdle22b,
      
      m.Fu.hurdle31a,
        m.Fu2.hurdle31a,
-       m.Fu3.hurdle31a, m.Fu3.hurdle32a,
-       m.Fu4.hurdle31a, m.Fu4.hurdle32a,
+       m.Fu3.hurdle31a, m.Fu3.hurdle32a, 
+       m.Fu4.hurdle31a, m.Fu4.hurdle32a, 
       
-     m.Fu.hurdle31b, m.Fu.hurdle32b,
+     m.Fu.hurdle31b, m.Fu.hurdle32b, m.Fu.hurdle33b, m.Fu.hurdle34b,
        m.Fu2.hurdle31b,
        m.Fu3.hurdle31b,
-       m.Fu4.hurdle31b,m.Fu4.hurdle32b,
-     
-     m.Fu.hurdle31c,
-     m.Fu.hurdle31d,
+       m.Fu4.hurdle31b, m.Fu4.hurdle32b, m.Fu4.hurdle33b,
      
      m.Fu.hurdle41a, 
-     m.Fu.hurdle41b, m.Fu.hurdle42b,
+     m.Fu.hurdle41b, m.Fu.hurdle42b, m.Fu.hurdle43b,
      
-     file="./statistics/brms/231124_Fu.RData")
+     file="./statistics/brms/231127_Fu.RData")
 
-load(file="./statistics/brms/231122_Fu.RData")
+load(file="./statistics/brms/231127_Fu.RData")
 conditional_effects(m.Fu2.hurdle31b)
 pp_check(m.Fu4.hurdle31b, ndraws = 100)+xlim(0,1000)
 
