@@ -428,6 +428,13 @@ predictions.Fu2b <- conditional_effects(m.Fu2.hurdle31b)[[3]]
 predictions.Fu3b <- conditional_effects(m.Fu3.hurdle31b)[[3]]
 predictions.Fu4b <- conditional_effects(m.Fu4.hurdle33b)[[3]]
 
+predictions.Fu_week <- conditional_effects(m.Fu.hurdle53a)[[4]]
+
+#make a 3 way interaction
+conditions <- make_conditions(m.Fu.hurdle62a, "week")
+predictions.Fu_week2 <- conditional_effects(m.Fu.hurdle62a, "sowndivLogStd:treatment", conditions = conditions)[[1]]
+
+
 #our data as in the models
 dat <- subset(dBEF_nem21, sowndiv!=60)
 dat <- dat %>% mutate(sowndivLogStd = ( (sowndivLog - mean(sowndivLog)) / sd(sowndivLog) ),
@@ -436,20 +443,20 @@ BREAKS <- unique(dat$sowndivLogStd) %>%
   sort()
 
 #for all Fungivores:
-predictions = predictions.Fua
+predictions = predictions.Fu_week2
 treatments2 = c("+SH+PH", "+SH-PH", "-SH-PH")
 cols=c("brown2", "darkolivegreen", "dodgerblue3")
 
 p.Fu <- ggplot(dat, aes(x=sowndivLogStd, y=Fu_per100g) )+
-  geom_ribbon(data=predictions, aes(ymin= lower__, ymax=upper__, 
-                                    fill=treatment), 
-              alpha=0.2, show.legend=FALSE)+
+  #geom_ribbon(data=predictions, aes(ymin= lower__, ymax=upper__, 
+  #                                  fill=treatment), 
+  #            alpha=0.2, show.legend=FALSE)+
   geom_jitter(width=0.2, shape=19, alpha=0.4, 
               aes(col=treatment))+
   geom_line(data=predictions, aes(x= sowndivLogStd, y=estimate__, 
-                                  linetype=treatment, col=treatment),
+                                  linetype=week, col=treatment),
             linewidth= 1, show.legend = FALSE)+
-  scale_color_manual(labels=treatments2, values = cols)+
+  #scale_color_manual(labels=treatments2, values = cols)+
   scale_x_continuous(name = "sown plant diversity", breaks = BREAKS,
                      labels = c("1", "2", "4", "8", "16"))+
   scale_y_continuous(name = "Fungivores per 100g DW")+
@@ -457,6 +464,12 @@ p.Fu <- ggplot(dat, aes(x=sowndivLogStd, y=Fu_per100g) )+
   theme(legend.position ="bottom")
 
 p.Fu
+
+ggplot(dat, aes(x=sowndivLogStd, y=Fu_per100g, shape=week) )+
+  geom_jitter(width=0.2, alpha=0.4, 
+              aes(col=treatment))+
+  
+
 ggsave(filename = "./plots presi/Fu_21.png" ,plot = p.Fu,
        height = 4,
        width = 4)

@@ -7,6 +7,7 @@
   library(gridExtra)
   library(hexbin)
   library(GGally)
+  library(emmeans)
 
 # a seed:
 SEED = 22061996
@@ -346,8 +347,131 @@ m.Ba.hurdle41b <- brm(
 pp_check(m.Ba.hurdle41b, ndraws = 100)+
   xlim(0,1000)
 
+####51a hurdle: Ba ~ sowndivLogStd*treatment*week + (1|block/plot), hu~1, family=lognormal####
+SEED = 22061996
+dat <- subset(dBEF_nem21, sowndiv != 60)
+#standardize:  
+dat <- dat %>% mutate(sowndivLogStd = ( (sowndivLog - mean(sowndivLog)) / sd(sowndivLog) ),
+                      .after = sowndivLog)
 
 
+m.Ba.hurdle51a <- brm(
+  bf(Ba_per100g ~ sowndivLogStd + treatment + week + 
+       sowndivLogStd:treatment + sowndivLogStd:week + treatment:week +
+       sowndivLogStd:treatment:week + (1|block/plot),
+     hu ~ 1),
+  data = dat, 
+  family = hurdle_lognormal,
+  chains = 3,
+  cores = 3,
+  iter = 2000, warmup = 1000,
+  seed = SEED,
+  control = list(adapt_delta=0.99)) # 2 divergent transitions
+
+m.Ba.hurdle52a <- update(m.Ba.hurdle51a ,
+                         control=list(adapt_delta=0.999)) #all good
+
+summary(m.Ba.hurdle52a)
+emt <- emtrends(m.Ba.hurdle52a, specs = c("treatment", "week"), var="sowndivLogStd")
+summary(emt, point.est=mean)
+summary(emt, point.est=mean, level = .9) 
+
+emt2 <- emtrends(m.Ba.hurdle52a, specs = "treatment", var="sowndivLogStd")
+summary(emt2, point.est=mean, level = .9)
+
+####51b hurdle: Ba ~ sowndivLogStd*treatment*week + (1|block/plot), hu~term, family=lognormal####
+m.Ba.hurdle51b <- brm(
+  bf(Ba_per100g ~ sowndivLogStd + treatment + week + 
+       sowndivLogStd:treatment + sowndivLogStd:week + treatment:week +
+       sowndivLogStd:treatment:week + (1|block/plot),
+     hu ~ sowndivLogStd + treatment + week + 
+       sowndivLogStd:treatment + sowndivLogStd:week + treatment:week +
+       sowndivLogStd:treatment:week + (1|block/plot)),
+  data = dat, 
+  family = hurdle_lognormal,
+  chains = 3,
+  cores = 3,
+  iter = 2000, warmup = 1000,
+  seed = SEED,
+  control = list(adapt_delta=0.99)) #all good
+
+pp_check(m.Ba.hurdle51b, ndraws=100)+
+  xlim(0,1000)
+
+summary(m.Ba.hurdle51b)
+
+
+m.Ba.hurdle51c <- brm(
+  bf(Ba_per100g ~ sowndivLogStd + treatment + week + 
+       sowndivLogStd:treatment + sowndivLogStd:week + treatment:week + (1|block/plot),
+     hu ~ week + (1|block/plot)),
+  data = dat, 
+  family = hurdle_lognormal,
+  chains = 3,
+  cores = 3,
+  iter = 2000, warmup = 1000,
+  seed = SEED,
+  control = list(adapt_delta=0.99)) #1 diverg
+
+m.Ba.hurdle52c <- update(m.Ba.hurdle51c ,
+                         control=list(adapt_delta=0.999)) #986 exceeded max_treedepth 
+
+m.Ba.hurdle52c <- update(m.Ba.hurdle51c ,
+                         control=list(adapt_delta=0.999,
+                                      max_treedepth=12)) #4divergent transitions
+pp_check(m.Ba.hurdle52c , ndraws=100)+ 
+  xlim(0,1000)
+
+
+#save model
+save(m.Ba.hurdle51a, m.Ba.hurdle52a,
+     m.Ba.hurdle51b,
+     m.Ba.hurdle51c, m.Ba.hurdle52c,
+     file = "./statistics/brms/231129_Ba_week.RData")
+
+
+
+#look at predictions
+  #make a 3 way interaction
+  conditions <- make_conditions(m.Ba.hurdle51d, "week")
+  predictions.Ba<- conditional_effects(m.Ba.hurdle51d, "sowndivLogStd:treatment", conditions = conditions)[[1]]
+  
+  predictions = predictions.Ba
+  treatments = c("+SH+PH", "+SH-PH", "-SH-PH")
+  cols=c("brown2", "darkolivegreen", "dodgerblue3")
+  BREAKS <- unique(dat$sowndivLogStd) %>% 
+    sort()
+  
+  p = ggplot(dat, aes(x=sowndivLogStd, y=Ba_per100g) )+
+    #geom_ribbon(data=predictions, aes(ymin= lower__, ymax=upper__, http://127.0.0.1:35231/graphics/plot_zoom_png?width=1200&height=900
+    #                                  fill=treatment), 
+    #            alpha=0.2, show.legend=FALSE)+
+    geom_jitter(width=0.2,  alpha=0.4, shape=19,
+                aes(col=treatment))+
+    geom_line(data=predictions, aes(x= sowndivLogStd, y=estimate__, 
+                                    linetype=week, col=treatment),
+              linewidth= 1, show.legend = FALSE)+
+    #scale_color_manual(labels=treatments, values = cols)+
+    scale_x_continuous(name = "sown plant diversity", breaks = BREAKS,
+                       labels = c("1", "2", "4", "8", "16"))+ 
+    scale_y_continuous(name = "bacterivores per 100g DW")+
+    theme_bw()+
+    theme(legend.position ="bottom")
+  
+  p
+  
+  #compare the weeks
+  dat2 <- dat %>% 
+    mutate(sowndivLogStd = as.factor(sowndivLogStd))
+  ggplot(dat2, aes(x=sowndivLogStd, y=Ba_per100g, col=treatment, shape=week) )+
+    #geom_jitter(width = 0.2)+
+    geom_point(position = position_dodge(width=0.7), alpha=0.9)+
+    geom_boxplot(alpha=0.4, outlier.shape = NA)
+    
+  
+  rm(dat2)
+
+sum(dat$Ba_per100g ==0)
 #### save hurdle models ####
 save(#m.Ba.hurdle11a,
      #m.Ba.hurdle11b, 

@@ -13,6 +13,7 @@ library(gridExtra)
 library(hexbin)
 library(GGally)
 library(magrittr)
+library(emmeans)
 
 #set a seed:
 SEED = 22061996
@@ -295,6 +296,12 @@ m.Fu.hurdle34b <- update(m.Fu.hurdle31b,
                                         max_treedepth=15)) 
 #18 divergent transitions, bulk/tail ESS too low
 
+m.Fu.hurdle35b <- update(m.Fu.hurdle31b,
+                         iter = 12000, warmup = 3000,
+                         control = list(adapt_delta=0.9999999,
+                                        max_treedepth=18)) 
+#18 divergent transitions, bulk/tail ESS too low
+
 pp_check(m.Fu.hurdle33b, ndraws=100)
 summary(m.Fu.hurdle34b)
 
@@ -463,6 +470,98 @@ loo(m.Fu.hurdle31a, m.Fu.hurdle31b,
       #31a:2883.3, 31b:2871.7
       #31c:2885.3, 31d:2887.7
 
+####m.Fu.hurdle51a####
+SEED = 22061996
+
+dat = dBEF_nem21 %>% 
+  filter(sowndiv != 60)
+#standardize:  
+dat <- dat %>% mutate(sowndivLogStd = ( (sowndivLog - mean(sowndivLog)) / sd(sowndivLog) ),
+                      .after = sowndivLog)
+
+
+m.Fu.hurdle51a <- brm(
+  bf(Fu_per100g ~ sowndivLogStd + treatment + week + 
+       sowndivLogStd:treatment + sowndivLogStd:week + treatment:week +
+       sowndivLogStd:treatment:week + (1|block/plot),
+     hu ~ 1),
+  data = dat, 
+  family = hurdle_lognormal,
+  chains = 3,
+  cores = 3,
+  iter = 2000, warmup = 1000,
+  seed = SEED,
+  control = list(adapt_delta=0.99)) # 4 divergent transitions
+
+m.Fu.hurdle52a <- update(m.Fu.hurdle51a,
+                         control = list(adapt_delta=0.999)) #5 divergent, 8 exceeded max_treedepth
+
+m.Fu.hurdle53a <- update(m.Fu.hurdle52a,
+                         control = list(adapt_delta=0.9999,
+                                        max_treedepth=12)) #all good
+
+summary(m.Fu.hurdle53a)
+emt = emtrends(m.Fu.hurdle53a, specs = c("treatment", "week"), var="sowndivLogStd")
+summary(emt, point.est=mean)
+summary(emt, point.est=mean, level = .9) 
+#despite not being significant, the mean slope estimates differ quite a lot between weeks and treatments
+
+m.Fu.hurdle61a <- brm(
+  bf(Fu_per100g ~ sowndivLogStd + treatment + week + 
+       sowndivLogStd:treatment + sowndivLogStd:week + treatment:week + (1|block/plot),
+     hu ~ 1),
+  data = dat, 
+  family = hurdle_lognormal,
+  chains = 3,
+  cores = 3,
+  iter = 2000, warmup = 1000,
+  seed = SEED,
+  control = list(adapt_delta=0.99)) #1 divergent transition
+
+m.Fu.hurdle62a <- update(m.Fu.hurdle61a,
+                         control=list(adapt_delta=0.999)) #2 divergent transitions, 625 exceeded max_treedepth
+
+m.Fu.hurdle62a <- update(m.Fu.hurdle61a,
+                         control=list(adapt_delta=0.9999,
+                                      max_treedepth=12)) #all good
+
+summary(m.Fu.hurdle62a)
+
+
+m.Fu.hurdle51b <- brm(
+  bf(Fu_per100g ~ sowndivLogStd + treatment + week + 
+       sowndivLogStd*treatment + sowndivLogStd*week + treatment*week +
+       sowndivLogStd:treatment:week + (1|block/plot),
+     hu ~ sowndivLogStd + treatment + week + 
+       sowndivLogStd*treatment + sowndivLogStd*week + treatment*week +
+       sowndivLogStd:treatment:week + (1|block/plot)),
+  data = dat, 
+  family = hurdle_lognormal,
+  chains = 3,
+  cores = 3,
+  iter = 2000, warmup = 1000,
+  seed = SEED,
+  control = list(adapt_delta=0.99)) #3000 exceeded max_treedepth
+
+m.Fu.hurdle52b <- update(m.Fu.hurdle51b, 
+                         control=list(max_treedepth=12)) #3000 exceeded max treedepth
+
+loo(m.Fu.hurdle53a, m.Fu.hurdle62a)
+  #52b 4
+#assess pareto k values
+rstan::get_num_upars(m.Fu.hurdle53a$fit) #96
+rstan::get_num_upars(m.Fu.hurdle52b$fit) #189 
+rstan::get_num_upars(m.Fu.hurdle62a$fit) #94
+
+#save the week-predictor models:
+save(m.Fu.hurdle51a, m.Fu.hurdle52a, m.Fu.hurdle53a,
+     m.Fu.hurdle51b, m.Fu.hurdle52b,
+     m.Fu.hurdle61a, m.Fu.hurdle62a,
+     file="./statistics/brms/231129_Fu_week.RData")
+
+
+
+
 
 
 ####saving models####
@@ -476,7 +575,7 @@ save(#m.Fu.hurdle11a,
        m.Fu3.hurdle31a, m.Fu3.hurdle32a, 
        m.Fu4.hurdle31a, m.Fu4.hurdle32a, 
       
-     m.Fu.hurdle31b, m.Fu.hurdle32b, m.Fu.hurdle33b, m.Fu.hurdle34b,
+     m.Fu.hurdle31b, m.Fu.hurdle32b, m.Fu.hurdle33b, m.Fu.hurdle34b, m.Fu.hurdle35b, 
        m.Fu2.hurdle31b,
        m.Fu3.hurdle31b,
        m.Fu4.hurdle31b, m.Fu4.hurdle32b, m.Fu4.hurdle33b,

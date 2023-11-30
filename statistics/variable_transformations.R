@@ -165,6 +165,12 @@ dBEF_nem <- dBEF_nem %>%
   mutate(Om_per100gZeroC = ifelse(Om_per100g == 0, 0.001, Om_per100g), 
          .after=Om_per100g) 
 
+####adding a week variable in '21 data####
+dBEF_nem <- dBEF_nem %>%
+  mutate(week = ifelse(year == 2021,
+                       ifelse(block == "B1"| block == "B2", "W1", "W2"),
+                       NA), .after=block)
+
 #### creating a custom brms hurdle_gaussian family ####
   #this is the family: hurdle_gaussian as coded by Andrew Heiss:
   #https://www.andrewheiss.com/blog/2022/05/09/hurdle-lognormal-gaussian-brms/#exponentially-distributed-outcomes-with-zeros
@@ -209,8 +215,12 @@ posterior_epred_hurdle_gaussian <- function(prep) {
 
 #4 - to use code, pass it to brm() using brm(... , stanvars = stanvars)  
 
+ggplot(dBEF_nem, aes(x=block, y=SWC_gravimetric))+
+  geom_point()
 
 ####creating subset df's for '21 and '17 and no 60 species ####
 dBEF_nem21 <- subset(dBEF_nem, year==2021)
 dBEF_nem17 <- subset(dBEF_nem, year==2017)
+
+
 
