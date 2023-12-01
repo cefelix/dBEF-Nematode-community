@@ -17,7 +17,9 @@ library(emmeans)
 dat <- subset(dBEF_nem21, sowndiv != 60) 
 #standardize:  
 dat <- dat %>% mutate(sowndivLogStd = ( (sowndivLog - mean(sowndivLog)) / sd(sowndivLog) ),
-                      .after = sowndivLog)
+                      .after = sowndivLog) %>%
+  mutate(realdivLogStd = ( (realdivLog - mean(realdivLog)) / sd(realdivLog) ),
+           .after = realdivLog)
 
 
 #### exploratrory compare the weeks: ####
@@ -33,12 +35,26 @@ dat2 <- dat %>%
     scale_x_discrete(name = "sown plant diversity",
                        labels = c("1", "2", "4", "8", "16"))
   
+  #prob of zero in week 1: 7.89 %
+    sum(subset(dat, week == "W1")$Ba_per100g == 0) /
+      nrow(subset(dat, week == "W1"))             
+  # "           in week 2: 1.75%
+    sum(subset(dat, week == "W2")$Ba_per100g == 0) /
+      nrow(subset(dat, week == "W2"))  
+  
 #Fu:
   ggplot(dat2, aes(x=sowndivLogStd, y=Fu_per100g, col=treatment, shape=week) )+
     geom_point(position = position_dodge(width=0.7), alpha=0.9)+
     #geom_boxplot(alpha=0.4, outlier.shape = NA)+
     scale_x_discrete(name = "sown plant diversity",
                      labels = c("1", "2", "4", "8", "16"))
+  
+  #prob of zero in week 1: 2.63 %
+    sum(subset(dat, week == "W1")$Fu_per100g == 0) / 
+      nrow(subset(dat, week == "W1"))
+  # "           in week 2: 0.88 %
+    sum(subset(dat, week == "W2")$Fu_per100g == 0) /
+      nrow(subset(dat, week == "W2")) 
   
 #Pl:
   ggplot(dat2, aes(x=sowndivLogStd, y=Pl_per100g, col=treatment, shape=week) )+
@@ -47,23 +63,46 @@ dat2 <- dat %>%
     scale_x_discrete(name = "sown plant diversity",
                      labels = c("1", "2", "4", "8", "16"))  
   
+  #prob of zero in week 1: 1.75 %
+    sum(subset(dat, week == "W1")$Pl_per100g == 0) / 
+      nrow(subset(dat, week == "W1"))
+  # "           in week 2: 0 %
+    sum(subset(dat, week == "W2")$Pl_per100g == 0) /
+      nrow(subset(dat, week == "W2")) 
+  
 #Pr:
   ggplot(dat2, aes(x=sowndivLogStd, y=Pr_per100g, col=treatment, shape=week) )+
     geom_point(position = position_dodge(width=0.7), alpha=0.9)+
     #geom_boxplot(alpha=0.4, outlier.shape = NA)+
     scale_x_discrete(name = "sown plant diversity",
                      labels = c("1", "2", "4", "8", "16"))  
+  #prob of zero in week 1: 38.60 %
+    sum(subset(dat, week == "W1")$Pr_per100g == 0) / 
+      nrow(subset(dat, week == "W1"))
+  # "           in week 2: 11.40 %
+    sum(subset(dat, week == "W2")$Pr_per100g == 0) /
+      nrow(subset(dat, week == "W2")) 
   
 #Om:
   ggplot(dat2, aes(x=sowndivLogStd, y=Om_per100g, col=treatment, shape=week) )+
     geom_point(position = position_dodge(width=0.7), alpha=0.9)+
     #geom_boxplot(alpha=0.4, outlier.shape = NA)+
+    stat_summary( fun.y = "mean" )+
     scale_x_discrete(name = "sown plant diversity",
-                     labels = c("1", "2", "4", "8", "16"))    
+                     labels = c("1", "2", "4", "8", "16"))   
+  
+  #prob of zero in week 1: 78.07 %
+    sum(subset(dat, week == "W1")$Om_per100g == 0) / 
+      nrow(subset(dat, week == "W1"))
+  # "           in week 2: 36.84 %
+    sum(subset(dat, week == "W2")$Om_per100g == 0) /
+      nrow(subset(dat, week == "W2")) 
   
 ####bacterivores 3way ####
-  
-#most complex: 
+
+SEED = 22061996  
+
+#most complex, sowndiv: 
   m.Ba.3way_a <- brm(
     bf(Ba_per100g ~ sowndivLogStd + treatment + week + 
          sowndivLogStd:treatment + sowndivLogStd:week + treatment:week + 
@@ -91,6 +130,47 @@ dat2 <- dat %>%
       #t3w1 - t3w2 88.27%
     
     #none "significant" -> exclude 3 way interaction:
+    
+    
+#most complex, realdiv: 
+    m.Ba.3way_realdiv <- brm(
+      bf(Ba_per100g ~ realdivLogStd + treatment + week + 
+           realdivLogStd:treatment + realdivLogStd:week + treatment:week + 
+           realdivLogStd:treatment:week + (1|block/plot),
+         hu ~ week + (1|block/plot)),
+      data = dat, 
+      family = hurdle_lognormal,
+      chains = 3,
+      cores = 3,
+      iter = 2000, warmup = 1000,
+      seed = SEED,
+      control = list(adapt_delta=0.99))  #3 divergent transitions
+    
+    m.Ba.3way_realdiv <- update(m.Ba.3way_realdiv,
+                                control = list(adapt_delta=0.999)) #2 divergent transitions
+    
+    m.Ba.3way_realdiv <- update(m.Ba.3way_realdiv,
+                                control = list(adapt_delta=0.9999)) #2 div
+    
+    m.Ba.3way_realdiv <- update(m.Ba.3way_realdiv,
+                                control = list(adapt_delta=0.9999,
+                                               max_treedepth=12)) #all good
+    
+    summary(m.Ba.3way_realdiv)
+    pp_check(m.Ba.3way_realdiv, ndraws=100)+
+      xlim(0,1000)
+    
+    #get slopes:
+    emt = emtrends(m.Ba.3way_realdiv, specs = c("treatment", "week"), var="realdivLogStd")
+    summary(emt, point.est=mean, level = .95) 
+    emt.pairs <- pairs(emt)
+    summary(emt.pairs, point.est=mean, level = .95)
+    bayestestR::p_direction(emt.pairs) #probability of direction
+    #t1w1 - t1w2: 88.23
+    #t2w1 - t2w2: 79.00
+    #t3w1 - t3w2: 86.97
+    
+    loo(m.Ba.3way_realdiv) #1 pareto k > 0.7
 
 ####bacterivores 2way 1 ####        
     m.Ba.2way_a <- brm(
@@ -126,7 +206,9 @@ dat2 <- dat %>%
     summary(emt.pairs, point.est=mean, level = .95)
     bayestestR::p_direction(emt.pairs) #probability of direction
   
-####bacterivores 2way 2 ####        
+####bacterivores 2way 2 ####  
+    
+  #sowndiv:  
     m.Ba.2way_b <- brm(
       bf(Ba_per100g ~ sowndivLogStd + treatment + week + 
            sowndivLogStd:treatment + (1|block/plot),
@@ -151,11 +233,47 @@ dat2 <- dat %>%
     bayestestR::p_direction(emt.pairs) #probability of direction  
     
     
+  #realdiv:  
+    m.Ba.2way_b_realdiv <- brm(
+      bf(Ba_per100g ~ realdivLogStd + treatment + week + 
+           realdivLogStd:treatment + (1|block/plot),
+         hu ~ week + (1|block/plot)),
+      data = dat, 
+      family = hurdle_lognormal,
+      chains = 3,
+      cores = 3,
+      iter = 2000, warmup = 1000,
+      seed = SEED,
+      control = list(adapt_delta=0.99)) #all good
     
     
-#compare and decide    
-    loo(m.Ba.2way_b, m.Ba.2way_a2, m.Ba.3way_a2)
+    pp_check(m.Ba.2way_d, ndraws=100)+ 
+      xlim(0,1000)
+    
+    #get slopes:
+    emt = emtrends(m.Ba.2way_d, specs = c("treatment"), var="realdivLogStd")
+    summary(emt, point.est=mean, level = .95) 
+    emt.pairs <- pairs(emt)
+    summary(emt.pairs, point.est=mean, level = .95)
+    bayestestR::p_direction(emt.pairs) #probability of direction  
+    
+    
+    
+    
+####compare Ba models####    
+    #2way interactions sowndiv
+    loo(m.Ba.2way_b, m.Ba.2way_a2, m.Ba.3way_a2) 
   
+    #least complicated sowndiv vs realdiv
+      loo(m.Ba.2way_b, m.Ba.2way_d)
+      #real div fits slightly better
+      
+    #most complicated realdiv vs sowndiv
+      loo(m.Ba.3way_a, m.Ba.3way_realdiv) #real div slightly better
+        pp_check(m.Ba.3way_a, ndraws=100)+
+          xlim(0,1000)
+        pp_check(m.Ba.3way_realdiv, ndraws=100)+
+          xlim(0,1000)
   
   
 #### fungivores 3 way ####
@@ -183,6 +301,22 @@ dat2 <- dat %>%
     #t2w1 - t2w2: 52.43%
     #t3w1 - t3w2: 68.17%
     #no "significant differences" -> get rid of 3way interaction
+    
+    m.Fu.3way_realdiv <- brm(
+      bf(Fu_per100g ~ realdivLogStd + treatment + week + 
+           realdivLogStd:treatment + realdivLogStd:week + treatment:week +
+           realdivLogStd:treatment:week + (1|block/plot),
+         hu ~ week + (1|block/plot)),
+      data = dat, 
+      family = hurdle_lognormal,
+      chains = 3,
+      cores = 3,
+      iter = 2000, warmup = 1000,
+      seed = SEED,
+      control = list(adapt_delta=0.99)) #3 divergent transitions
+    
+    pp_check(m.Fu.3way_realdiv, ndraws=100)+
+      xlim(0,2000)
     
 #### fungivores 2 way 1.1 ####
     
@@ -257,7 +391,8 @@ dat2 <- dat %>%
     bayestestR::p_direction(emt.pairs) #probability of direction         
     
 #### fungivores 2 way 2 ####
-    
+ 
+  #sowndiv     
     m.Fu.2way_b <- brm(
       bf(Fu_per100g ~ sowndivLogStd + treatment + week + 
            sowndivLogStd:treatment + (1|block/plot),
@@ -274,8 +409,8 @@ dat2 <- dat %>%
                           control = list(adapt_delta=0.999)) #all good
     
     summary(m.Fu.2way_b)
-    pp_check(m.Fu.2way_b2, ndraws=100)+
-      xlim(0,1000) #but rather bad fit
+    pp_check(m.Fu.2way_b, ndraws=100)+
+      xlim(0,2000) #but rather bad fit
     
     #get slopes:
     emt = emtrends(m.Fu.2way_b, specs = c("treatment"), var="sowndivLogStd")
@@ -284,18 +419,38 @@ dat2 <- dat %>%
     summary(emt.pairs, point.est=mean, level = .95)
     bayestestR::p_direction(emt.pairs) #probability of direction 
   
+  #realdiv    
+    m.Fu.2way_b_realdiv <- brm(
+      bf(Fu_per100g ~ realdivLogStd + treatment + week + 
+           realdivLogStd:treatment + (1|block/plot),
+         hu ~ week + (1|block/plot)),
+      data = dat, 
+      family = hurdle_lognormal,
+      chains = 3,
+      cores = 3,
+      iter = 2000, warmup = 1000,
+      seed = SEED,
+      control = list(adapt_delta=0.99)) #1 divergent 
+    
+    m.Fu.2way_b_realdiv <- update(m.Fu.2way_b_realdiv,
+                                  control = list(adapt_delta=0.999)) #1div transition
+    m.Fu.2way_b_realdiv <- update(m.Fu.2way_b_realdiv,
+                                  control = list(adapt_delta=0.9999)) #still to do
     
     ####save fu and ba models####
-    save(m.Ba.3way_a,
+    save(m.Ba.3way_a, m.Ba.3way_realdiv,
          m.Ba.2way_a,
-         m.Ba.2way_b,
+         m.Ba.2way_b, m.Ba.2way_b_realdiv, #d = realdiv
+         
       
-         m.Fu.3way_a,
+         m.Fu.3way_a, m.Fu.3way_realdiv,
          m.Fu.2way_a,
          m.Fu.2way_a2,
          m.Fu.2way_a3,
-         m.Fu.2way_b, 
-         file="./statistics/brms/231130_FuBa_hu_week.RData")
+         m.Fu.2way_b, m.Fu.2way_b_realdiv,
+         file="./statistics/brms/231201_FuBa_hu_week.RData")
+    
+    load("./statistics/brms/231130_FuBa_hu_week.RData")
     
     
     

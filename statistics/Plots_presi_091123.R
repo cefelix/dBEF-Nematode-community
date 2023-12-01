@@ -281,6 +281,7 @@ ggsave(filename = "./plots presi/Hill1Fu_21.png" ,plot = p.Hill1.21.Fu,
        width = 4)
 
 ####bacterivores 2021####
+
 load(file="./statistics/brms/231127_Ba.RData")
 loo(m.Ba.hurdle31a, m.Ba.hurdle31b)
 
@@ -288,6 +289,8 @@ predictions.Ba <- conditional_effects(m.Ba.hurdle31b)[[3]]
 predictions.Ba1 <- conditional_effects(m.Ba1.hurdle31b)[[3]]
 predictions.Ba2 <- conditional_effects(m.Ba2.hurdle31b)[[3]]
 predictions.Ba4 <- conditional_effects(m.Ba4.hurdle31b)[[3]]
+
+
 
 #our data as in the models
 dat <- subset(dBEF_nem21, sowndiv!=60)
@@ -620,8 +623,39 @@ emt.pairs <- pairs(emt)
 summary(emt.pairs, point.est=mean, level = .95)
 bayestestR::p_direction(emt.pairs) #probability of difference between the treatments in the output to be negative
 
+#### quick and dirty: realized SR plots####
 
+ggplot(dat, aes(x=log(realdiv), y=Ba_per100g))+
+  geom_point(aes(shape = week))+
+  facet_wrap(~treatment)+
+  ggtitle("bacterivores per 100g DW \n ~ by treatment")
+  
+ggplot(dat, aes(x=log(realdiv), y=Fu_per100g))+
+  geom_point(aes(shape = week))+
+  facet_wrap(~treatment)+
+  ggtitle("fungivores per 100g DW \n ~ by treatment")
 
+ggplot(dat, aes(x=log(realdiv), y=Pl_per100g))+
+  geom_point(aes(shape = week))+
+  facet_wrap(~treatment)+
+  ggtitle("herbivores per 100g DW \n ~ by treatment")
+
+ggplot(dat, aes(x=log(realdiv), y=Pr_per100g))+
+  geom_point(aes(shape = week))+
+  facet_wrap(~treatment)+
+  ggtitle("Predators per 100g DW \n ~ by treatment")
+
+ggplot(dat, aes(x=log(realdiv), y=Om_per100g))+
+  geom_point(aes(shape = week))+
+  facet_wrap(~treatment)+
+  ggtitle("Omnivores per 100g DW \n ~ by treatment")
+
+ggplot(dat, aes(x=log(realdiv), y=total_nematodes))+
+  geom_point(aes(shape = week))+
+  facet_wrap(~treatment)+
+  ggtitle("Predators per 100g DW \n ~ by treatment")
+
+dat$total_nematodes
 #### to do####
 pp_check(m.Pr.hurdle51, ndraws=100)
 
