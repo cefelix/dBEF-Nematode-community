@@ -130,11 +130,14 @@ pairs(~Ba_per100g + log(sowndiv) +  SWC_gravimetric, data=dBEF_nem)
 #### predictor standardization and log-transformation #####
 dBEF_nem <- dBEF_nem %>%
   mutate(sowndivLog = log(sowndiv, base = 2),
-         .after = sowndiv)
+         .after = sowndiv) %>%
+  mutate(realdivLog = log(realdiv, base = 2),
+         .after = realdiv)
 
 dBEF_nem <- dBEF_nem %>%
   mutate(soilDW.Log = log(soilDW),
          .after = soilDW)
+
 
 #### re-level treatment so that 1 = +SH+PH, 2 = +SH-PH, 3 = -SH-PH ####
 for (i in 1:nrow(dBEF_nem)) {

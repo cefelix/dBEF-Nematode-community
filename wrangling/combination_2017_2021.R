@@ -18,6 +18,28 @@ amyntas2021 <- read.csv("./wrangling/Amyntas2021.csv", row.names = 1)
 vogel2017 <- read.csv("./wrangling/Vogel2017.csv", row.names = 1)
 nemaplex <- read.csv("wrangling/nemaplex.csv", row.names = 1)
 
+#### adding realized species richness ####
+#loading:
+  realizedSR <- read.csv("./wrangling/realized_SR.csv")
+
+  realized17 <- subset(realizedSR, year == 2017 & 
+                         season == "Total" & 
+                         plotcode %in% vogel2017$plot)
+  realized21 <- subset(realizedSR, year == 2021 & 
+                         season == "Total" & 
+                         plotcode %in% amyntas2021$plot)
+
+amyntas2021 <- amyntas2021 %>%
+  mutate(realdiv = as.character(realized21$realizedSR[match(.$plot, realized21$plotcode)]), 
+         .before = sowndiv)
+
+vogel2017 <- vogel2017 %>%
+  mutate(realdiv = as.character(realized17$realizedSR[match(.$plot, realized17$plotcode)]), 
+         .before = sowndiv)
+
+rm(realized17, realized21, realizedSR)
+
+
 
 ####for bootstrap re-sampling: adding raw counts and soil dry weigths ####
 abun_amyntas <- read.csv("./wrangling/abundances2021.csv", row.names = 1)  %>% 
@@ -531,4 +553,4 @@ dBEF_nem <- dBEF_nem %>%
   
 ####save the whole file as .csv####
 write.csv(dBEF_nem, "./dBEF_nem_b.csv")
-
+  
