@@ -41,6 +41,7 @@ dat2 <- dat %>%
   # "           in week 2: 1.75%
     sum(subset(dat, week == "W2")$Ba_per100g == 0) /
       nrow(subset(dat, week == "W2"))  
+  #ratio 3.46
   
 #Fu:
   ggplot(dat2, aes(x=sowndivLogStd, y=Fu_per100g, col=treatment, shape=week) )+
@@ -51,11 +52,12 @@ dat2 <- dat %>%
   
   #prob of zero in week 1: 2.63 %
     sum(subset(dat, week == "W1")$Fu_per100g == 0) / 
-      nrow(subset(dat, week == "W1"))
+      nrow(subset(dat, week == "W1")) 
   # "           in week 2: 0.88 %
     sum(subset(dat, week == "W2")$Fu_per100g == 0) /
       nrow(subset(dat, week == "W2")) 
-  
+  #ratio 2.30
+    
 #Pl:
   ggplot(dat2, aes(x=sowndivLogStd, y=Pl_per100g, col=treatment, shape=week) )+
     geom_point(position = position_dodge(width=0.7), alpha=0.9)+
@@ -65,11 +67,12 @@ dat2 <- dat %>%
   
   #prob of zero in week 1: 1.75 %
     sum(subset(dat, week == "W1")$Pl_per100g == 0) / 
-      nrow(subset(dat, week == "W1"))
+      nrow(subset(dat, week == "W1")) 
   # "           in week 2: 0 %
     sum(subset(dat, week == "W2")$Pl_per100g == 0) /
       nrow(subset(dat, week == "W2")) 
-  
+  #ratio: inf
+    
 #Pr:
   ggplot(dat2, aes(x=sowndivLogStd, y=Pr_per100g, col=treatment, shape=week) )+
     geom_point(position = position_dodge(width=0.7), alpha=0.9)+
@@ -82,6 +85,7 @@ dat2 <- dat %>%
   # "           in week 2: 11.40 %
     sum(subset(dat, week == "W2")$Pr_per100g == 0) /
       nrow(subset(dat, week == "W2")) 
+  #ratio 2.60  
   
 #Om:
   ggplot(dat2, aes(x=sowndivLogStd, y=Om_per100g, col=treatment, shape=week) )+
@@ -93,11 +97,12 @@ dat2 <- dat %>%
   
   #prob of zero in week 1: 78.07 %
     sum(subset(dat, week == "W1")$Om_per100g == 0) / 
-      nrow(subset(dat, week == "W1"))
+      nrow(subset(dat, week == "W1")) 
   # "           in week 2: 36.84 %
     sum(subset(dat, week == "W2")$Om_per100g == 0) /
       nrow(subset(dat, week == "W2")) 
-  
+  #ratio 1.63
+    
 ####bacterivores 3way ####
 
 SEED = 22061996  
@@ -118,6 +123,7 @@ SEED = 22061996
   
   m.Ba.3way_a <- update(m.Ba.3way_a ,
                          control=list(adapt_delta=0.999))  #all good
+  summary(m.Ba.3way_a)
   
   #get slopes:
   emt = emtrends(m.Ba.3way_a2, specs = c("treatment", "week"), var="sowndivLogStd")
@@ -225,6 +231,8 @@ SEED = 22061996
     pp_check(m.Ba.2way_b, ndraws=100)+ 
       xlim(0,1000)
     
+    summary(m.Ba.2way_b)
+    
     #get slopes:
     emt = emtrends(m.Ba.2way_b, specs = c("treatment", "week"), var="sowndivLogStd")
     summary(emt, point.est=mean, level = .95) 
@@ -291,11 +299,12 @@ SEED = 22061996
     seed = SEED,
     control = list(adapt_delta=0.99)) #all good
     
+    summary(m.Fu.3way_a)
     #get slopes:
     emt = emtrends(m.Fu.3way_a, specs = c("treatment", "week"), var="sowndivLogStd")
     summary(emt, point.est=mean, level = .95) 
     emt.pairs <- pairs(emt)
-    summary(emt.pairs, point.est=mean, level = .95)
+    summary(emt.pairs, point.est=mean, level = .9)
     bayestestR::p_direction(emt.pairs) #probability of direction  
     #t1w1 - t1w2: 75.03%
     #t2w1 - t2w2: 52.43%
@@ -332,9 +341,11 @@ SEED = 22061996
       seed = SEED,
       control = list(adapt_delta=0.99)) #all good
     
+    summary(m.Fu.2way_a )
+    
     #get slopes:
     emt = emtrends(m.Fu.2way_a, specs = c("treatment", "week"), var="sowndivLogStd")
-    summary(emt, point.est=mean, level = .95) 
+    summary(emt, point.est=mean, level = .9) 
     emt.pairs <- pairs(emt)
     summary(emt.pairs, point.est=mean, level = .95)
     bayestestR::p_direction(emt.pairs) #probability of direction      
@@ -437,7 +448,7 @@ SEED = 22061996
     m.Fu.2way_b_realdiv <- update(m.Fu.2way_b_realdiv,
                                   control = list(adapt_delta=0.9999)) #still to do
     
-    ####save fu and ba models####
+####save fu and ba models####
     save(m.Ba.3way_a, m.Ba.3way_realdiv,
          m.Ba.2way_a,
          m.Ba.2way_b, m.Ba.2way_b_realdiv, #d = realdiv
@@ -450,7 +461,151 @@ SEED = 22061996
          m.Fu.2way_b, m.Fu.2way_b_realdiv,
          file="./statistics/brms/231201_FuBa_hu_week.RData")
     
-    load("./statistics/brms/231130_FuBa_hu_week.RData")
+    load("./statistics/brms/231201_FuBa_hu_week.RData")
     
+    
+#### plot predictions from 2way-models ####    
+    load("./statistics/brms/231201_FuBa_hu_week.RData")  
+    
+    #get predictions:
+    predictions.Ba.sown <- conditional_effects(m.Ba.2way_b)[[4]]
+    predictions.Ba.real <- conditional_effects(m.Ba.2way_b_realdiv)[[4]]
+    predictions.Fu.sown <- conditional_effects(m.Fu.2way_b)[[4]]
+    predictions.Fu.real <- conditional_effects(m.Fu.2way_b_realdiv)[[4]]   
+    
+    #our data as in the models
+    dat <- subset(dBEF_nem21, sowndiv != 60) #60 sp. plots
+    dat <- dat %>% mutate(sowndivLogStd = ( (sowndivLog - mean(sowndivLog)) / sd(sowndivLog) ),
+                          .after = sowndivLog) %>%
+      mutate(realdivLogStd = ( (realdivLog - mean(realdivLog)) / sd(realdivLog) ),
+             .after = realdivLog)
+    
+    #Ba sowndiv
+    predictions = predictions.Ba.sown 
+    treatments2 = c("+SH+PH", "+SH-PH", "-SH-PH")
+    cols=c("brown2", "darkolivegreen", "dodgerblue3")
+    
+    BREAKS = unique(dat$sowndivLogStd)
+    ggplot(dat, aes(x=sowndivLogStd, y=Ba_per100g) )+
+      geom_ribbon(data=predictions, aes(ymin= lower__, ymax=upper__, 
+                                        fill=treatment), 
+                  alpha=0.2, show.legend=FALSE)+
+      geom_jitter(width=0.2, shape=19, alpha=0.4, 
+                  aes(col=treatment))+
+      geom_line(data=predictions, aes(x= sowndivLogStd, y=estimate__, 
+                                      linetype=treatment, col=treatment),
+                linewidth= 1, show.legend = FALSE)+
+      scale_color_manual(labels=treatments2, values = cols)+
+      scale_x_continuous(name = "sown plant diversity", breaks = BREAKS,
+                         labels = c("1", "2", "4", "8", "16"))+
+      scale_y_continuous(name = "Ba per 100g DW")+
+      theme_bw()+
+      theme(legend.position ="bottom")
+    
+    #Ba realdiv
+    predictions = predictions.Ba.real 
+    treatments2 = c("+SH+PH", "+SH-PH", "-SH-PH")
+    cols=c("brown2", "darkolivegreen", "dodgerblue3")
+    
+    BREAKS = unique(dat$sowndivLogStd)
+    ggplot(dat, aes(x=realdivLogStd, y=Ba_per100g) )+
+      geom_ribbon(data=predictions, aes(ymin= lower__, ymax=upper__, 
+                                        fill=treatment), 
+                  alpha=0.2, show.legend=FALSE)+
+      geom_jitter(width=0.075, shape=19, alpha=0.4, 
+                  aes(col=treatment))+
+      geom_line(data=predictions, aes(x= realdivLogStd, y=estimate__, 
+                                      linetype=treatment, col=treatment),
+                linewidth= 1, show.legend = FALSE)+
+      scale_color_manual(labels=treatments2, values = cols)+
+      scale_x_continuous(name = "realized plant diversity", breaks = BREAKS,
+                         labels = c("1", "2", "4", "8", "16"))+
+      scale_y_continuous(name = "Ba per 100g DW")+
+      theme_bw()+
+      theme(legend.position ="bottom")
+    
+    #Fu sowndiv
+    predictions = predictions.Fu.sown 
+    treatments2 = c("+SH+PH", "+SH-PH", "-SH-PH")
+    cols=c("brown2", "darkolivegreen", "dodgerblue3")
+    
+    BREAKS = unique(dat$sowndivLogStd)
+    ggplot(dat, aes(x=sowndivLogStd, y=Fu_per100g) )+
+      geom_ribbon(data=predictions, aes(ymin= lower__, ymax=upper__, 
+                                        fill=treatment), 
+                  alpha=0.2, show.legend=FALSE)+
+      geom_jitter(width=0.2, shape=19, alpha=0.4, 
+                  aes(col=treatment))+
+      geom_line(data=predictions, aes(x= sowndivLogStd, y=estimate__, 
+                                      linetype=treatment, col=treatment),
+                linewidth= 1, show.legend = FALSE)+
+      scale_color_manual(labels=treatments2, values = cols)+
+      scale_x_continuous(name = "sown plant diversity", breaks = BREAKS,
+                         labels = c("1", "2", "4", "8", "16"))+
+      scale_y_continuous(name = "Fu per 100g DW")+
+      theme_bw()+
+      theme(legend.position ="bottom")
+    
+    #Fu realdiv
+    predictions = predictions.Fu.real
+    treatments2 = c("+SH+PH", "+SH-PH", "-SH-PH")
+    cols=c("brown2", "darkolivegreen", "dodgerblue3")
+    
+    BREAKS = round(unique(dat$realdivLogStd), digits = 1)
+    ggplot(dat, aes(x=realdivLogStd, y=Fu_per100g) )+
+      geom_ribbon(data=predictions, aes(ymin= lower__, ymax=upper__, 
+                                        fill=treatment), 
+                  alpha=0.2, show.legend=FALSE)+
+      geom_jitter(width=0.05, shape=19, alpha=0.4, 
+                  aes(col=treatment))+
+      geom_line(data=predictions, aes(x= realdivLogStd, y=estimate__, 
+                                      linetype=treatment, col=treatment),
+                linewidth= 1, show.legend = FALSE)+
+      scale_color_manual(labels=treatments2, values = cols)+
+      scale_x_continuous(name = "realized plant diversity", breaks = BREAKS)+#,
+                         #labels = c("1", "2", "4", "8", "16"))+
+      scale_y_continuous(name = "Fu per 100g DW")+
+      theme_bw()+
+      theme(legend.position ="bottom")
+    
+####plot predictions from 3-way models####
+    
+    conditions <- make_conditions(m.Fu.3way_a, "week")
+    predictions.Fu3way.sown <- conditional_effects(m.Fu.3way_a, "sowndivLogStd:treatment", conditions = conditions)[[1]]
+    
+    
+    #Fu sowndiv
+    predictions = predictions.Fu3way.sown
+    treatments2 = c("+SH+PH", "+SH-PH", "-SH-PH")
+    cols=c("brown2", "darkolivegreen", "dodgerblue3")
+    
+    BREAKS = -1*unique(dat$sowndivLogStd)
+    ggplot(dat, aes(x=sowndivLogStd, y=Fu_per100g) )+
+      #geom_ribbon(data=predictions, aes(ymin= lower__, ymax=upper__, 
+      #                                  fill=treatment), 
+      #            alpha=0.2, show.legend=FALSE)+
+      geom_jitter(width=0.05, shape=19, alpha=0.4, 
+                  aes(col=treatment))+
+      geom_line(data=predictions, aes(x= sowndivLogStd, y=estimate__, 
+                                      linetype=week, col=treatment),
+                linewidth= 1, show.legend = FALSE)+
+      scale_color_manual(labels=treatments2, values = cols)+
+      scale_x_continuous(name = "realized plant diversity", breaks = BREAKS,
+        labels = c("1", "2", "4", "8", "16"))+
+      scale_y_continuous(name = "Fu per 100g DW")+
+      theme_bw()+
+      theme(legend.position ="bottom")
+    
+    summary(m.Fu.3way_a)
+    
+    
+    
+    
+####check priors####
+  get_prior( bf(Fu_per100g ~ realdivLogStd + treatment + week + 
+           realdivLogStd:treatment + (1|block/plot),
+         hu ~ week + (1|block/plot)),
+      data = dat, 
+      family = hurdle_lognormal)  
     
     
