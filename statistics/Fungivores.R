@@ -63,7 +63,7 @@ grid.arrange(p.1, p.5, p.15, p.19)
   dBEF_nem21_t3 <- subset(dBEF_nem21, treatment == 1)
 
   
-  sum(dBEF_nem21$Fu_per100g == 0) #4 of 240 samples have zero fungivores
+  sum(dBEF_nem21$Fu_per100g == 0 ) #4 of 240 samples have zero fungivores
 
 #a jitter plot with an OLS regression line
 p.all <- ggplot(dBEF_nem21, aes(x = log(sowndiv), y = Fu_per100g))+
