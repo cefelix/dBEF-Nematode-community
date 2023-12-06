@@ -124,15 +124,34 @@ SEED = 22061996
   m.Ba.3way_a <- update(m.Ba.3way_a ,
                          control=list(adapt_delta=0.999, 
                                       max_treedepth=12))  #all good
-  summary(m.Ba.3way_a, prob=0.85 )
+  #### emmeans term check 3fold ####
+  #3fold interaction
+  summary(m.Ba.3way_a, prob=0.9 )
   emt = emtrends(m.Ba.3way_a, specs = c("treatment", "week"), var="sowndivLogStd")
-  summary(emt, point.est=mean, level = .95) 
+  summary(emt, point.est=mean, level = .9) 
+  emt.pairs <- pairs(emt)
+  summary(emt.pairs, point.est=mean, level = .90)
+  bayestestR::p_direction(emt.pairs)
+  # t1 week1 - t1 week 2: 79.10%
+  # t2 week1 - t2 week 2: 72.07%
+  # t3 week1 - t3 week 2: 88.20%
+  contrast(emt)
+  
+  #combinations of treatment and week
+  emm1 <- emmeans(m.Ba.3way_a, "week")
+  emm2 <- emmeans(m.Ba.3way_a, ~treatment*week)
+  emm3 <- emm2[1] + emm1
+  summary(emm3)
+  contrast(emm3)
+  
   
 #remove 3 way interaction:
   m.Ba.2way_a <- update(m.Ba.3way_a, .~. -sowndivLogStd:treatment:week,
                         control = list(adapt_delta=0.99,
                                        max_treedepth=10)) #10 div trans
-  summary(m.Ba.2way_a, prob=0.85)
+  summary(m.Ba.2way_a, prob=0.9)
+  
+  ####emmeans term check 2way interactions####
   
 #remove week:treatment
   m.Ba.2way_b <- update(m.Ba.2way_a, .~. -treatment:week,
@@ -140,8 +159,7 @@ SEED = 22061996
                                        max_treedepth=10))
   summary(m.Ba.2way_b, prob=0.9) 
   pp_check(m.Ba.2way_b, ndraws = 100)
-  
-  ####best fit Ba~sowndiv model####
+ 
     #remove hu~week:sowndiv  
       m.Ba.2way_b2 <- brm(
         bf(Ba_per100g ~ sowndivLogStd + treatment + week + 
@@ -155,7 +173,7 @@ SEED = 22061996
         seed = SEED,
         control = list(adapt_delta=0.99))
       
-      summary(m.Ba.2way_b2, prob=0.85) #best
+      summary(m.Ba.2way_b2, prob=0.9) #best
       pp_check(m.Ba.2way_b2, ndraws = 100)
       
       #remove hu~week
@@ -169,9 +187,9 @@ SEED = 22061996
         cores = 3,
         iter = 2000, warmup = 1000,
         seed = SEED,
-        control = list(adapt_delta=0.99))
+        control = list(adapt_delta=0.99)) #2 div trans
       
-      summary(m.Ba.2way_b3, prob=0.85)
+      summary(m.Ba.2way_b3, prob=0.9)
       
       #remove hu~sowndivLogStd
       m.Ba.2way_b4 <- brm(
@@ -184,95 +202,51 @@ SEED = 22061996
         cores = 3,
         iter = 2000, warmup = 1000,
         seed = SEED,
-        control = list(adapt_delta=0.99))
+        control = list(adapt_delta=0.99)) #1 div
       
-      summary(m.Ba.2way_b4, prob=0.85)
+      summary(m.Ba.2way_b4, prob=0.9)
       
       #remove hu ~ sowndivLogStd + week + sowndivLogStd:week + (1|block/plot)
       m.Ba.2way_b5 <- brm(
         bf(Ba_per100g ~ sowndivLogStd + treatment + week + 
              sowndivLogStd:treatment + sowndivLogStd:week + (1|block/plot),
-           hu ~ week + (1|block/plot)),
+           hu ~ 1),
         data = dat, 
         family = hurdle_lognormal,
         chains = 3,
         cores = 3,
         iter = 2000, warmup = 1000,
         seed = SEED,
-        control = list(adapt_delta=0.99))
+        control = list(adapt_delta=0.99)) #4 div trans
       
-      summary(m.Ba.2way_b5, prob=0.85)
+      summary(m.Ba.2way_b5, prob=0.9)
       
+      #assess effects of week:sowndivLogStd with emmeans 
+        emt = emtrends(m.Ba.2way_b5, specs = c("treatment", "week"), var="sowndivLogStd")
+        summary(emt, point.est=mean, level = .90) 
+        emt.pairs <- pairs(emt)
+        summary(emt.pairs, point.est=mean, level = .90)
+        bayestestR::p_direction(emt.pairs)
+        #treat1 w1- treat1 w2: 91.5%
+        #treat2 w1- treat2 w2: 91.5%
+        #treat2 w1- treat2 w2: 91.5%
+
+           
   
-#remove both week:treatment and week:sowndivLogStd  
-  m.Ba.2way_c <- update(m.Ba.2way_b, .~. -week:sowndivLogStd,
+#remove both week:sowndivLogStd  
+  m.Ba.2way_c <- update(m.Ba.2way_b5, .~. -week:sowndivLogStd,
                          control = list(adapt_delta=0.99,
                                         max_treedepth=10))
   summary(m.Ba.2way_c)
   
+  
+
+####best fit Ba ~ sowndiv model ####    
 #remove week  
-  m.Ba.2way_d <- update(m.Ba.2way_c, .~. -week,
+  m.Ba.2way_c2 <- update(m.Ba.2way_c, .~. -week,
                         control = list(adapt_delta=0.99,
                                        max_treedepth=10))
-  summary(m.Ba.2way_d)
-  
-    #remove hu~week:sowndivLogStd
-    m.Ba.2way_d2 <- brm(
-      bf(Ba_per100g ~ sowndivLogStd + treatment + 
-           sowndivLogStd:treatment + (1|block/plot),
-         hu ~ week + sowndivLogStd + (1|block/plot)),
-      data = dat, 
-      family = hurdle_lognormal,
-      chains = 3,
-      cores = 3,
-      iter = 2000, warmup = 1000,
-      seed = SEED,
-      control = list(adapt_delta=0.99))
-    
-    summary(m.Ba.2way_d2)
-    
-    #remove hu~week
-    m.Ba.2way_d3 <- brm(
-      bf(Ba_per100g ~ sowndivLogStd + treatment + 
-           sowndivLogStd:treatment + (1|block/plot),
-         hu ~  sowndivLogStd + (1|block/plot)),
-      data = dat, 
-      family = hurdle_lognormal,
-      chains = 3,
-      cores = 3,
-      iter = 2000, warmup = 1000,
-      seed = SEED,
-      control = list(adapt_delta=0.99))
-    summary(m.Ba.2way_d3, prob=0.9)
-    pp_check(m.Ba.2way_d3, ndraws=100)
-    
-    #remove hu~sowndiVLogStd
-    m.Ba.2way_d4 <- brm(
-      bf(Ba_per100g ~ sowndivLogStd + treatment + 
-           sowndivLogStd:treatment + (1|block/plot),
-         hu ~  week + (1|block/plot)),
-      data = dat, 
-      family = hurdle_lognormal,
-      chains = 3,
-      cores = 3,
-      iter = 2000, warmup = 1000,
-      seed = SEED,
-      control = list(adapt_delta=0.99))
-    summary(m.Ba.2way_d4)
-    
-  
-#get slopes:
-  emt = emtrends(m.Ba.3way_a, specs = c("treatment", "week"), var="sowndivLogStd")
-  summary(emt, point.est=mean, level = .95) 
-    emt.pairs <- pairs(emt)
-    summary(emt.pairs, point.est=mean, level = .95)
-    bayestestR::p_direction(emt.pairs) #probability of direction
-      #t1w1 - t1w2 78.60%
-      #t2w1 - t2w2 70.33%
-      #t3w1 - t3w2 88.27%
-    
-    #none "significant" -> exclude 3 way interaction:
-  
+  summary(m.Ba.2way_c2, prob=0.9)
   
 #### Fu ~ sowndiv, hu~1, stepwise simplification####
     
@@ -408,7 +382,13 @@ SEED = 22061996
 #### Pr ~ sowndiv, stepwise simplification ####    
   sum(dat$Pr_per100g == 0) #57 -> hurdle ~ term
   
-  b <- prior(normal(0,20), class = "b")
+  beta_coeff_priors <- prior(normal(0,20), class = "b")
+  get_prior(bf(Pr_per100g ~ sowndivLogStd + treatment + week + 
+                 sowndivLogStd:treatment + sowndivLogStd:week + treatment:week + 
+                 sowndivLogStd:treatment:week + (1|block/plot),
+               hu ~ 1),
+            data = dat, 
+            family = hurdle_lognormal)
   
   #1 chain for speed
   m.Pr.3way_a <- brm(
@@ -633,7 +613,7 @@ SEED = 22061996
 ####save models####
 
 #best sowndiv models
-    save(m.Ba.2way_b2,
+    save(m.Ba.2way_c2,
          m.Fu.2way_b ,
          m.Pl.2way_d ,
          m.Pr.2way_d2,
@@ -641,11 +621,12 @@ SEED = 22061996
          
     file="./statistics/brms/231205_densBEST_sowndiv.RData")
   
+  load(file="./statistics/brms/231205_densBEST_sowndiv.RData")
+  
 #all Ba~sowndiv models        
  save(m.Ba.2way_a, m.Ba.2way_b,
       m.Ba.2way_b2, m.Ba.2way_b3, m.Ba.2way_b4, m.Ba.2way_b5,
-      m.Ba.2way_c,
-      m.Ba.2way_d, m.Ba.2way_d2, m.Ba.2way_d3,m.Ba.2way_d4,
+      m.Ba.2way_c, m.Ba.2way_c2,
       m.Ba.3way_a,
       file="./statistics/brms/231205_densBa_sowndiv.RData")
     
