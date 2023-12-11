@@ -1,5 +1,6 @@
 library(brms)
 library(rstan)
+library(ggplot2)
 
 # fitting trophic group densities ~ sowndiv
 
@@ -38,7 +39,19 @@ library(rstan)
     seed = SEED,
     control = list(adapt_delta=0.99)) #9div 
   
-  summary(m.Ba_sowndivW1_p) 
+      #using a narrower prior:
+      beta_coeff_priors2 <- prior(normal(0,5), class = "b")  
+      m.Ba_sowndivW1_p2 <- update(m.Ba_sowndivW1_p,
+                                  prior = beta_coeff_priors2,
+                                  seed = SEED)
+      
+      #using a even narrower prior:
+      beta_coeff_priors <- prior(normal(0,2), class = "b")  
+      m.Ba_sowndivW1_p3 <- update(m.Ba_sowndivW1_p2,
+                                  prior = beta_coeff_priors3,
+                                  seed = SEED)
+  
+  summary(m.Ba_sowndivW1_p, prob=0.9) 
   pp_check(m.Ba_sowndivW1_p, ndraws=100)+
     xlim(0,2000)
 
@@ -80,6 +93,18 @@ m.Ba_sowndivW2_p <- brm(
   iter = 2000, warmup = 1000,
   seed = SEED,
   control = list(adapt_delta=0.99)) #all good
+
+    #using a narrower prior:
+    beta_coeff_priors2 <- prior(normal(0,5), class = "b")  
+    m.Ba_sowndivW1_p2 <- update(m.Ba_sowndivW1_p,
+                                prior = beta_coeff_priors2,
+                                seed = SEED)
+    
+    #using a even narrower prior:
+    beta_coeff_priors <- prior(normal(0,2), class = "b")  
+    m.Ba_sowndivW1_p3 <- update(m.Ba_sowndivW1_p2,
+                                prior = beta_coeff_priors3,
+                                seed = SEED)
 
 summary(m.Ba_sowndivW2_p) 
 pp_check(m.Ba_sowndivW2_p, ndraws=100)
@@ -155,7 +180,7 @@ pp_check(m.Ba_sowndivW2_p, ndraws=100)
   
   pred.Ba_prior  <- conditional_effects(m.Ba_sowndiv_p)[[3]]
   pred.Ba_def  <- conditional_effects(m.Ba_sowndiv_d)[[3]]
-  summary(m.Ba_sowndiv_d)
+  summary(m.Ba_sowndiv_d, prob=0.9)
   
   treatments2 = c("+SH+PH", "+SH-PH", "-SH-PH")
   cols=c("brown2", "darkolivegreen", "dodgerblue3")
@@ -173,31 +198,24 @@ pp_check(m.Ba_sowndivW2_p, ndraws=100)
                 width=0.2, shape=18, alpha=0.4, 
                 aes(col=treatment))+
     #predictions week1
-    geom_line(data=pred.Ba_prior1, aes(x= sowndivLogStd, y=estimate__, 
-                                       linetype="dashed", col=treatment),
-              linewidth= 0.5, show.legend = FALSE)+
     geom_line(data=pred.Ba_def1, aes(x= sowndivLogStd, y=estimate__, 
                                      linetype="solid", col=treatment),
-              linewidth= 0.5, show.legend = FALSE)+
+              linewidth= 0.5, linetype=2,
+              show.legend = FALSE)+
     #predictions week 2:
     geom_line(data=pred.Ba_prior2, aes(x= sowndivLogStd, y=estimate__, 
-                                       linetype="dashed", col=treatment),
-              linewidth= 0.5, show.legend = FALSE)+
-    geom_line(data=pred.Ba_def2, aes(x= sowndivLogStd, y=estimate__, 
-                                     linetype="solid", col=treatment),
-              linewidth=0.5, show.legend = FALSE)+
+                                       col=treatment),
+              linewidth= 0.5, linetype=6,
+              show.legend = FALSE)+
     #models for both weeks:
     geom_line(data=pred.Ba_prior, aes(x= sowndivLogStd, y=estimate__, 
-                                      linetype="dashed", col=treatment),
-              linewidth= 0.7, show.legend = FALSE)+
-    geom_line(data=pred.Ba_def, aes(x= sowndivLogStd, y=estimate__, 
-                                    linetype="solid", col=treatment),
-              linewidth=0.7, show.legend = FALSE)+
-    
+                                       col=treatment),
+              linewidth= 0.7, linetype="solid",
+              show.legend = FALSE)+
     scale_color_manual(labels=treatments2, values = cols)+
     scale_x_continuous(name = "sown plant diversity", breaks = BREAKS,
                        labels = c("16", "8", "4", "2", "1"))+
-    scale_y_continuous(name = "Ba per 100g DW")+
+    scale_y_continuous(name = "Ba per 100g DW", limits = c(-1, 500))+
     theme_bw()+
     theme(legend.position ="bottom")  
 
@@ -285,7 +303,7 @@ BREAKS = unique(dat$sowndivLogStd)
       theme_bw()+
       theme(legend.position ="bottom")    
 
-#### Fu ~ sowndiv:W1-d, W2-d, both-d####
+#### Fu ~ sowndiv:W1-d, W2-d, both-d ####
  
     SEED = 22061996
     beta_coeff_priors <- prior(normal(0,20), class = "b")  
@@ -307,7 +325,7 @@ BREAKS = unique(dat$sowndivLogStd)
       seed = SEED,
       control = list(adapt_delta=0.99)) #11 div
     
-    summary(m.Fu_sowndivW1_p)
+    summary(m.Fu_sowndivW1_p, prob=0.9)
     pp_check(m.Fu_sowndivW1_p, ndraws=100)+
       xlim(0,2000)
     
@@ -324,7 +342,19 @@ BREAKS = unique(dat$sowndivLogStd)
       seed = SEED, 
       control = list(adapt_delta=0.99)) #1 div
     
-    summary(m.Fu_sowndivW1_d)
+        #using a narrower prior:
+        beta_coeff_priors2 <- prior(normal(0,5), class = "b")  
+        m.Fu_sowndivW1_p2 <- update(m.Fu_sowndivW1_p,
+                                    prior = beta_coeff_priors2,
+                                    seed = SEED)
+        
+        #using a even narrower prior:
+        beta_coeff_priors <- prior(normal(0,2), class = "b")  
+        m.Fu_sowndivW1_p3 <- update(m.Fu_sowndivW1_p2,
+                                    prior = beta_coeff_priors3,
+                                    seed = SEED)
+    
+    summary(m.Fu_sowndivW1_d, prob=0.9)
     pp_check(m.Fu_sowndivW1_d, ndraws=100)+
       xlim(0,2000)
     
@@ -348,8 +378,20 @@ BREAKS = unique(dat$sowndivLogStd)
       seed = SEED,
       control = list(adapt_delta=0.99)) #2 div
     
-    summary(m.Fu_sowndivW2_p)
-    pp_check(m.Fu_sowndivW2_p, ndraws=100)
+        #using a narrower prior:
+        beta_coeff_priors2 <- prior(normal(0,5), class = "b")  
+        m.Fu_sowndivW2_p2 <- update(m.Fu_sowndivW2_p,
+                                    prior = beta_coeff_priors2,
+                                    seed = SEED)
+        
+        #using a even narrower prior:
+        beta_coeff_priors <- prior(normal(0,2), class = "b")  
+        m.Fu_sowndivW2_p3 <- update(m.Fu_sowndivW2_p2,
+                                    prior = beta_coeff_priors3,
+                                    seed = SEED)
+    
+    summary(m.Fu_sowndivW2_p3)
+    pp_check(m.Fu_sowndivW2_p3, ndraws=100)
     
     #with default priors
     m.Fu_sowndivW2_d <- brm(
@@ -492,6 +534,19 @@ BREAKS = unique(dat$sowndivLogStd)
       seed = SEED,
       control = list(adapt_delta=0.99)) #30 div
     
+      #using a narrower prior:
+      beta_coeff_priors2 <- prior(normal(0,5), class = "b")  
+      m.Pl_sowndivW1_p2 <- update(m.Pl_sowndivW1_p,
+                                 prior = beta_coeff_priors2,
+                                 seed = SEED)
+      
+      #using a even narrower prior:
+      beta_coeff_priors <- prior(normal(0,2), class = "b")  
+      m.Pl_sowndivW1_p3 <- update(m.Pl_sowndivW1_p2,
+                                  prior = beta_coeff_priors3,
+                                  seed = SEED)
+        
+    
     summary(m.Pl_sowndivW1_p, prob=0.9)
     pp_check(m.Pl_sowndivW1_p, ndraws=100)+
       xlim(0,2000)
@@ -532,6 +587,18 @@ BREAKS = unique(dat$sowndivLogStd)
       iter = 2000, warmup = 1000,
       seed = SEED,
       control = list(adapt_delta=0.99)) #8 div
+    
+        #using a narrower prior:
+        beta_coeff_priors2 <- prior(normal(0,5), class = "b")  
+        m.Pl_sowndivW2_p2 <- update(m.Pl_sowndivW2_p,
+                                    prior = beta_coeff_priors2,
+                                    seed = SEED)
+        
+        #using a even narrower prior:
+        beta_coeff_priors <- prior(normal(0,2), class = "b")  
+        m.Pl_sowndivW2_p3 <- update(m.Pl_sowndivW2_p2,
+                                    prior = beta_coeff_priors3,
+                                    seed = SEED)
     
     summary(m.Pl_sowndivW2_p, prob=0.9)
     pp_check(m.Pl_sowndivW2_p, ndraws=100)
@@ -656,7 +723,7 @@ BREAKS = unique(dat$sowndivLogStd)
       theme_bw()+
       theme(legend.position ="bottom")  
 
-#### Pr ~ sowndiv: W1-p, W2-p, both-p  ####
+#### Pr ~ sowndiv: W1-d3, W2-p5, both-p  ####
     #in W1: p has less divergent transitions, but slightly wors ELPD
     
     SEED = 22061996
@@ -678,9 +745,39 @@ BREAKS = unique(dat$sowndivLogStd)
       seed = SEED,
       control = list(adapt_delta=0.99)) #3 div
     
+        #remove hu~sowndivLogStd:treatment
+        m.Pr_sowndivW1_p2 <-update(m.Pr_sowndivW1_p,
+                                   bf(Pr_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                                   hu ~ sowndivLogStd + treatment + (1|block/plot)),
+                                   seed = SEED) # 5 div, 104 exc. max_treedepth, tail ESS too low
+        
+        #remove hu~sowndivLogStd
+        m.Pr_sowndivW1_p3 <-update(m.Pr_sowndivW1_p2,
+                                   bf(Pr_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                                      hu ~ treatment + (1|block/plot)),
+                                   seed = SEED) #9 div, 943 exceeded max_treedepth
+        #remove hu~treatment
+        m.Pr_sowndivW1_p4 <-update(m.Pr_sowndivW1_p3,
+                                   control=list(max_treedepth=12),
+                                   seed = SEED) #10 div
+        
+        #narrower priors: 
+        beta_coeff_priors2 <- prior(normal(0,5), class = "b")  
+        m.Pr_sowndivW1_p5 <-update(m.Pr_sowndivW1_p4,
+                                   prior=beta_coeff_priors2,
+                                   seed=SEED) #9 div
+        
+        #even narrower priors: 
+        beta_coeff_priors3 <- prior(normal(0,2), class = "b")  
+        m.Pr_sowndivW1_p6 <-update(m.Pr_sowndivW1_p5,
+                                   prior=beta_coeff_priors3,
+                                   seed=SEED) #11 div
+        
+        #best fit: _p5
+    
     summary(m.Pr_sowndivW1_p, prob=0.9)
-    pp_check(m.Pr_sowndivW1_p, ndraws=100)+
-      xlim(0,2000)
+    pp_check(m.Pr_sowndivW1_p5, ndraws=100)+
+      xlim(0,200)
     
     #with default prior:
     m.Pr_sowndivW1_d <- brm(
@@ -695,59 +792,123 @@ BREAKS = unique(dat$sowndivLogStd)
       seed = SEED,
       control = list(adapt_delta=0.99)) #42 div
     
-    summary(m.Pr_sowndivW1_d, prob=0.9)
+        #remove hu~sowndivLogStd:treatment
+        m.Pr_sowndivW1_d2 <-update(m.Pr_sowndivW1_d,
+                                   bf(Pr_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                                      hu ~ sowndivLogStd + treatment + (1|block/plot)),
+                                   seed = SEED) #13 div
+        
+        #remove hu~sowndivLogStd
+        m.Pr_sowndivW1_d3 <-update(m.Pr_sowndivW1_d2,
+                                   bf(Pr_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                                      hu ~ treatment + (1|block/plot)),
+                                   seed = SEED) #12 div
+        #best: _d3
+    
+    summary(m.Pr_sowndivW1_d3, prob=0.9)
     pp_check(m.Pr_sowndivW1_d, ndraws=100)+
       xlim(0,2000)
     
     #compare them  
-    loo(m.Pr_sowndivW1_p, m.Pr_sowndivW1_d)
+    loo(m.Pr_sowndivW1_p5, m.Pr_sowndivW1_d3) #d_3 is best
     print(rstan::get_elapsed_time(m.Pr_sowndivW1_p$fit))
     print(rstan::get_elapsed_time(m.Pr_sowndivW1_d$fit))
     
     
   #for week 2:
-    m.Pr_sowndivW2_p <- brm(
-      bf(Pr_per100g ~ sowndivLogStd*treatment + (1|block/plot),
-         hu ~ sowndivLogStd*treatment + (1|block/plot)),
-      data = subset(dat, week=="W2"), 
-      prior = beta_coeff_priors,
-      family = hurdle_lognormal,
-      stanvars = stanvars, #necessary to use custom brms families!
-      chains = 3,
-      cores = 3,
-      iter = 2000, warmup = 1000,
-      seed = SEED,
-      control = list(adapt_delta=0.99)) #6 div trans
-    
-    summary(m.Pr_sowndivW2_p, prob=0.9)
-    pp_check(m.Pr_sowndivW2_p, ndraws=100)
+      m.Pr_sowndivW2_p <- brm(
+        bf(Pr_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+           hu ~ sowndivLogStd*treatment + (1|block/plot)),
+        data = subset(dat, week=="W2"), 
+        prior = beta_coeff_priors,
+        family = hurdle_lognormal,
+        stanvars = stanvars, #necessary to use custom brms families!
+        chains = 3,
+        cores = 3,
+        iter = 2000, warmup = 1000,
+        seed = SEED,
+        control = list(adapt_delta=0.99)) #6 div trans
+      
+      #remove hu ~ sowndivLogStd:treatment
+      m.Pr_sowndivW2_p2 <- update(m.Pr_sowndivW2_p,
+                                  bf(Pr_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                                     hu ~ sowndivLogStd + treatment + (1|block/plot)),
+                                  seed = SEED) #3 div
+      
+      #remove hu ~ sowndivLogStd
+      m.Pr_sowndivW2_p3 <- update(m.Pr_sowndivW2_p2,
+                                  bf(Pr_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                                     hu ~ treatment + (1|block/plot)),
+                                  seed = SEED)  #13 div
+      #remove hu ~ treatment
+      m.Pr_sowndivW2_p4 <- update(m.Pr_sowndivW2_p3,
+                                  bf(Pr_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                                     hu ~ 1),
+                                  seed = SEED) #10 div
+      
+      #narrower prior:
+      beta_coeff_priors2 <- prior(normal(0,5), class = "b")  
+      m.Pr_sowndivW2_p5 <-update(m.Pr_sowndivW2_p4,
+                                 prior=beta_coeff_priors2,
+                                 seed=SEED) #1 div
+      
+      #even narrower priors: 
+      beta_coeff_priors3 <- prior(normal(0,2), class = "b")  
+      m.Pr_sowndivW2_p6 <-update(m.Pr_sowndivW2_p5,
+                                 prior=beta_coeff_priors3,
+                                 seed=SEED) 
+      
+      loo(m.Pr_sowndivW2_p4, m.Pr_sowndivW2_p5 )
+      #best: _p5
+      
+      summary(m.Pr_sowndivW2_p4, prob=0.9)
+      pp_check(m.Pr_sowndivW2_p, ndraws=100)
     
     #with default priors
-    m.Pr_sowndivW2_d <- brm(
-      bf(Pr_per100g ~ sowndivLogStd*treatment + (1|block/plot),
-         hu ~ sowndivLogStd*treatment + (1|block/plot)),
-      data = subset(dat, week=="W2"), 
-      family = hurdle_lognormal,
-      stanvars = stanvars, #necessary to use custom brms families!
-      chains = 3,
-      cores = 3,
-      iter = 2000, warmup = 1000,
-      seed = SEED,
-      control = list(adapt_delta=0.99))  #9 div trans
-    
-    summary(m.Pr_sowndivW2_d, prob=0.9)
-    pp_check(m.Pr_sowndivW2_d, ndraws=100)
-    
-    #compare them  
-    loo(m.Pr_sowndivW2_p, m.Pr_sowndivW2_d)
-    print(rstan::get_elapsed_time(m.Pr_sowndivW2_p$fit))
-    print(rstan::get_elapsed_time(m.Pr_sowndivW2_d$fit))
-    loo(m.Pr_sowndivW2_d, m.Pr_sowndivW2_p)
+      m.Pr_sowndivW2_d <- brm(
+        bf(Pr_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+           hu ~ sowndivLogStd*treatment + (1|block/plot)),
+        data = subset(dat, week=="W2"), 
+        family = hurdle_lognormal,
+        stanvars = stanvars, #necessary to use custom brms families!
+        chains = 3,
+        cores = 3,
+        iter = 2000, warmup = 1000,
+        seed = SEED,
+        control = list(adapt_delta=0.99))  #9 div trans
+      
+      #remove hu ~ sowndivLogStd:treatment
+      m.Pr_sowndivW2_d2 <- update(m.Pr_sowndivW2_d,
+                                  bf(Pr_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                                     hu ~ sowndivLogStd + treatment + (1|block/plot)),
+                                  seed = SEED)
+      
+      #remove hu ~ sowndivLogStd
+      m.Pr_sowndivW2_d3 <- update(m.Pr_sowndivW2_d2,
+                                  bf(Pr_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                                     hu ~ treatment + (1|block/plot)),
+                                  seed = SEED)
+      
+      #remove hu ~ treatment
+      m.Pr_sowndivW2_d4 <- update(m.Pr_sowndivW2_d3,
+                                  bf(Pr_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                                     hu ~ 1),
+                                  seed = SEED)
+      
+      
+      summary(m.Pr_sowndivW2_d2, prob=0.9)
+      pp_check(m.Pr_sowndivW2_d2, ndraws=100)
+      
+      #compare them  
+      loo(m.Pr_sowndivW2_p, m.Pr_sowndivW2_d)
+      print(rstan::get_elapsed_time(m.Pr_sowndivW2_p$fit))
+      print(rstan::get_elapsed_time(m.Pr_sowndivW2_d$fit))
+      loo(m.Pr_sowndivW2_d, m.Pr_sowndivW2_p)
     
   #for both weeks  
     m.Pr_sowndiv_p <- brm(
       bf(Pr_per100g ~ sowndivLogStd*treatment + (1|block/plot),
-         hu ~ sowndivLogStd*treatment + (1|block/plot)),
+         hu ~ sowndivLogStd + treatment + week + (1|block/plot)),
       data = dat, 
       prior = beta_coeff_priors,
       family = hurdle_lognormal,
@@ -812,38 +973,32 @@ BREAKS = unique(dat$sowndivLogStd)
                   width=0.2, shape=17, alpha=0.8, 
                   aes(col=treatment))+
       #predictions week1
-      geom_line(data=pred.Pr_prior1, aes(x= sowndivLogStd, y=estimate__, 
-                                         linetype="dashed", col=treatment),
-                linewidth= 0.5, show.legend = FALSE)+
       geom_line(data=pred.Pr_def1, aes(x= sowndivLogStd, y=estimate__, 
-                                       linetype="solid", col=treatment),
-                linewidth= 0.5, show.legend = FALSE)+
+                                        col=treatment),
+                linewidth= 0.5, linetype=6,
+                show.legend = FALSE)+
       #predictions week 2:
-      geom_line(data=pred.Pr_prior2, aes(x= sowndivLogStd, y=estimate__, 
-                                         linetype="dashed", col=treatment),
-                linewidth= 0.5, show.legend = FALSE)+
       geom_line(data=pred.Pr_def2, aes(x= sowndivLogStd, y=estimate__, 
-                                       linetype="solid", col=treatment),
-                linewidth=0.5, show.legend = FALSE)+
+                                       col=treatment),
+                linewidth=0.5, linetype="dashed",
+                show.legend = FALSE)+
       #models for both weeks:
-      geom_line(data=pred.Pr_prior, aes(x= sowndivLogStd, y=estimate__, 
-                                        linetype="dashed", col=treatment),
-                linewidth= 0.7, show.legend = FALSE)+
       geom_line(data=pred.Pr_def, aes(x= sowndivLogStd, y=estimate__, 
-                                      linetype="solid", col=treatment),
-                linewidth=0.7, show.legend = FALSE)+
+                                      col=treatment),
+                linewidth=0.7, linetype="solid",
+                show.legend = FALSE)+
       
       scale_color_manual(labels=treatments2, values = cols)+
       scale_x_continuous(name = "sown plant diversity", breaks = BREAKS,
                          labels = c("16", "8", "4", "2", "1"))+
-      scale_y_continuous(name = "Pr per 100g DW")+
+      scale_y_continuous(name = "Pr per 100g DW", limits = c(-1,50))+
       theme_bw()+
       theme(legend.position ="bottom")  
     
     
     
     
-#### Om ~ sowndiv: W1-p, W2-p, both-d ####
+#### Om ~ sowndiv: W1-p4, W2-p2, both-d4 ####
     #W1: d has better elpd, but p less divergent transitions
     #W2: 11 vs 12 divergent transitions, elpd basically same
     #both: 10 div in p, zero in d, elpd slightly better in p
@@ -853,7 +1008,7 @@ BREAKS = unique(dat$sowndivLogStd)
     sum(subset(dat, week=="W1")$Om_per100g == 0) #89
     sum(subset(dat, week=="W2")$Om_per100g == 0) #42
     
-    #for week 1:
+  #for week 1:
     m.Om_sowndivW1_p <- brm(
       bf(Om_per100g ~ sowndivLogStd*treatment + (1|block/plot),
          hu ~ sowndivLogStd*treatment + (1|block/plot)),
@@ -867,9 +1022,32 @@ BREAKS = unique(dat$sowndivLogStd)
       seed = SEED,
       control = list(adapt_delta=0.99))  #15 div
     
-    summary(m.Om_sowndivW1_p, prob=0.9)
-    pp_check(m.Om_sowndivW1_p, ndraws=100)+
-      xlim(0,2000)
+        #remove hu~sowndivLogStd:treatment
+        m.Om_sowndivW1_p2 <- update(m.Om_sowndivW1_p,
+                                    bf(Om_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                                       hu ~ sowndivLogStd + treatment + (1|block/plot)),
+                                    newdata = subset(dat, week=="W1"),
+                                    seed = SEED) #46 div, bulk too low
+        #remove hu~sowndivLogStd
+        m.Om_sowndivW1_p3 <- update(m.Om_sowndivW1_p,
+                                    bf(Om_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                                       hu ~ treatment + (1|block/plot)),
+                                    newdata = subset(dat, week=="W1"),
+                                    seed = SEED) #26 div, bulk too low
+        
+        
+        #try a narrower prior:
+        beta_coeff_priors2<- prior(normal(0,5), class = "b")
+        m.Om_sowndivW1_p4 <- update(m.Om_sowndivW1_p3,
+                                    prior=beta_coeff_priors2,
+                                    newdata = subset(dat, week=="W1"),
+                                    seed = SEED) #3 div, bulk ESS too low
+        
+        #decision: _p4 is best
+      
+      summary(m.Om_sowndivW1_p4, prob=0.9)
+      pp_check(m.Om_sowndivW1_p4, ndraws=100)+
+        xlim(0,50)
     
     #with default prior:
     m.Om_sowndivW1_d <- brm(
@@ -884,17 +1062,30 @@ BREAKS = unique(dat$sowndivLogStd)
       seed = SEED,
       control = list(adapt_delta=0.99)) #25 div
     
-    summary(m.Om_sowndivW1_d, prob=0.9)
-    pp_check(m.Om_sowndivW1_d, ndraws=100)+
-      xlim(0,2000)
+      #priciple of parsimony: remove hurdle interaction
+        m.Om_sowndivW1_d2 <- update(m.Om_sowndivW1_d,
+                                    bf(Om_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                                        hu ~ sowndivLogStd + treatment + (1|block/plot)),
+                                    newdata = subset(dat, week=="W1"),
+                                    seed = SEED)#5 div, 24 exceeded max_treedepth, bulk ESS to low
+      #parsimony: remove hu~sowndivLogStd
+        m.Om_sowndivW1_d3 <- update(m.Om_sowndivW1_d,
+                                    bf(Om_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                                       hu ~ treatment + (1|block/plot)),
+                                    newdata = subset(dat, week=="W1"),
+                                    seed = SEED) #3 div, bulk ESS too low
+        
+      summary(m.Om_sowndivW1_d3, prob=0.9)
+      pp_check(m.Om_sowndivW1_d3, ndraws=100)+
+        xlim(0,100)
     
     #compare them  
-    loo(m.Om_sowndivW1_p, m.Om_sowndivW1_d)
+    loo(m.Om_sowndivW1_p4, m.Om_sowndivW1_d3)
     print(rstan::get_elapsed_time(m.Om_sowndivW1_p$fit))
     print(rstan::get_elapsed_time(m.Om_sowndivW1_d$fit))
     
     
-    #for week 2:
+  #for week 2:
     m.Om_sowndivW2_p <- brm(
       bf(Om_per100g ~ sowndivLogStd*treatment + (1|block/plot),
          hu ~ sowndivLogStd*treatment + (1|block/plot)),
@@ -908,8 +1099,16 @@ BREAKS = unique(dat$sowndivLogStd)
       seed = SEED,
       control = list(adapt_delta=0.99)) #11 div
     
-    summary(m.Om_sowndivW2_p, prob=0.9)
-    pp_check(m.Om_sowndivW2_p, ndraws=100)
+     #with a narrower prior:
+      beta_coeff_priors2<- prior(normal(0,5), class = "b")
+      m.Om_sowndivW2_p2 <- update(m.Om_sowndivW2_p, 
+                                  prior = beta_coeff_priors2,
+                                  seed = SEED) #5 div
+      
+      #choose: _p2
+    
+    summary(m.Om_sowndivW2_p2, prob=0.9)
+    pp_check(m.Om_sowndivW2_p2, ndraws=100)
     
     #with default priors
     m.Om_sowndivW2_d <- brm(
@@ -928,12 +1127,12 @@ BREAKS = unique(dat$sowndivLogStd)
     pp_check(m.Om_sowndivW2_d, ndraws=100)
     
     #compare them  
-    loo(m.Om_sowndivW2_p, m.Om_sowndivW2_d)
+    loo(m.Om_sowndivW2_p2, m.Om_sowndivW2_d)
     print(rstan::get_elapsed_time(m.Om_sowndivW2_p$fit))
     print(rstan::get_elapsed_time(m.Om_sowndivW2_d$fit))
     loo(m.Om_sowndivW2_d, m.Om_sowndivW2_p)
     
-    #for both weeks  
+  #for both weeks  
     m.Om_sowndiv_p <- brm(
       bf(Om_per100g ~ sowndivLogStd*treatment + (1|block/plot),
          hu ~ sowndivLogStd*treatment + (1|block/plot)),
@@ -946,8 +1145,31 @@ BREAKS = unique(dat$sowndivLogStd)
       seed = SEED,
       control = list(adapt_delta=0.99)) #10 div
     
-    summary(m.Om_sowndiv_p, prob=0.9)
-    pp_check(m.Om_sowndiv_p, ndraws=100)+
+      #parsimony: remove hu~sowndivLogStd:treatment:
+      m.Om_sowndiv_p2 <- update(m.Om_sowndiv_p,
+                             bf(Om_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                             hu ~ sowndivLogStd + treatment + (1|block/plot)),
+                             seed=SEED)
+      
+      #parsimony: remove hu~sowndivLogStd:
+      m.Om_sowndiv_p3 <- update(m.Om_sowndiv_p,
+                              bf(Om_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                                 hu ~ treatment + (1|block/plot)),
+                              seed=SEED) #1 div
+      
+      #parsimony: remove hu~treatment:
+      m.Om_sowndiv_p4 <- update(m.Om_sowndiv_p,
+                                bf(Om_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                                   hu ~ 1),
+                                seed=SEED) #5 div
+      #set narrower priors: 
+      beta_coeff_priors2<- prior(normal(0,5), class = "b")
+      m.Om_sowndiv_p5 <- update(m.Om_sowndiv_p4,
+                                prior = beta_coeff_priors2,
+                                seed = SEED) #5 div
+    
+    summary(m.Om_sowndiv_p5, prob=0.9)
+    pp_check(m.Om_sowndiv_p2, ndraws=100)+
       xlim(0,220)
     
     #with default priors
@@ -962,34 +1184,56 @@ BREAKS = unique(dat$sowndivLogStd)
       seed = SEED,
       control = list(adapt_delta=0.99)) #all good
     
-    summary(m.Om_sowndiv_d, prob=0.9)
-    pp_check(m.Om_sowndiv_d, ndraws=100)+
+    #parsimony: remove hu~sowndivLogStd:treatment:
+    m.Om_sowndiv_d2 <- update(m.Om_sowndiv_d,
+                            bf(Om_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                               hu ~ sowndivLogStd + treatment + (1|block/plot)),
+                            seed=SEED)
+    
+    #parsimony: remove hu~sowndivLogStd:
+    m.Om_sowndiv_d3 <- update(m.Om_sowndiv_d,
+                            bf(Om_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                               hu ~ treatment + (1|block/plot)),
+                            seed=SEED)
+    
+    
+    #parsimony: remove hu~treatment:
+    m.Om_sowndiv_d4 <- update(m.Om_sowndiv_d,
+                              bf(Om_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                                 hu ~ 1),
+                              seed=SEED) #3 div
+    
+    
+    
+    
+    summary(m.Om_sowndiv_d5, prob=0.9)
+    pp_check(m.Om_sowndiv_d2, ndraws=100)+
       xlim(0,220)
     
     #compare them  
-    loo(m.Om_sowndiv_p, m.Om_sowndiv_d)
+    loo(m.Om_sowndiv_p4, m.Om_sowndiv_d4) #choise d4
     print(rstan::get_elapsed_time(m.Om_sowndiv_p$fit))
     print(rstan::get_elapsed_time(m.Om_sowndiv_d$fit))  
     
 ####Om plot predictions ####
-    pred.Om_prior1 <- conditional_effects(m.Om_sowndivW1_p)[[3]]
-    pred.Om_def1 <- conditional_effects(m.Om_sowndivW1_d)[[3]]
-    summary(m.Om_sowndivW1_p)
+    pred.Om_prior1 <- conditional_effects(m.Om_sowndivW1_p4)[[3]]
+    pred.Om_def1 <- conditional_effects(m.Om_sowndivW1_d3)[[3]]
+    summary(m.Om_sowndivW1_p4)
     
-    pred.Om_prior2 <- conditional_effects(m.Om_sowndivW2_p)[[3]]
+    pred.Om_prior2 <- conditional_effects(m.Om_sowndivW2_p2)[[3]]
     pred.Om_def2 <- conditional_effects(m.Om_sowndivW2_d)[[3]]
-    summary(m.Om_sowndivW2_p)
+    summary(m.Om_sowndivW2_p2)
     
-    pred.Om_prior  <- conditional_effects(m.Om_sowndiv_p)[[3]]
-    pred.Om_def  <- conditional_effects(m.Om_sowndiv_d)[[3]]
-    summary(m.Om_sowndiv_d)
+    pred.Om_prior  <- conditional_effects(m.Om_sowndiv_p4)[[3]]
+    pred.Om_def  <- conditional_effects(m.Om_sowndiv_d4)[[3]]
+    summary(m.Om_sowndiv_d4)
     
     treatments2 = c("+SH+PH", "+SH-PH", "-SH-PH")
     cols=c("brown2", "darkolivegreen", "dodgerblue3")
     BREAKS = unique(dat$sowndivLogStd)
     
     
-    ggplot(data = dat, aes(x= sowndivLogStd, y=Om_per100g))+
+   p.Om <- ggplot(data = dat, aes(x= sowndivLogStd, y=Om_per100g))+
       #geom_ribbon(data=predictions, aes(ymin= lower__, ymax=upper__, 
       #                                 fill=treatment), 
       #           alpha=0.2, show.legend=FALSE)+
@@ -1001,24 +1245,18 @@ BREAKS = unique(dat$sowndivLogStd)
                   aes(col=treatment))+
       #predictions week1
       geom_line(data=pred.Om_prior1, aes(x= sowndivLogStd, y=estimate__, 
-                                         linetype="dashed", col=treatment),
-                linewidth= 0.5, show.legend = FALSE)+
-      geom_line(data=pred.Om_def1, aes(x= sowndivLogStd, y=estimate__, 
-                                       linetype="solid", col=treatment),
+                                         col=treatment),
+                linetype=6, 
                 linewidth= 0.5, show.legend = FALSE)+
       #predictions week 2:
       geom_line(data=pred.Om_prior2, aes(x= sowndivLogStd, y=estimate__, 
-                                         linetype="dashed", col=treatment),
+                                          col=treatment),
+                linetype=2,
                 linewidth= 0.5, show.legend = FALSE)+
-      geom_line(data=pred.Om_def2, aes(x= sowndivLogStd, y=estimate__, 
-                                       linetype="solid", col=treatment),
-                linewidth=0.5, show.legend = FALSE)+
-      #models for both weeks:
-      geom_line(data=pred.Om_prior, aes(x= sowndivLogStd, y=estimate__, 
-                                        linetype="dashed", col=treatment),
-                linewidth= 0.7, show.legend = FALSE)+
+      #both weeks:
       geom_line(data=pred.Om_def, aes(x= sowndivLogStd, y=estimate__, 
-                                      linetype="solid", col=treatment),
+                                      col=treatment),
+                linetype=1, 
                 linewidth=0.7, show.legend = FALSE)+
       
       scale_color_manual(labels=treatments2, values = cols)+
@@ -1027,16 +1265,25 @@ BREAKS = unique(dat$sowndivLogStd)
       scale_y_continuous(name = "Om per 100g DW")+
       theme_bw()+
       theme(legend.position ="bottom")  
+   
+   p.Om
+   
+   ggsave(filename = "./plots model comparison/Om_21.png" ,plot = p.Om,
+          height = 4,
+          width = 4)
     
     
         
     
 #### save models ####
     
-    save(m.Om_sowndivW1_d, m.Om_sowndivW1_p,
+    save(m.Om_sowndivW1_d, m.Om_sowndivW1_p, #basic
+          m.Om_sowndivW1_d3, m.Om_sowndivW1_p4, #simplified according to Ockham's razor
          m.Om_sowndivW2_d, m.Om_sowndivW2_p,
+           m.Om_sowndivW2_p2, # _d is most simplified already
          m.Om_sowndiv_d, m.Om_sowndiv_p,
-         file = "./statistics/brms/231207_Om_sowndiv_priors.RData")
+          m.Om_sowndiv_d4, m.Om_sowndiv_p3,
+         file = "./statistics/brms/231211_Om_sowndiv_priors.RData")
     
     
     save(m.Pr_sowndivW1_d, m.Pr_sowndivW1_p,
