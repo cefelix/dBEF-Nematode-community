@@ -144,7 +144,62 @@ pp_check(m.Ba_sowndivW2_p, ndraws=100)
   print(rstan::get_elapsed_time(m.Ba_sowndiv_p$fit))
   print(rstan::get_elapsed_time(m.Ba_sowndiv_d$fit))  
 
-
+####Ba plot predictions ####
+  pred.Ba_prior1 <- conditional_effects(m.Ba_sowndivW1_p)[[3]]
+  pred.Ba_def1 <- conditional_effects(m.Ba_sowndivW1_d)[[3]]
+  summary(m.Ba_sowndivW1_p)
+  
+  pred.Ba_prior2 <- conditional_effects(m.Ba_sowndivW2_p)[[3]]
+  pred.Ba_def2 <- conditional_effects(m.Ba_sowndivW2_d)[[3]]
+  summary(m.Ba_sowndivW2_p)
+  
+  pred.Ba_prior  <- conditional_effects(m.Ba_sowndiv_p)[[3]]
+  pred.Ba_def  <- conditional_effects(m.Ba_sowndiv_d)[[3]]
+  summary(m.Ba_sowndiv_d)
+  
+  treatments2 = c("+SH+PH", "+SH-PH", "-SH-PH")
+  cols=c("brown2", "darkolivegreen", "dodgerblue3")
+  BREAKS = unique(dat$sowndivLogStd)
+  
+  
+  ggplot(data = dat, aes(x= sowndivLogStd, y=Ba_per100g))+
+    #geom_ribbon(data=predictions, aes(ymin= lower__, ymax=upper__, 
+    #                                 fill=treatment), 
+    #           alpha=0.2, show.legend=FALSE)+
+    geom_jitter(data =datW1,
+                width=0.2, shape=19, alpha=0.4, 
+                aes(col=treatment))+
+    geom_jitter(data=datW2,
+                width=0.2, shape=18, alpha=0.4, 
+                aes(col=treatment))+
+    #predictions week1
+    geom_line(data=pred.Ba_prior1, aes(x= sowndivLogStd, y=estimate__, 
+                                       linetype="dashed", col=treatment),
+              linewidth= 0.5, show.legend = FALSE)+
+    geom_line(data=pred.Ba_def1, aes(x= sowndivLogStd, y=estimate__, 
+                                     linetype="solid", col=treatment),
+              linewidth= 0.5, show.legend = FALSE)+
+    #predictions week 2:
+    geom_line(data=pred.Ba_prior2, aes(x= sowndivLogStd, y=estimate__, 
+                                       linetype="dashed", col=treatment),
+              linewidth= 0.5, show.legend = FALSE)+
+    geom_line(data=pred.Ba_def2, aes(x= sowndivLogStd, y=estimate__, 
+                                     linetype="solid", col=treatment),
+              linewidth=0.5, show.legend = FALSE)+
+    #models for both weeks:
+    geom_line(data=pred.Ba_prior, aes(x= sowndivLogStd, y=estimate__, 
+                                      linetype="dashed", col=treatment),
+              linewidth= 0.7, show.legend = FALSE)+
+    geom_line(data=pred.Ba_def, aes(x= sowndivLogStd, y=estimate__, 
+                                    linetype="solid", col=treatment),
+              linewidth=0.7, show.legend = FALSE)+
+    
+    scale_color_manual(labels=treatments2, values = cols)+
+    scale_x_continuous(name = "sown plant diversity", breaks = BREAKS,
+                       labels = c("16", "8", "4", "2", "1"))+
+    scale_y_continuous(name = "Ba per 100g DW")+
+    theme_bw()+
+    theme(legend.position ="bottom")  
 
 ####Ba plot predictions for week1####
   pred.Ba_prior <- conditional_effects(m.Ba_sowndivW1_p)[[3]]
@@ -542,6 +597,64 @@ BREAKS = unique(dat$sowndivLogStd)
     print(rstan::get_elapsed_time(m.Pl_sowndiv_p$fit))
     print(rstan::get_elapsed_time(m.Pl_sowndiv_d$fit))  
     
+    
+    
+####Pl plot predictions ####
+    pred.Pl_prior1 <- conditional_effects(m.Pl_sowndivW1_p)[[3]]
+    pred.Pl_def1 <- conditional_effects(m.Pl_sowndivW1_d)[[3]]
+    summary(m.Pl_sowndivW1_p)
+    
+    pred.Pl_prior2 <- conditional_effects(m.Pl_sowndivW2_p)[[3]]
+    pred.Pl_def2 <- conditional_effects(m.Pl_sowndivW2_d)[[3]]
+    summary(m.Pl_sowndivW2_p)
+    
+    pred.Pl_prior  <- conditional_effects(m.Pl_sowndiv_p)[[3]]
+    pred.Pl_def  <- conditional_effects(m.Pl_sowndiv_d)[[3]]
+    summary(m.Pl_sowndiv_d)
+    
+    treatments2 = c("+SH+PH", "+SH-PH", "-SH-PH")
+    cols=c("brown2", "darkolivegreen", "dodgerblue3")
+    BREAKS = unique(dat$sowndivLogStd)
+    
+    
+    ggplot(data = dat, aes(x= sowndivLogStd, y=Pl_per100g))+
+      #geom_ribbon(data=predictions, aes(ymin= lower__, ymax=upper__, 
+      #                                 fill=treatment), 
+      #           alpha=0.2, show.legend=FALSE)+
+      geom_jitter(data =datW1,
+                  width=0.2, shape=15, alpha=0.4, 
+                  aes(col=treatment))+
+      geom_jitter(data=datW2,
+                  width=0.2, shape=17, alpha=0.8, 
+                  aes(col=treatment))+
+      #predictions week1
+      geom_line(data=pred.Pl_prior1, aes(x= sowndivLogStd, y=estimate__, 
+                                         linetype="dashed", col=treatment),
+                linewidth= 0.5, show.legend = FALSE)+
+      geom_line(data=pred.Pl_def1, aes(x= sowndivLogStd, y=estimate__, 
+                                       linetype="solid", col=treatment),
+                linewidth= 0.5, show.legend = FALSE)+
+      #predictions week 2:
+      geom_line(data=pred.Pl_prior2, aes(x= sowndivLogStd, y=estimate__, 
+                                         linetype="dashed", col=treatment),
+                linewidth= 0.5, show.legend = FALSE)+
+      geom_line(data=pred.Pl_def2, aes(x= sowndivLogStd, y=estimate__, 
+                                       linetype="solid", col=treatment),
+                linewidth=0.5, show.legend = FALSE)+
+      #models for both weeks:
+      geom_line(data=pred.Pl_prior, aes(x= sowndivLogStd, y=estimate__, 
+                                        linetype="dashed", col=treatment),
+                linewidth= 0.7, show.legend = FALSE)+
+      geom_line(data=pred.Pl_def, aes(x= sowndivLogStd, y=estimate__, 
+                                      linetype="solid", col=treatment),
+                linewidth=0.7, show.legend = FALSE)+
+      
+      scale_color_manual(labels=treatments2, values = cols)+
+      scale_x_continuous(name = "sown plant diversity", breaks = BREAKS,
+                         labels = c("16", "8", "4", "2", "1"))+
+      scale_y_continuous(name = "Pl per 100g DW")+
+      theme_bw()+
+      theme(legend.position ="bottom")  
 
 #### Pr ~ sowndiv: W1-p, W2-p, both-p  ####
     #in W1: p has less divergent transitions, but slightly wors ELPD
@@ -668,6 +781,67 @@ BREAKS = unique(dat$sowndivLogStd)
     loo(m.Pr_sowndiv_p, m.Pr_sowndiv_d)
     print(rstan::get_elapsed_time(m.Pr_sowndiv_p$fit))
     print(rstan::get_elapsed_time(m.Pr_sowndiv_d$fit))  
+    
+    
+####Pr plot predictions ####
+    pred.Pr_prior1 <- conditional_effects(m.Pr_sowndivW1_p)[[3]]
+    pred.Pr_def1 <- conditional_effects(m.Pr_sowndivW1_d)[[3]]
+    summary(m.Pr_sowndivW1_p)
+    
+    pred.Pr_prior2 <- conditional_effects(m.Pr_sowndivW2_p)[[3]]
+    pred.Pr_def2 <- conditional_effects(m.Pr_sowndivW2_d)[[3]]
+    summary(m.Pr_sowndivW2_p)
+    
+    pred.Pr_prior  <- conditional_effects(m.Pr_sowndiv_p)[[3]]
+    pred.Pr_def  <- conditional_effects(m.Pr_sowndiv_d)[[3]]
+    summary(m.Pr_sowndiv_d)
+    
+    treatments2 = c("+SH+PH", "+SH-PH", "-SH-PH")
+    cols=c("brown2", "darkolivegreen", "dodgerblue3")
+    BREAKS = unique(dat$sowndivLogStd)
+    
+    
+    ggplot(data = dat, aes(x= sowndivLogStd, y=Pr_per100g))+
+      #geom_ribbon(data=predictions, aes(ymin= lower__, ymax=upper__, 
+      #                                 fill=treatment), 
+      #           alpha=0.2, show.legend=FALSE)+
+      geom_jitter(data =datW1,
+                  width=0.2, shape=15, alpha=0.4, 
+                  aes(col=treatment))+
+      geom_jitter(data=datW2,
+                  width=0.2, shape=17, alpha=0.8, 
+                  aes(col=treatment))+
+      #predictions week1
+      geom_line(data=pred.Pr_prior1, aes(x= sowndivLogStd, y=estimate__, 
+                                         linetype="dashed", col=treatment),
+                linewidth= 0.5, show.legend = FALSE)+
+      geom_line(data=pred.Pr_def1, aes(x= sowndivLogStd, y=estimate__, 
+                                       linetype="solid", col=treatment),
+                linewidth= 0.5, show.legend = FALSE)+
+      #predictions week 2:
+      geom_line(data=pred.Pr_prior2, aes(x= sowndivLogStd, y=estimate__, 
+                                         linetype="dashed", col=treatment),
+                linewidth= 0.5, show.legend = FALSE)+
+      geom_line(data=pred.Pr_def2, aes(x= sowndivLogStd, y=estimate__, 
+                                       linetype="solid", col=treatment),
+                linewidth=0.5, show.legend = FALSE)+
+      #models for both weeks:
+      geom_line(data=pred.Pr_prior, aes(x= sowndivLogStd, y=estimate__, 
+                                        linetype="dashed", col=treatment),
+                linewidth= 0.7, show.legend = FALSE)+
+      geom_line(data=pred.Pr_def, aes(x= sowndivLogStd, y=estimate__, 
+                                      linetype="solid", col=treatment),
+                linewidth=0.7, show.legend = FALSE)+
+      
+      scale_color_manual(labels=treatments2, values = cols)+
+      scale_x_continuous(name = "sown plant diversity", breaks = BREAKS,
+                         labels = c("16", "8", "4", "2", "1"))+
+      scale_y_continuous(name = "Pr per 100g DW")+
+      theme_bw()+
+      theme(legend.position ="bottom")  
+    
+    
+    
     
 #### Om ~ sowndiv: W1-p, W2-p, both-d ####
     #W1: d has better elpd, but p less divergent transitions
@@ -797,6 +971,64 @@ BREAKS = unique(dat$sowndivLogStd)
     print(rstan::get_elapsed_time(m.Om_sowndiv_p$fit))
     print(rstan::get_elapsed_time(m.Om_sowndiv_d$fit))  
     
+####Om plot predictions ####
+    pred.Om_prior1 <- conditional_effects(m.Om_sowndivW1_p)[[3]]
+    pred.Om_def1 <- conditional_effects(m.Om_sowndivW1_d)[[3]]
+    summary(m.Om_sowndivW1_p)
+    
+    pred.Om_prior2 <- conditional_effects(m.Om_sowndivW2_p)[[3]]
+    pred.Om_def2 <- conditional_effects(m.Om_sowndivW2_d)[[3]]
+    summary(m.Om_sowndivW2_p)
+    
+    pred.Om_prior  <- conditional_effects(m.Om_sowndiv_p)[[3]]
+    pred.Om_def  <- conditional_effects(m.Om_sowndiv_d)[[3]]
+    summary(m.Om_sowndiv_d)
+    
+    treatments2 = c("+SH+PH", "+SH-PH", "-SH-PH")
+    cols=c("brown2", "darkolivegreen", "dodgerblue3")
+    BREAKS = unique(dat$sowndivLogStd)
+    
+    
+    ggplot(data = dat, aes(x= sowndivLogStd, y=Om_per100g))+
+      #geom_ribbon(data=predictions, aes(ymin= lower__, ymax=upper__, 
+      #                                 fill=treatment), 
+      #           alpha=0.2, show.legend=FALSE)+
+      geom_jitter(data =datW1,
+                  width=0.2, shape=15, alpha=0.4, 
+                  aes(col=treatment))+
+      geom_jitter(data=datW2,
+                  width=0.2, shape=17, alpha=0.8, 
+                  aes(col=treatment))+
+      #predictions week1
+      geom_line(data=pred.Om_prior1, aes(x= sowndivLogStd, y=estimate__, 
+                                         linetype="dashed", col=treatment),
+                linewidth= 0.5, show.legend = FALSE)+
+      geom_line(data=pred.Om_def1, aes(x= sowndivLogStd, y=estimate__, 
+                                       linetype="solid", col=treatment),
+                linewidth= 0.5, show.legend = FALSE)+
+      #predictions week 2:
+      geom_line(data=pred.Om_prior2, aes(x= sowndivLogStd, y=estimate__, 
+                                         linetype="dashed", col=treatment),
+                linewidth= 0.5, show.legend = FALSE)+
+      geom_line(data=pred.Om_def2, aes(x= sowndivLogStd, y=estimate__, 
+                                       linetype="solid", col=treatment),
+                linewidth=0.5, show.legend = FALSE)+
+      #models for both weeks:
+      geom_line(data=pred.Om_prior, aes(x= sowndivLogStd, y=estimate__, 
+                                        linetype="dashed", col=treatment),
+                linewidth= 0.7, show.legend = FALSE)+
+      geom_line(data=pred.Om_def, aes(x= sowndivLogStd, y=estimate__, 
+                                      linetype="solid", col=treatment),
+                linewidth=0.7, show.legend = FALSE)+
+      
+      scale_color_manual(labels=treatments2, values = cols)+
+      scale_x_continuous(name = "sown plant diversity", breaks = BREAKS,
+                         labels = c("16", "8", "4", "2", "1"))+
+      scale_y_continuous(name = "Om per 100g DW")+
+      theme_bw()+
+      theme(legend.position ="bottom")  
+    
+    
         
     
 #### save models ####
@@ -829,4 +1061,4 @@ BREAKS = unique(dat$sowndivLogStd)
          m.Ba_sowndiv_d, m.Ba_sowndiv_p,
          file = "./statistics/brms/231207_Ba_sowndiv_priors.RData")
 
-load(file = "./statistics/brms/231206_troph_sowndiv_priors.RData")
+load(file = "./statistics/brms/231207_Om_sowndiv_priors.RData")
