@@ -23,6 +23,10 @@ dBEF_nem <- dBEF_nem %>%
   mutate(yearblock = as.factor(paste(dBEF_nem$year, dBEF_nem$block, sep="")),
          .after = block)
 
+#rename func.group to funcdiv for naming consistency:
+dBEF_nem <- dBEF_nem %>%
+  rename(funcdiv = func.group)
+
 #### log transformation ####
 #add log-transformed densities for each trophic guild:
 dBEF_nem <- dBEF_nem %>%
@@ -217,9 +221,8 @@ posterior_epred_hurdle_gaussian <- function(prep) {
 }
 
 #4 - to use code, pass it to brm() using brm(... , stanvars = stanvars)  
-
-ggplot(dBEF_nem, aes(x=block, y=SWC_gravimetric))+
-  geom_point()
+ggplot(dBEF_nem, aes(x=block, y=SWC_gravimetric, col = col.sowndiv))+
+  geom_jitter()
 
 ####creating subset df's for '21 and '17 and no 60 species ####
 dBEF_nem21 <- subset(dBEF_nem, year==2021)
