@@ -21,7 +21,10 @@ library(ggplot2)
     beta_coeff_priors2 <- prior(normal(0,5), class = "b")  
     beta_coeff_priors3 <- prior(normal(0,2), class = "b")  
 ####Ba~sowndiv: W1-d4, W2-p , both- ####
+    
+    
     #W2: _p has 1 div, _d has 4 div --> despite slightly better elpd (less than 2 SE difference), choose _p 
+    load(file = "./statistics/brms/231213_Ba_sowndiv_priors.RData")
     
   SEED = 22061996
   beta_coeff_priors <- prior(normal(0,20), class = "b")  
@@ -164,7 +167,7 @@ m.Ba_sowndivW2_p <- brm(
                                 seed = SEED) # 6div
     summary(m.Ba_sowndivW2_p3, prob=0.9)
     
-    #best _d
+    #best _p
 
 summary(m.Ba_sowndivW2_p, prob=0.9) 
 pp_check(m.Ba_sowndivW2_p, ndraws=100)
@@ -333,10 +336,33 @@ pp_check(m.Ba_sowndivW2_p, ndraws=100)
   print(rstan::get_elapsed_time(m.Ba_sowndiv_p$fit))
   print(rstan::get_elapsed_time(m.Ba_sowndiv_d$fit))  
   
+#save them:
+  save(m.Ba_sowndivW1_d, m.Ba_sowndivW1_p,
+        m.Ba_sowndivW1_p2, m.Ba_sowndivW1_p3, m.Ba_sowndivW1_p4, m.Ba_sowndivW1_p5, m.Ba_sowndivW1_p6,
+        m.Ba_sowndivW1_d2, m.Ba_sowndivW1_d3, m.Ba_sowndivW1_d4,
+       m.Ba_sowndivW2_d, m.Ba_sowndivW2_p,
+        m.Ba_sowndivW2_p2, m.Ba_sowndivW2_p3,
+       m.Ba_sowndiv_d, m.Ba_sowndiv_p,
+        m.Ba_sowndiv_d2, m.Ba_sowndiv_d3, m.Ba_sowndiv_d4,
+        m.Ba_sowndiv_p4, m.Ba_sowndiv_p5, m.Ba_sowndiv_p6, m.Ba_sowndiv_p7,
+       file = "./statistics/brms/231213_Ba_sowndiv_priors.RData")
+  
+#remove from workspace to prevent crashing
+  rm(m.Ba_sowndivW1_d, m.Ba_sowndivW1_p,
+    m.Ba_sowndivW1_p2, m.Ba_sowndivW1_p3, m.Ba_sowndivW1_p4, m.Ba_sowndivW1_p5, m.Ba_sowndivW1_p6,
+    m.Ba_sowndivW1_d2, m.Ba_sowndivW1_d3, m.Ba_sowndivW1_d4,
+    m.Ba_sowndivW2_d, m.Ba_sowndivW2_p,
+    m.Ba_sowndivW2_p2, m.Ba_sowndivW2_p3,
+    m.Ba_sowndiv_d, m.Ba_sowndiv_p,
+    m.Ba_sowndiv_d2, m.Ba_sowndiv_d3, m.Ba_sowndiv_d4,
+    m.Ba_sowndiv_p4, m.Ba_sowndiv_p5, m.Ba_sowndiv_p6, m.Ba_sowndiv_p7)
+  
+  
 
 #### Fu ~ sowndiv:W1-p2, W2-d, both- ####
     #W1: _p2: 1 div, _d 7 div, elpd for p2 lower --> choose p2 
     #W2: _p: 1 div, _d 0 div, elpd for p slightly lower (less than 2 se) --> choose d
+    load(file = "./statistics/brms/231213_Fu_sowndiv_priors.RData")
   
     SEED = 22061996
     beta_coeff_priors <- prior(normal(0,20), class = "b")  
@@ -573,11 +599,28 @@ pp_check(m.Ba_sowndivW2_p, ndraws=100)
     print(rstan::get_elapsed_time(m.Fu_sowndiv_p$fit))
     print(rstan::get_elapsed_time(m.Fu_sowndiv_d$fit))  
     
+#save models:
+    save(m.Fu_sowndivW1_d, m.Fu_sowndivW1_p,
+          m.Fu_sowndivW1_p2, m.Fu_sowndivW1_p3,
+         m.Fu_sowndivW2_d, m.Fu_sowndivW2_p,
+          m.Fu_sowndivW2_p2, m.Fu_sowndivW2_p3,
+         m.Fu_sowndiv_d, m.Fu_sowndiv_p,
+          m.Fu_sowndiv_p2, m.Fu_sowndiv_p3,
+         file = "./statistics/brms/231213_Fu_sowndiv_priors.RData")
+    
+#remove models to prevent crashes:
+    rm(m.Fu_sowndivW1_d, m.Fu_sowndivW1_p,
+      m.Fu_sowndivW1_p2, m.Fu_sowndivW1_p3,
+      m.Fu_sowndivW2_d, m.Fu_sowndivW2_p,
+      m.Fu_sowndivW2_p2, m.Fu_sowndivW2_p3,
+      m.Fu_sowndiv_d, m.Fu_sowndiv_p,
+      m.Fu_sowndiv_p2, m.Fu_sowndiv_p3)
     
     
 #### Pl ~ sowndiv: W1-p2, W2-p, both-p ####
     #W1: _p2: 1 div, _d 19 div, elpd for _p2 equal --> choose _p2
     #W2: _p: 2 div, _d 11 div, elpd for _p slightly worse (but less than 2 SE) --> choose _p
+    load(file = "./statistics/brms/231213_Pl_sowndiv_priors.RData")
     
     SEED = 22061996
     beta_coeff_priors <- prior(normal(0,20), class = "b")  
@@ -637,7 +680,7 @@ pp_check(m.Ba_sowndivW2_p, ndraws=100)
       xlim(0,2000)
     
     #compare them  
-    loo(m.Pl_sowndivW1_p2, m.Pl_sowndivW1_p, m.Pl_sowndivW1_d)
+    loo(m.Pl_sowndivW1_p, m.Pl_sowndivW1_p2, m.Pl_sowndivW1_p3, m.Pl_sowndivW1_d)
     print(rstan::get_elapsed_time(m.Pl_sowndivW1_p$fit))
     print(rstan::get_elapsed_time(m.Pl_sowndivW1_d$fit))
     
@@ -692,7 +735,8 @@ pp_check(m.Ba_sowndivW2_p, ndraws=100)
     pp_check(m.Pl_sowndivW2_d, ndraws=100)
     
     #compare them  
-    loo(m.Pl_sowndivW2_p, m.Pl_sowndivW2_p2, m.Pl_sowndivW2_d) #elpd of _d slightly worse, but less than 2 SE
+    loo(m.Pl_sowndivW2_p, m.Pl_sowndivW2_p2, m.Pl_sowndivW2_p3, m.Pl_sowndivW2_d) 
+      #elpd of _d slightly worse, but less than 2 SE
     print(rstan::get_elapsed_time(m.Pl_sowndivW2_p$fit))
     print(rstan::get_elapsed_time(m.Pl_sowndivW2_d$fit))
     loo(m.Pl_sowndivW2_d, m.Pl_sowndivW2_p)
@@ -816,18 +860,40 @@ pp_check(m.Ba_sowndivW2_p, ndraws=100)
       xlim(0,2000)
     
     #compare them  
-    loo(m.Pl_sowndiv_p2, m.Pl_sowndiv_p3, m.Pl_sowndiv_p4, m.Pl_sowndiv_d2)
-    #choose P4
+    loo(m.Pl_sowndiv_p2, m.Pl_sowndiv_p3, m.Pl_sowndiv_p4, m.Pl_sowndiv_d, m.Pl_sowndiv_d2)
+      #choose _p4
     
     print(rstan::get_elapsed_time(m.Pl_sowndiv_p$fit))
     print(rstan::get_elapsed_time(m.Pl_sowndiv_d$fit))  
     
+    
+#save the models
+    save(m.Pl_sowndivW1_d, m.Pl_sowndivW1_p,
+          m.Pl_sowndivW1_p2, m.Pl_sowndivW1_p3,
+         m.Pl_sowndivW2_d, m.Pl_sowndivW2_p,
+          m.Pl_sowndivW2_p2, m.Pl_sowndivW2_p3,
+         m.Pl_sowndiv_d, m.Pl_sowndiv_p,
+          m.Pl_sowndiv_p2, m.Pl_sowndiv_p3, m.Pl_sowndiv_p4, 
+          m.Pl_sowndiv_d2,
+         file = "./statistics/brms/231213_Pl_sowndiv_priors.RData")
+    
+#remove to prevent crashes:
+    rm(m.Pl_sowndivW1_d, m.Pl_sowndivW1_p,
+      m.Pl_sowndivW1_p2, m.Pl_sowndivW1_p3,
+      m.Pl_sowndivW2_d, m.Pl_sowndivW2_p,
+      m.Pl_sowndivW2_p2, m.Pl_sowndivW2_p3,
+      m.Pl_sowndiv_d, m.Pl_sowndiv_p,
+      m.Pl_sowndiv_p2, m.Pl_sowndiv_p3, m.Pl_sowndiv_p4, 
+      m.Pl_sowndiv_d2)
+    
+   
     
     
     
 #### Pr ~ sowndiv: W1-p5, W2-p5, both-  ####
     #W1: _p5 6 div, _d3 9 div, loo is equal --> choose _p5
     #W2: _p5 5 div, _d4 13 div, loo is slightly better in _p5 (less than 2 SE) --> choose _p5
+    load(file = "./statistics/brms/231213_Pr_sowndiv_priors.RData")
     
     SEED = 22061996
     beta_coeff_priors <- prior(normal(0,20), class = "b")  
@@ -929,7 +995,7 @@ pp_check(m.Ba_sowndivW2_p, ndraws=100)
       xlim(0,2000)
     
     #compare them  
-    loo(m.Pr_sowndivW1_p5, m.Pr_sowndivW1_d3) #d_3 is best
+    loo(m.Pr_sowndivW1_p4, m.Pr_sowndivW1_p5, m.Pr_sowndivW1_p6, m.Pr_sowndivW1_d3) #d_3 is best
     print(rstan::get_elapsed_time(m.Pr_sowndivW1_p$fit))
     print(rstan::get_elapsed_time(m.Pr_sowndivW1_d$fit))
     
@@ -1102,6 +1168,21 @@ pp_check(m.Ba_sowndivW2_p, ndraws=100)
       control = list(adapt_delta=0.99)) #all good
     
     summary(m.Pr_sowndiv_p, prob=0.9)
+    
+    #using a narrower prior:
+    beta_coeff_priors2 <- prior(normal(0,5), class = "b")  
+    m.Pr_sowndiv_p2 <- update(m.Pr_sowndiv_p,
+                              prior = beta_coeff_priors2,
+                              seed = SEED) #0 div
+    summary(m.Pr_sowndiv_p3, prob=0.9)
+    
+    #using an even narrower prior:
+    beta_coeff_priors3 <- prior(normal(0,2), class = "b")  
+    m.Pr_sowndiv_p3 <- update(m.Pr_sowndiv_p2,
+                              prior = beta_coeff_priors3,
+                              seed = SEED) #0 div
+    summary(m.Pr_sowndiv_p4, prob=0.9)
+    
     pp_check(m.Pr_sowndiv_p, ndraws=100)+
       xlim(0,2000)
     
@@ -1126,6 +1207,27 @@ pp_check(m.Ba_sowndivW2_p, ndraws=100)
     print(rstan::get_elapsed_time(m.Pr_sowndiv_p$fit))
     print(rstan::get_elapsed_time(m.Pr_sowndiv_d$fit))  
     
+#save the models: 
+    save(m.Pr_sowndivW1_d, m.Pr_sowndivW1_p,
+          m.Pr_sowndivW1_d2, m.Pr_sowndivW1_d3,
+          m.Pr_sowndivW1_p2, m.Pr_sowndivW1_p3, m.Pr_sowndivW1_p4, m.Pr_sowndivW1_p5, m.Pr_sowndivW1_p6,
+         m.Pr_sowndivW2_d, m.Pr_sowndivW2_p,
+          m.Pr_sowndivW2_d2, m.Pr_sowndivW2_d3, m.Pr_sowndivW2_d4,
+          m.Pr_sowndivW2_p2, m.Pr_sowndivW2_p3, m.Pr_sowndivW2_p4, m.Pr_sowndivW2_p5, m.Pr_sowndivW2_p6,
+         m.Pr_sowndiv_d, m.Pr_sowndiv_p,
+          m.Pr_sowndiv_p2, m.Pr_sowndiv_p3, 
+         file = "./statistics/brms/231213_Pr_sowndiv_priors.RData")
+    
+#unload the models to prevent crashes:
+    rm(m.Pr_sowndivW1_d, m.Pr_sowndivW1_p,
+        m.Pr_sowndivW1_d2, m.Pr_sowndivW1_d3,
+        m.Pr_sowndivW1_p2, m.Pr_sowndivW1_p3, m.Pr_sowndivW1_p4, m.Pr_sowndivW1_p5, m.Pr_sowndivW1_p6,
+        m.Pr_sowndivW2_d, m.Pr_sowndivW2_p,
+        m.Pr_sowndivW2_d2, m.Pr_sowndivW2_d3, m.Pr_sowndivW2_d4,
+        m.Pr_sowndivW2_p2, m.Pr_sowndivW2_p3, m.Pr_sowndivW2_p4, m.Pr_sowndivW2_p5, m.Pr_sowndivW2_p6,
+        m.Pr_sowndiv_d, m.Pr_sowndiv_p,
+        m.Pr_sowndiv_p2, m.Pr_sowndiv_p3)
+    
     
     
     
@@ -1134,6 +1236,7 @@ pp_check(m.Ba_sowndivW2_p, ndraws=100)
     #W1: _p3 13 div, _d3 10 div, p has slightly better elpd (less than 2 SE) -> d3 is best
     #W2: _p 1 div, _d 6 div, _p has slightly better elpd (less than 2 SE) --> _p is best
     #both: 10 div in p, zero in d, elpd slightly better in p
+    load(file = "./statistics/brms/231213_Om_sowndiv_priors.RData")
     
     SEED = 22061996
     beta_coeff_priors <- prior(normal(0,20), class = "b")  
@@ -1414,23 +1517,21 @@ pp_check(m.Ba_sowndivW2_p, ndraws=100)
    m.Om_sowndiv_d2 <- update(m.Om_sowndiv_d,
                              bf(Om_per100g ~ sowndivLogStd*treatment + (1|block/plot),
                                 hu ~ sowndivLogStd + treatment + (1|block/plot)),
-                             seed=SEED)
+                             seed=SEED) #6 div
+   summary(m.Om_sowndiv_d2, prob=0.9) 
    
    #parsimony: remove hu~sowndivLogStd:
    m.Om_sowndiv_d3 <- update(m.Om_sowndiv_d,
                              bf(Om_per100g ~ sowndivLogStd*treatment + (1|block/plot),
                                 hu ~ treatment + (1|block/plot)),
-                             seed=SEED)
-   
+                             seed=SEED) #0 div
+   summary(m.Om_sowndiv_d3, prob=0.9)
    
    #parsimony: remove hu~treatment:
    m.Om_sowndiv_d4 <- update(m.Om_sowndiv_d,
                              bf(Om_per100g ~ sowndivLogStd*treatment + (1|block/plot),
                                 hu ~ 1),
-                             seed=SEED) #3 div
-   
-   
-   
+                             seed=SEED) #1 div
    
    summary(m.Om_sowndiv_d4, prob=0.9)
    pp_check(m.Om_sowndiv_d2, ndraws=100)+
@@ -1440,142 +1541,25 @@ pp_check(m.Ba_sowndivW2_p, ndraws=100)
    loo(m.Om_sowndiv_p4, m.Om_sowndiv_d4) #choise d4
    print(rstan::get_elapsed_time(m.Om_sowndiv_p$fit))
    print(rstan::get_elapsed_time(m.Om_sowndiv_d$fit))  
+
+#save them:
+   save(m.Om_sowndivW1_d, m.Om_sowndivW1_p, #basic
+        m.Om_sowndivW1_d2 , m.Om_sowndivW1_d3, 
+        m.Om_sowndivW1_p2, m.Om_sowndivW1_p3, m.Om_sowndivW1_p4, #simplified according to Ockham's razor
+        m.Om_sowndivW2_d, m.Om_sowndivW2_p,
+        m.Om_sowndivW2_p2 ,m.Om_sowndivW2_p3, # _d is most simplified already
+        m.Om_sowndiv_d, m.Om_sowndiv_p,
+        m.Om_sowndiv_p2, m.Om_sowndiv_p3, m.Om_sowndiv_p4, m.Om_sowndiv_p5, m.Om_sowndiv_p6,
+        m.Om_sowndiv_d2, m.Om_sowndiv_d3, m.Om_sowndiv_d4,
+        file = "./statistics/brms/231213_Om_sowndiv_priors.RData")
+   
+#unload to prevent crashes:    
+   rm(m.Om_sowndivW1_d, m.Om_sowndivW1_p, 
+     m.Om_sowndivW1_d2 , m.Om_sowndivW1_d3, 
+     m.Om_sowndivW1_p2, m.Om_sowndivW1_p3, m.Om_sowndivW1_p4, 
+     m.Om_sowndivW2_d, m.Om_sowndivW2_p,
+     m.Om_sowndivW2_p2 ,m.Om_sowndivW2_p3,
+     m.Om_sowndiv_d, m.Om_sowndiv_p,
+     m.Om_sowndiv_p2, m.Om_sowndiv_p3, m.Om_sowndiv_p4, m.Om_sowndiv_p5, m.Om_sowndiv_p6,
+     m.Om_sowndiv_d2, m.Om_sowndiv_d3, m.Om_sowndiv_d4)
     
-    
-        
-    
-#### save models ####
-    
-    save(m.Om_sowndivW1_d, m.Om_sowndivW1_p, #basic
-          m.Om_sowndivW1_d2 , m.Om_sowndivW1_d3, 
-          m.Om_sowndivW1_p2, m.Om_sowndivW1_p3, m.Om_sowndivW1_p4, #simplified according to Ockham's razor
-         m.Om_sowndivW2_d, m.Om_sowndivW2_p,
-          m.Om_sowndivW2_p2 ,m.Om_sowndivW2_p3, # _d is most simplified already
-         m.Om_sowndiv_d, m.Om_sowndiv_p,
-          m.Om_sowndiv_p2, m.Om_sowndiv_p3, m.Om_sowndiv_p4, m.Om_sowndiv_p5, m.Om_sowndiv_p6,
-          m.Om_sowndiv_d2, m.Om_sowndiv_d3, m.Om_sowndiv_d4,
-         file = "./statistics/brms/231212_Om_sowndiv_priors.RData")
-    
-    
-    save(m.Pr_sowndivW1_d, m.Pr_sowndivW1_p,
-          m.Pr_sowndivW1_d2, m.Pr_sowndivW1_d3,
-          m.Pr_sowndivW1_p2, m.Pr_sowndivW1_p3, m.Pr_sowndivW1_p4, m.Pr_sowndivW1_p5, m.Pr_sowndivW1_p6,
-         m.Pr_sowndivW2_d, m.Pr_sowndivW2_p,
-          m.Pr_sowndivW2_d2, m.Pr_sowndivW2_d3, m.Pr_sowndivW2_d4,
-         m.Pr_sowndivW2_p2, m.Pr_sowndivW2_p3, m.Pr_sowndivW2_p4, m.Pr_sowndivW2_p5, m.Pr_sowndivW2_p6,
-         m.Pr_sowndiv_d, m.Pr_sowndiv_p,
-         file = "./statistics/brms/231212_Pr_sowndiv_priors.RData")
-    
-    
-     save(m.Pl_sowndivW1_d, m.Pl_sowndivW1_p,
-           m.Pl_sowndivW1_p2, m.Pl_sowndivW1_p3,
-         m.Pl_sowndivW2_d, m.Pl_sowndivW2_p,
-           m.Pl_sowndivW2_p2, m.Pl_sowndivW2_p3,
-         m.Pl_sowndiv_d, m.Pl_sowndiv_p,
-         file = "./statistics/brms/231212_Pl_sowndiv_priors.RData")
-    
-    
-    save(m.Fu_sowndivW1_d, m.Fu_sowndivW1_p,
-          m.Fu_sowndivW1_p2, m.Fu_sowndivW1_p3,
-         m.Fu_sowndivW2_d, m.Fu_sowndivW2_p,
-          m.Fu_sowndivW2_p2, m.Fu_sowndivW2_p3,
-         m.Fu_sowndiv_d, m.Fu_sowndiv_p,
-         file = "./statistics/brms/231212_Fu_sowndiv_priors.RData")
-    
-    save(m.Ba_sowndivW1_d, m.Ba_sowndivW1_p,
-          m.Ba_sowndivW1_p2, m.Ba_sowndivW1_p3, m.Ba_sowndivW1_p4, m.Ba_sowndivW1_p5, m.Ba_sowndivW1_p6,
-          m.Ba_sowndivW1_d2, m.Ba_sowndivW1_d3, m.Ba_sowndivW1_d4,
-         m.Ba_sowndivW2_d, m.Ba_sowndivW2_p,
-          m.Ba_sowndivW2_d2, m.Ba_sowndivW2_d3, m.Ba_sowndivW2_d4,
-         m.Ba_sowndiv_d, m.Ba_sowndiv_p,
-          m.Ba_sowndiv_d2, m.Ba_sowndiv_d3, m.Ba_sowndiv_d4,
-          m.Ba_sowndiv_p4, m.Ba_sowndiv_p5, m.Ba_sowndiv_p6, m.Ba_sowndiv_p7,
-         file = "./statistics/brms/231212_Ba_sowndiv_priors.RData")
-
-load(file = "./statistics/brms/231212_Pl_sowndiv_priors.RData")
-
-####removed####
-#Ba plot predictions for week1
-pred.Ba_prior <- conditional_effects(m.Ba_sowndivW1_p)[[3]]
-pred.Ba_def <- conditional_effects(m.Ba_sowndivW1_d)[[3]]
-
-treatments2 = c("+SH+PH", "+SH-PH", "-SH-PH")
-cols=c("brown2", "darkolivegreen", "dodgerblue3")
-BREAKS = unique(dat$sowndivLogStd)
-
-
-ggplot(subset(dat, week == "W1"), aes(x= sowndivLogStd, y=Ba_per100g))+
-  #geom_ribbon(data=predictions, aes(ymin= lower__, ymax=upper__, 
-  #                                 fill=treatment), 
-  #           alpha=0.2, show.legend=FALSE)+
-  geom_jitter(width=0.2, shape=19, alpha=0.4, 
-              aes(col=treatment))+
-  geom_line(data=pred.Ba_prior, aes(x= sowndivLogStd, y=estimate__, 
-                                    linetype="dashed", col=treatment),
-            linewidth= 1, show.legend = FALSE)+
-  geom_line(data=pred.Ba_def, aes(x= sowndivLogStd, y=estimate__, 
-                                  linetype="solid", col=treatment),
-            linewidth= 1, show.legend = FALSE)+
-  scale_color_manual(labels=treatments2, values = cols)+
-  scale_x_continuous(name = "sown plant diversity", breaks = BREAKS,
-                     labels = c("1", "2", "4", "8", "16"))+
-  scale_y_continuous(name = "Ba per 100g DW")+
-  theme_bw()+
-  theme(legend.position ="bottom")  
-
-#Ba plot predictions for week2
-pred.Ba_prior <- conditional_effects(m.Ba_sowndivW2_p)[[3]]
-pred.Ba_def <- conditional_effects(m.Ba_sowndivW2_d)[[3]]
-
-treatments2 = c("+SH+PH", "+SH-PH", "-SH-PH")
-cols=c("brown2", "darkolivegreen", "dodgerblue3")
-BREAKS = unique(dat$sowndivLogStd)
-
-
-ggplot(subset(dat, week == "W2"), aes(x= sowndivLogStd, y=Ba_per100g))+
-  #geom_ribbon(data=predictions, aes(ymin= lower__, ymax=upper__, 
-  #                                 fill=treatment), 
-  #           alpha=0.2, show.legend=FALSE)+
-  geom_jitter(width=0.2, shape=19, alpha=0.4, 
-              aes(col=treatment))+
-  geom_line(data=pred.Ba_prior, aes(x= sowndivLogStd, y=estimate__, 
-                                    linetype="dashed", col=treatment),
-            linewidth= 1, show.legend = FALSE)+
-  geom_line(data=pred.Ba_def, aes(x= sowndivLogStd, y=estimate__, 
-                                  linetype="solid", col=treatment),
-            linewidth= 1, show.legend = FALSE)+
-  scale_color_manual(labels=treatments2, values = cols)+
-  scale_x_continuous(name = "sown plant diversity", breaks = BREAKS,
-                     labels = c("1", "2", "4", "8", "16"))+
-  scale_y_continuous(name = "Ba per 100g DW")+
-  theme_bw()+
-  theme(legend.position ="bottom")
-
-#Ba plot predictions for both weeks 
-pred.Ba_prior <- conditional_effects(m.Ba_sowndiv_p)[[3]]
-pred.Ba_def <- conditional_effects(m.Ba_sowndiv_d)[[3]]
-
-treatments2 = c("+SH+PH", "+SH-PH", "-SH-PH")
-cols=c("brown2", "darkolivegreen", "dodgerblue3")
-BREAKS = unique(dat$sowndivLogStd)
-
-
-ggplot(dat, aes(x= sowndivLogStd, y=Ba_per100g))+
-  #geom_ribbon(data=predictions, aes(ymin= lower__, ymax=upper__, 
-  #                                 fill=treatment), 
-  #           alpha=0.2, show.legend=FALSE)+
-  geom_jitter(width=0.2, shape=19, alpha=0.4, 
-              aes(col=treatment))+
-  geom_line(data=pred.Ba_prior, aes(x= sowndivLogStd, y=estimate__, 
-                                    linetype="dashed", col=treatment),
-            linewidth= 1, show.legend = FALSE)+
-  geom_line(data=pred.Ba_def, aes(x= sowndivLogStd, y=estimate__, 
-                                  linetype="solid", col=treatment),
-            linewidth= 1, show.legend = FALSE)+
-  scale_color_manual(labels=treatments2, values = cols)+
-  scale_x_continuous(name = "sown plant diversity", breaks = BREAKS,
-                     labels = c("1", "2", "4", "8", "16"))+
-  scale_y_continuous(name = "Ba per 100g DW")+
-  theme_bw()+
-  theme(legend.position ="bottom")    
-
