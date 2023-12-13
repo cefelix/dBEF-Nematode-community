@@ -307,7 +307,7 @@ dBEF_nem21 <- dBEF_nem21 %>%
   m.CR.13 <- update(m.CR.12, 
                     control = list(max_treedepth=12))
   
-  
+  summary(m.CR.13, prob=0.9)
   pp_check(m.CR.13, ndraws=100) 
     #overestimating the amount of values > 0 
     #these are implausible values, CR is bounded between [0,1]!
@@ -348,7 +348,7 @@ dBEF_nem21 <- dBEF_nem21 %>%
                     control= list(adapt_delta = 0.9999))
   
   pp_check(m.MI.13, ndraws = 100) #dont need a hurdle here, as no zeros in the data
-  
+  summary(m.MI.12)
 #### MI ~ sowndivLogStd*treatment + (1|block/plot),   
   m.MI.21 <- brm(MI ~ sowndivLogStd*treatment + (1|block/plot),
     data = dBEF_nem21, 
