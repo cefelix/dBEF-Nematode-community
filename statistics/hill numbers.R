@@ -9,216 +9,1005 @@ library(hexbin)
 library(GGally)
 
 # a seed:
-SEED = 22061996
+SEED = 19111996
 
-####Hill_q0 11: Hill_q0 ~ sowndivLog*treatment + (1|block/plot), fam=negBinom####
-dBEF_nem21 %>% filter(is.na(Hill_q0)==FALSE) %>% pull(Hill_q0) %>% density %>% plot()
-#as it is a count, lets try negbinomial:
-SEED = 22061996
-m.Hill_q0.11 <- brm(Hill_q0 ~ sowndivLog*treatment + (1|block/plot), 
-                            data = dBEF_nem21, family = "negbinomial",
-                            chains = 3,
-                            cores = 3,
-                            iter = 2000, warmup = 1000,
-                            seed = SEED,
-                            control = list(adapt_delta = 0.9) ) 
+#load files: 
+#load(file = "./statistics/brms/231127_Hill.RData" )
 
-m.Hill_q0.12 <- update(m.Hill_q0.11,
-                       control = list(adapt_delta = 0.99))
+#exclude 60 sp.:
+  dat <- subset(dBEF_nem21, sowndiv != 60) 
+  #standardize:  
+  dat <- dat %>% mutate(sowndivLogStd = ( (sowndivLog - mean(sowndivLog)) / sd(sowndivLog) ),
+                        .after = sowndivLog) %>%
+    mutate(realdivLogStd = ( (realdivLog - mean(realdivLog)) / sd(realdivLog) ),
+           .after = realdivLog)
+  
+  datW1 <- subset(dat, week=="W1")
+  datW2 <- subset(dat, week=="W2")
 
-pp_check(m.Hill_q0.12, ndraws=100) # thats off
+#priors    
+  beta_coeff_priors <- prior(normal(0,20), class = "b")  
+  beta_coeff_priors2 <- prior(normal(0,5), class = "b")  
+  beta_coeff_priors3 <- prior(normal(0,2), class = "b")  
 
-####H1 Shannon ####
-dBEF_nem21 %>% filter(is.na(Shannon_H)==FALSE) %>% pull(Shannon_H) %>% density %>% plot()
-SEED = 22061996
-m.Shannon_H.11 <- brm(Shannon_H ~ sowndivLog*treatment + (1|block/plot), 
-                    data = dBEF_nem21, family = "gaussian",
-                    chains = 3,
-                    cores = 3,
-                    iter = 2000, warmup = 1000,
-                    seed = SEED,
-                    control = list(adapt_delta = 0.9) ) 
-  #10 divergent transitions
+  
+#### Shannon all ~ sowndivLogStd ####
+#with default priors:  
+  m.all.Shannon.gaus_d <- brm(Hill_q1 ~ sowndivLogStd*treatment + (1|block/plot), 
+                        data = dat, family = "gaussian",
+                        chains = 3,
+                        cores = 3,
+                        iter = 2000, warmup = 1000,
+                        seed = SEED,
+                        control = list(adapt_delta = 0.99) ) #0 div
+    pp_check(m.all.Shannon.gaus_d, ndraws=100) #okay
+    summary(m.all.Shannon.gaus_d, prob = 0.9)
+    
+  m.all.Shannon.gamma_d <- brm(Hill_q1 ~ sowndivLogStd*treatment + (1|block/plot), 
+                              data = dat, family = "gamma",
+                              chains = 3,
+                              cores = 3,
+                              iter = 2000, warmup = 1000,
+                              seed = SEED,
+                              control = list(adapt_delta = 0.99) ) #0 div  
+  pp_check(m.all.Shannon.gamma_d, ndraws=100) #okay
+  summary(m.all.Shannon.gamma_d, prob = 0.9)
+    
 
-m.Shannon_H.12 <- update(m.Shannon_H.11,
-                         control=list(adapt_delta=0.99))
-  #7 divergent transitions
-m.Shannon_H.13 <- update(m.Shannon_H.12,
-                         control=list(adapt_delta=0.999))
+  #with a normal(0,20) prior for beta coefficients
+    m.all.Shannon.gaus_p <- brm(Hill_q1 ~ sowndivLogStd*treatment + (1|block/plot), 
+                                 data = dat, family = "gaussian",
+                                 chains = 3,
+                                 cores = 3,
+                                 iter = 2000, warmup = 1000,
+                                 prior = beta_coeff_priors,
+                                 seed = SEED,
+                                 control = list(adapt_delta = 0.99) )  
+    
+    m.all.Shannon.gamma_p <- brm(Hill_q1 ~ sowndivLogStd*treatment + (1|block/plot), 
+                             data = dat, family = "gamma",
+                             chains = 3,
+                             cores = 3,
+                             iter = 2000, warmup = 1000,
+                             prior = beta_coeff_priors,
+                             seed = SEED,
+                             control = list(adapt_delta = 0.99) )  
+    
+  #a narrower normal(0,5) prior:
+    m.all.Shannon.gaus_p2 <- update( m.all.Shannon.gaus_p,
+                                      prior =   beta_coeff_priors2,
+                                      seed = SEED)
+    
+    m.all.Shannon.gamma_p2 <- update( m.all.Shannon.gamma_p,
+                                      prior =   beta_coeff_priors2,
+                                      seed = SEED)
+    
+    pp_check(m.all.Shannon.gamma_p2, ndraws=100)
+    summary(m.all.Shannon.gamma_p2, prob = 0.9)
+    
+  #a narrower normal(0,2) prior:
+    m.all.Shannon.gaus_p3 <- update( m.all.Shannon.gaus_p2,
+                                      prior =   beta_coeff_priors3,
+                                      seed = SEED)
+    pp_check(m.all.Shannon.gaus_p3, ndraws=100)
+    summary(m.all.Shannon.gaus_p3, prob = 0.9)
+    
+    m.all.Shannon.gamma_p3 <- update( m.all.Shannon.gamma_p2,
+                               prior =   beta_coeff_priors3,
+                               seed = SEED)
+    pp_check(m.all.Shannon.gamma_p3, ndraws=100)
+    summary(m.all.Shannon.gamma_p3, prob = 0.9)
+  
+#compare them: 
+  loo(m.all.Shannon.gaus_p3, m.all.Shannon.gaus_p2, m.all.Shannon.gaus_p, m.all.Shannon.gaus_d,
+      m.all.Shannon.gamma_p3, m.all.Shannon.gamma_p2, m.all.Shannon.gamma_p, m.all.Shannon.gamma_d)
+  #best: all within 2 SE of elpd range, so all 
+  
+  save(m.all.Shannon.gaus_p3, m.all.Shannon.gaus_p2, m.all.Shannon.gaus_p, m.all.Shannon.gaus_d,
+       m.all.Shannon.gamma_p3, m.all.Shannon.gamma_p2, m.all.Shannon.gamma_p, m.all.Shannon.gamma_d,
+       file = "./statistics/brms/231214_all_HillQ1sowndiv.RData")
+  
+  rm(m.all.Shannon.gaus_p3, m.all.Shannon.gaus_p2, m.all.Shannon.gaus_p, m.all.Shannon.gaus_d,
+     m.all.Shannon.gamma_p3, m.all.Shannon.gamma_p2, m.all.Shannon.gamma_p, m.all.Shannon.gamma_d)
 
-pp_check(m.Shannon_H.13, ndraws=100) # a little overpredictive in quartile below mean
 
-#### hill q1 ####
-dBEF_nem21 %>% filter(is.na(Hill_q1)==FALSE) %>% pull(Hill_q1) %>% density %>% plot()
-SEED = 22061996
-m.Hill_q1.11 <- brm(Hill_q1 ~ sowndivLog*treatment + (1|block/plot), 
-                      data = dBEF_nem21, family = "gaussian",
-                      chains = 3,
-                      cores = 3,
-                      iter = 2000, warmup = 1000,
-                      seed = SEED,
-                      control = list(adapt_delta = 0.9) ) 
+#### Shannon Ba ~ sowndivLogStd ####
+  
+  #with default priors:  
+  m.Ba.Shannon.gaus_d <- brm(Hill_q1.Ba ~ sowndivLogStd*treatment + (1|block/plot), 
+                              data = dat, family = "gaussian",
+                              chains = 3,
+                              cores = 3,
+                              iter = 2000, warmup = 1000,
+                              seed = SEED,
+                              control = list(adapt_delta = 0.99) ) #0 div
+  pp_check(m.Ba.Shannon.gaus_d, ndraws=100) #okay
+  summary(m.Ba.Shannon.gaus_d, prob = 0.9)
+  
+  m.Ba.Shannon.gamma_d <- brm(Hill_q1.Ba ~ sowndivLogStd*treatment + (1|block/plot), 
+                               data = dat, family = "gamma",
+                               chains = 3,
+                               cores = 3,
+                               iter = 2000, warmup = 1000,
+                               seed = SEED,
+                               control = list(adapt_delta = 0.99) ) #0 div  
+  pp_check(m.Ba.Shannon.gamma_d, ndraws=100) #okay
+  summary(m.Ba.Shannon.gamma_d, prob = 0.9)
+  
+  
+  #with a normal(0,20) prior for beta coefficients
+  m.Ba.Shannon.gaus_p <- brm(Hill_q1.Ba ~ sowndivLogStd*treatment + (1|block/plot), 
+                              data = dat, family = "gaussian",
+                              chains = 3,
+                              cores = 3,
+                              iter = 2000, warmup = 1000,
+                              prior = beta_coeff_priors,
+                              seed = SEED,
+                              control = list(adapt_delta = 0.99) )  
+  
+  m.Ba.Shannon.gamma_p <- brm(Hill_q1.Ba ~ sowndivLogStd*treatment + (1|block/plot), 
+                               data = dat, family = "gamma",
+                               chains = 3,
+                               cores = 3,
+                               iter = 2000, warmup = 1000,
+                               prior = beta_coeff_priors,
+                               seed = SEED,
+                               control = list(adapt_delta = 0.99) )  
+  
+  #a narrower normal(0,5) prior:
+  m.Ba.Shannon.gaus_p2 <- update( m.Ba.Shannon.gaus_p,
+                                   prior =   beta_coeff_priors2,
+                                   seed = SEED)
+  
+  m.Ba.Shannon.gamma_p2 <- update( m.Ba.Shannon.gamma_p,
+                                    prior =   beta_coeff_priors2,
+                                    seed = SEED)
+  
+  pp_check(m.Ba.Shannon.gamma_p2, ndraws=100)
+  summary(m.Ba.Shannon.gamma_p2, prob = 0.9)
+  
+  #a narrower normal(0,2) prior:
+  m.Ba.Shannon.gaus_p3 <- update( m.Ba.Shannon.gaus_p2,
+                                   prior =   beta_coeff_priors3,
+                                   seed = SEED)
+  pp_check(m.Ba.Shannon.gaus_p3, ndraws=100)
+  summary(m.Ba.Shannon.gaus_p3, prob = 0.9)
+  
+  m.Ba.Shannon.gamma_p3 <- update( m.Ba.Shannon.gamma_p2,
+                                    prior =   beta_coeff_priors3,
+                                    seed = SEED)
+  pp_check(m.Ba.Shannon.gamma_p3, ndraws=100)
+  summary(m.Ba.Shannon.gamma_p3, prob = 0.9)
+  
+  #compare them: 
+  loo(m.Ba.Shannon.gaus_p3, m.Ba.Shannon.gaus_p2, m.Ba.Shannon.gaus_p, m.Ba.Shannon.gaus_d,
+      m.Ba.Shannon.gamma_p3, m.Ba.Shannon.gamma_p2, m.Ba.Shannon.gamma_p, m.Ba.Shannon.gamma_d)
+  #best:
+  summary(m.Ba.Shannon.gaus_p3, prob=0.9)
+  summary(m.Ba.Shannon.gamma_p, prob=0.9)
+  
+  save(m.Ba.Shannon.gaus_p3, m.Ba.Shannon.gaus_p2, m.Ba.Shannon.gaus_p, m.Ba.Shannon.gaus_d,
+       m.Ba.Shannon.gamma_p3, m.Ba.Shannon.gamma_p2, m.Ba.Shannon.gamma_p, m.Ba.Shannon.gamma_d,
+       file = "./statistics/brms/231214_Ba_HillQ1sowndiv_.RData")
+  
+  rm(m.Ba.Shannon.gaus_p3, m.Ba.Shannon.gaus_p2, m.Ba.Shannon.gaus_p, m.Ba.Shannon.gaus_d,
+     m.Ba.Shannon.gamma_p3, m.Ba.Shannon.gamma_p2, m.Ba.Shannon.gamma_p, m.Ba.Shannon.gamma_d)
+  
+  #### Shannon Fu ~ sowndivLogStd ####
+  
+  #with default priors:  
+  m.Fu.Shannon.gaus_d <- brm(Hill_q1.Fu ~ sowndivLogStd*treatment + (1|block/plot), 
+                             data = dat, family = "gaussian",
+                             chains = 3,
+                             cores = 3,
+                             iter = 2000, warmup = 1000,
+                             seed = SEED,
+                             control = list(adapt_delta = 0.99) ) #0 div
+  pp_check(m.Fu.Shannon.gaus_d, ndraws=100) #okay
+  summary(m.Fu.Shannon.gaus_d, prob = 0.9)
+  
+  m.Fu.Shannon.gamma_d <- brm(Hill_q1.Fu ~ sowndivLogStd*treatment + (1|block/plot), 
+                               data = dat, family = "gamma",
+                               chains = 3,
+                               cores = 3,
+                               iter = 2000, warmup = 1000,
+                               seed = SEED,
+                               control = list(adapt_delta = 0.99) ) #0 div  
+  pp_check(m.Fu.Shannon.gamma_d, ndraws=100) #okay
+  summary(m.Fu.Shannon.gamma_d, prob = 0.9)
+  
+  
+  #with a normal(0,20) prior for beta coefficients
+  m.Fu.Shannon.gaus_p <- brm(Hill_q1.Fu ~ sowndivLogStd*treatment + (1|block/plot), 
+                             data = dat, family = "gaussian",
+                             chains = 3,
+                             cores = 3,
+                             iter = 2000, warmup = 1000,
+                             prior = beta_coeff_priors,
+                             seed = SEED,
+                             control = list(adapt_delta = 0.99) )  
+  
+  m.Fu.Shannon.gamma_p <- brm(Hill_q1.Fu ~ sowndivLogStd*treatment + (1|block/plot), 
+                              data = dat, family = "gamma",
+                              chains = 3,
+                              cores = 3,
+                              iter = 2000, warmup = 1000,
+                              prior = beta_coeff_priors,
+                              seed = SEED,
+                              control = list(adapt_delta = 0.99) )  
+  
+  #a narrower normal(0,5) prior:
+  m.Fu.Shannon.gaus_p2 <- update( m.Fu.Shannon.gaus_p,
+                                  prior =   beta_coeff_priors2,
+                                  seed = SEED)
+  
+  m.Fu.Shannon.gamma_p2 <- update( m.Fu.Shannon.gamma_p,
+                                   prior =   beta_coeff_priors2,
+                                   seed = SEED)
+  
+  pp_check(m.Fu.Shannon.gamma_p2, ndraws=100)
+  summary(m.Fu.Shannon.gamma_p2, prob = 0.9)
+  
+  #a narrower normal(0,2) prior:
+  m.Fu.Shannon.gaus_p3 <- update( m.Fu.Shannon.gaus_p2,
+                                  prior =   beta_coeff_priors3,
+                                  seed = SEED)
+  pp_check(m.Fu.Shannon.gaus_p3, ndraws=100)
+  summary(m.Fu.Shannon.gaus_p3, prob = 0.9)
+  
+  m.Fu.Shannon.gamma_p3 <- update( m.Fu.Shannon.gamma_p2,
+                                   prior =   beta_coeff_priors3,
+                                   seed = SEED)
+  pp_check(m.Fu.Shannon.gamma_p3, ndraws=100)
+  summary(m.Fu.Shannon.gamma_p3, prob = 0.9)
+  
+  #compare them: 
+  loo(m.Fu.Shannon.gaus_p3, m.Fu.Shannon.gaus_p2, m.Fu.Shannon.gaus_p, m.Fu.Shannon.gaus_d,
+      m.Fu.Shannon.gamma_p3, m.Fu.Shannon.gamma_p2, m.Fu.Shannon.gamma_p, m.Fu.Shannon.gamma_d)
+  #best:
+  summary(m.Fu.Shannon.gaus_p3, prob=0.9)
+  summary(m.Fu.Shannon.gamma_p, prob=0.9)
+  
+  save(m.Fu.Shannon.gaus_p3, m.Fu.Shannon.gaus_p2, m.Fu.Shannon.gaus_p, m.Fu.Shannon.gaus_d,
+       m.Fu.Shannon.gamma_p3, m.Fu.Shannon.gamma_p2, m.Fu.Shannon.gamma_p, m.Fu.Shannon.gamma_d,
+       file = "./statistics/brms/231214_Fu_HillQ1sowndiv_.RData")
+  
+  rm(m.Fu.Shannon.gaus_p3, m.Fu.Shannon.gaus_p2, m.Fu.Shannon.gaus_p, m.Fu.Shannon.gaus_d,
+     m.Fu.Shannon.gamma_p3, m.Fu.Shannon.gamma_p2, m.Fu.Shannon.gamma_p, m.Fu.Shannon.gamma_d)
+  
+  
+  #### Shannon Pl ~ sowndivLogStd ####
+  
+  #with default priors:  
+  m.Pl.Shannon.gaus_d <- brm(Hill_q1.Pl ~ sowndivLogStd*treatment + (1|block/plot), 
+                             data = dat, family = "gaussian",
+                             chains = 3,
+                             cores = 3,
+                             iter = 2000, warmup = 1000,
+                             seed = SEED,
+                             control = list(adapt_delta = 0.99) ) #0 div
+  pp_check(m.Pl.Shannon.gaus_d, ndraws=100) #okay
+  summary(m.Pl.Shannon.gaus_d, prob = 0.9)
+  
+  m.Pl.Shannon.gamma_d <- brm(Hill_q1.Pl ~ sowndivLogStd*treatment + (1|block/plot), 
+                               data = dat, family = "gamma",
+                               chains = 3,
+                               cores = 3,
+                               iter = 2000, warmup = 1000,
+                               seed = SEED,
+                               control = list(adapt_delta = 0.99) ) #0 div  
+  pp_check(m.Pl.Shannon.gamma_d, ndraws=100) #okay
+  summary(m.Pl.Shannon.gamma_d, prob = 0.9)
+  
+  
+  #with a normal(0,20) prior for beta coefficients
+  m.Pl.Shannon.gaus_p <- brm(Hill_q1.Pl ~ sowndivLogStd*treatment + (1|block/plot), 
+                             data = dat, family = "gaussian",
+                             chains = 3,
+                             cores = 3,
+                             iter = 2000, warmup = 1000,
+                             prior = beta_coeff_priors,
+                             seed = SEED,
+                             control = list(adapt_delta = 0.99) )  
+  
+  m.Pl.Shannon.gamma_p <- brm(Hill_q1.Pl ~ sowndivLogStd*treatment + (1|block/plot), 
+                              data = dat, family = "gamma",
+                              chains = 3,
+                              cores = 3,
+                              iter = 2000, warmup = 1000,
+                              prior = beta_coeff_priors,
+                              seed = SEED,
+                              control = list(adapt_delta = 0.99) )  
+  
+  #a narrower normal(0,5) prior:
+  m.Pl.Shannon.gaus_p2 <- update( m.Pl.Shannon.gaus_p,
+                                  prior =   beta_coeff_priors2,
+                                  seed = SEED)
+  
+  m.Pl.Shannon.gamma_p2 <- update( m.Pl.Shannon.gamma_p,
+                                   prior =   beta_coeff_priors2,
+                                   seed = SEED)
+  
+  pp_check(m.Pl.Shannon.gamma_p2, ndraws=100)
+  summary(m.Pl.Shannon.gamma_p2, prob = 0.9)
+  
+  #a narrower normal(0,2) prior:
+  m.Pl.Shannon.gaus_p3 <- update( m.Pl.Shannon.gaus_p2,
+                                  prior =   beta_coeff_priors3,
+                                  seed = SEED)
+  pp_check(m.Pl.Shannon.gaus_p3, ndraws=100)
+  summary(m.Pl.Shannon.gaus_p3, prob = 0.9)
+  
+  m.Pl.Shannon.gamma_p3 <- update( m.Pl.Shannon.gamma_p2,
+                                   prior =   beta_coeff_priors3,
+                                   seed = SEED)
+  pp_check(m.Pl.Shannon.gamma_p3, ndraws=100)
+  summary(m.Pl.Shannon.gamma_p3, prob = 0.9)
+  
+  #compare them: 
+  loo(m.Pl.Shannon.gaus_p3, m.Pl.Shannon.gaus_p2, m.Pl.Shannon.gaus_p, m.Pl.Shannon.gaus_d,
+      m.Pl.Shannon.gamma_p3, m.Pl.Shannon.gamma_p2, m.Pl.Shannon.gamma_p, m.Pl.Shannon.gamma_d)
+  #best:
+  summary(m.Pl.Shannon.gaus_p3, prob=0.9)
+  summary(m.Pl.Shannon.gamma_p, prob=0.9)
+  
+  save(m.Pl.Shannon.gaus_p3, m.Pl.Shannon.gaus_p2, m.Pl.Shannon.gaus_p, m.Pl.Shannon.gaus_d,
+       m.Pl.Shannon.gamma_p3, m.Pl.Shannon.gamma_p2, m.Pl.Shannon.gamma_p, m.Pl.Shannon.gamma_d,
+       file = "./statistics/brms/231214_Pl_HillQ1sowndiv_.RData")
+  
+  rm(m.Pl.Shannon.gaus_p3, m.Pl.Shannon.gaus_p2, m.Pl.Shannon.gaus_p, m.Pl.Shannon.gaus_d,
+     m.Pl.Shannon.gamma_p3, m.Pl.Shannon.gamma_p2, m.Pl.Shannon.gamma_p, m.Pl.Shannon.gamma_d)
+  
+#### Shannon Pr ~ sowndivLogStd ####
+  #with default priors:  
+  m.Pr.Shannon.gaus_d <- brm(Hill_q1.Pr ~ sowndivLogStd*treatment + (1|block/plot), 
+                             data = dat, family = "gaussian",
+                             chains = 3,
+                             cores = 3,
+                             iter = 2000, warmup = 1000,
+                             seed = SEED,
+                             control = list(adapt_delta = 0.99) ) #0 div
+  pp_check(m.Pr.Shannon.gaus_d, ndraws=100) #okay
+  summary(m.Pr.Shannon.gaus_d, prob = 0.9)
+  
+  m.Pr.Shannon.gamma_d <- brm(Hill_q1.Pr ~ sowndivLogStd*treatment + (1|block/plot), 
+                               data = dat, family = "gamma",
+                               chains = 3,
+                               cores = 3,
+                               iter = 2000, warmup = 1000,
+                               seed = SEED,
+                               control = list(adapt_delta = 0.99) ) #0 div  
+  pp_check(m.Pr.Shannon.gamma_d, ndraws=100) #okay
+  summary(m.Pr.Shannon.gamma_d, prob = 0.9)
+  
+  
+  #with a normal(0,20) prior for beta coefficients
+  m.Pr.Shannon.gaus_p <- brm(Hill_q1.Pr ~ sowndivLogStd*treatment + (1|block/plot), 
+                             data = dat, family = "gaussian",
+                             chains = 3,
+                             cores = 3,
+                             iter = 2000, warmup = 1000,
+                             prior = beta_coeff_priors,
+                             seed = SEED,
+                             control = list(adapt_delta = 0.99) )  
+  
+  m.Pr.Shannon.gamma_p <- brm(Hill_q1.Pr ~ sowndivLogStd*treatment + (1|block/plot), 
+                              data = dat, family = "gamma",
+                              chains = 3,
+                              cores = 3,
+                              iter = 2000, warmup = 1000,
+                              prior = beta_coeff_priors,
+                              seed = SEED,
+                              control = list(adapt_delta = 0.99) )  
+  
+  #a narrower normal(0,5) prior:
+  m.Pr.Shannon.gaus_p2 <- update( m.Pr.Shannon.gaus_p,
+                                  prior =   beta_coeff_priors2,
+                                  seed = SEED)
+  
+  m.Pr.Shannon.gamma_p2 <- update( m.Pr.Shannon.gamma_p,
+                                   prior =   beta_coeff_priors2,
+                                   seed = SEED)
+  
+  pp_check(m.Pr.Shannon.gamma_p2, ndraws=100)
+  summary(m.Pr.Shannon.gamma_p2, prob = 0.9)
+  
+  #a narrower normal(0,2) prior:
+  m.Pr.Shannon.gaus_p3 <- update( m.Pr.Shannon.gaus_p2,
+                                  prior =   beta_coeff_priors3,
+                                  seed = SEED)
+  pp_check(m.Pr.Shannon.gaus_p3, ndraws=100)
+  summary(m.Pr.Shannon.gaus_p3, prob = 0.9)
+  
+  m.Pr.Shannon.gamma_p3 <- update( m.Pr.Shannon.gamma_p2,
+                                   prior =   beta_coeff_priors3,
+                                   seed = SEED)
+  pp_check(m.Pr.Shannon.gamma_p3, ndraws=100)
+  summary(m.Pr.Shannon.gamma_p3, prob = 0.9)
+  
+  #compare them: 
+  loo(m.Pr.Shannon.gaus_p3, m.Pr.Shannon.gaus_p2, m.Pr.Shannon.gaus_p, m.Pr.Shannon.gaus_d,
+      m.Pr.Shannon.gamma_p3, m.Pr.Shannon.gamma_p2, m.Pr.Shannon.gamma_p, m.Pr.Shannon.gamma_d)
+  #best:
+  summary(m.Pr.Shannon.gaus_p3, prob=0.9)
+  summary(m.Pr.Shannon.gamma_p, prob=0.9)
+  
+  save(m.Pr.Shannon.gaus_p3, m.Pr.Shannon.gaus_p2, m.Pr.Shannon.gaus_p, m.Pr.Shannon.gaus_d,
+       m.Pr.Shannon.gamma_p3, m.Pr.Shannon.gamma_p2, m.Pr.Shannon.gamma_p, m.Pr.Shannon.gamma_d,
+       file = "./statistics/brms/231214_Pr_HillQ1sowndiv_.RData")
+  
+  rm(m.Pr.Shannon.gaus_p3, m.Pr.Shannon.gaus_p2, m.Pr.Shannon.gaus_p, m.Pr.Shannon.gaus_d,
+     m.Pr.Shannon.gamma_p3, m.Pr.Shannon.gamma_p2, m.Pr.Shannon.gamma_p, m.Pr.Shannon.gamma_d)
+  
+  #### Shannon Om ~ sowndivLogStd ####
+  
+  #with default priors:  
+  m.Om.Shannon.gaus_d <- brm(Hill_q1.Om ~ sowndivLogStd*treatment + (1|block/plot), 
+                             data = dat, family = "gaussian",
+                             chains = 3,
+                             cores = 3,
+                             iter = 2000, warmup = 1000,
+                             seed = SEED,
+                             control = list(adapt_delta = 0.99) ) #0 div
+  pp_check(m.Om.Shannon.gaus_d, ndraws=100) #okay
+  summary(m.Om.Shannon.gaus_d, prob = 0.9)
+  
+  m.Om.Shannon.gamma_d <- brm(Hill_q1.Om ~ sowndivLogStd*treatment + (1|block/plot), 
+                               data = dat, family = "gamma",
+                               chains = 3,
+                               cores = 3,
+                               iter = 2000, warmup = 1000,
+                               seed = SEED,
+                               control = list(adapt_delta = 0.99) ) #0 div  
+  pp_check(m.Om.Shannon.gamma_d, ndraws=100) #okay
+  summary(m.Om.Shannon.gamma_d, prob = 0.9)
+  
+  
+  #with a normal(0,20) prior for beta coefficients
+  m.Om.Shannon.gaus_p <- brm(Hill_q1.Om ~ sowndivLogStd*treatment + (1|block/plot), 
+                             data = dat, family = "gaussian",
+                             chains = 3,
+                             cores = 3,
+                             iter = 2000, warmup = 1000,
+                             prior = beta_coeff_priors,
+                             seed = SEED,
+                             control = list(adapt_delta = 0.99) )  
+  
+  m.Om.Shannon.gamma_p <- brm(Hill_q1.Om ~ sowndivLogStd*treatment + (1|block/plot), 
+                              data = dat, family = "gamma",
+                              chains = 3,
+                              cores = 3,
+                              iter = 2000, warmup = 1000,
+                              prior = beta_coeff_priors,
+                              seed = SEED,
+                              control = list(adapt_delta = 0.99) )  
+  
+  #a narrower normal(0,5) prior:
+  m.Om.Shannon.gaus_p2 <- update( m.Om.Shannon.gaus_p,
+                                  prior =   beta_coeff_priors2,
+                                  seed = SEED)
+  
+  m.Om.Shannon.gamma_p2 <- update( m.Om.Shannon.gamma_p,
+                                   prior =   beta_coeff_priors2,
+                                   seed = SEED)
+  
+  pp_check(m.Om.Shannon.gamma_p2, ndraws=100)
+  summary(m.Om.Shannon.gamma_p2, prob = 0.9)
+  
+  #a narrower normal(0,2) prior:
+  m.Om.Shannon.gaus_p3 <- update( m.Om.Shannon.gaus_p2,
+                                  prior =   beta_coeff_priors3,
+                                  seed = SEED)
+  pp_check(m.Om.Shannon.gaus_p3, ndraws=100)
+  summary(m.Om.Shannon.gaus_p3, prob = 0.9)
+  
+  m.Om.Shannon.gamma_p3 <- update( m.Om.Shannon.gamma_p2,
+                                   prior =   beta_coeff_priors3,
+                                   seed = SEED)
+  pp_check(m.Om.Shannon.gamma_p3, ndraws=100)
+  summary(m.Om.Shannon.gamma_p3, prob = 0.9)
+  
+  #compare them: 
+  loo(m.Om.Shannon.gaus_p3, m.Om.Shannon.gaus_p2, m.Om.Shannon.gaus_p, m.Om.Shannon.gaus_d,
+      m.Om.Shannon.gamma_p3, m.Om.Shannon.gamma_p2, m.Om.Shannon.gamma_p, m.Om.Shannon.gamma_d)
+  #best:
+  summary(m.Om.Shannon.gaus_p3, prob=0.9)
+  summary(m.Om.Shannon.gamma_p, prob=0.9)
+  
+  save(m.Om.Shannon.gaus_p3, m.Om.Shannon.gaus_p2, m.Om.Shannon.gaus_p, m.Om.Shannon.gaus_d,
+       m.Om.Shannon.gamma_p3, m.Om.Shannon.gamma_p2, m.Om.Shannon.gamma_p, m.Om.Shannon.gamma_d,
+       file = "./statistics/brms/231214_Om_HillQ1sowndiv_.RData")
+  
+  rm(m.Om.Shannon.gaus_p3, m.Om.Shannon.gaus_p2, m.Om.Shannon.gaus_p, m.Om.Shannon.gaus_d,
+     m.Om.Shannon.gamma_p3, m.Om.Shannon.gamma_p2, m.Om.Shannon.gamma_p, m.Om.Shannon.gamma_d)
+  
+  #### Shannon all ~ realdivLogStd ####
+  #with default priors:  
+  m.all.Shannon.gaus_d <- brm(Hill_q1 ~ realdivLogStd*treatment + (1|block/plot), 
+                              data = dat, family = "gaussian",
+                              chains = 3,
+                              cores = 3,
+                              iter = 2000, warmup = 1000,
+                              seed = SEED,
+                              control = list(adapt_delta = 0.99) ) #0 div
+  pp_check(m.all.Shannon.gaus_d, ndraws=100) #okay
+  summary(m.all.Shannon.gaus_d, prob = 0.9)
+  
+  m.all.Shannon.gamma_d <- brm(Hill_q1 ~ realdivLogStd*treatment + (1|block/plot), 
+                               data = dat, family = "gamma",
+                               chains = 3,
+                               cores = 3,
+                               iter = 2000, warmup = 1000,
+                               seed = SEED,
+                               control = list(adapt_delta = 0.99) ) #0 div  
+  pp_check(m.all.Shannon.gamma_d, ndraws=100) #okay
+  summary(m.all.Shannon.gamma_d, prob = 0.9)
+  
+  
+  #with a normal(0,20) prior for beta coefficients
+  m.all.Shannon.gaus_p <- brm(Hill_q1 ~ realdivLogStd*treatment + (1|block/plot), 
+                              data = dat, family = "gaussian",
+                              chains = 3,
+                              cores = 3,
+                              iter = 2000, warmup = 1000,
+                              prior = beta_coeff_priors,
+                              seed = SEED,
+                              control = list(adapt_delta = 0.99) )  
+  
+  m.all.Shannon.gamma_p <- brm(Hill_q1 ~ realdivLogStd*treatment + (1|block/plot), 
+                               data = dat, family = "gamma",
+                               chains = 3,
+                               cores = 3,
+                               iter = 2000, warmup = 1000,
+                               prior = beta_coeff_priors,
+                               seed = SEED,
+                               control = list(adapt_delta = 0.99) )  
+  
+  #a narrower normal(0,5) prior:
+  m.all.Shannon.gaus_p2 <- update( m.all.Shannon.gaus_p,
+                                   prior =   beta_coeff_priors2,
+                                   seed = SEED)
+  
+  m.all.Shannon.gamma_p2 <- update( m.all.Shannon.gamma_p,
+                                    prior =   beta_coeff_priors2,
+                                    seed = SEED)
+  
+  pp_check(m.all.Shannon.gamma_p2, ndraws=100)
+  summary(m.all.Shannon.gamma_p2, prob = 0.9)
+  
+  #a narrower normal(0,2) prior:
+  m.all.Shannon.gaus_p3 <- update( m.all.Shannon.gaus_p2,
+                                   prior =   beta_coeff_priors3,
+                                   seed = SEED)
+  pp_check(m.all.Shannon.gaus_p3, ndraws=100)
+  summary(m.all.Shannon.gaus_p3, prob = 0.9)
+  
+  m.all.Shannon.gamma_p3 <- update( m.all.Shannon.gamma_p2,
+                                    prior =   beta_coeff_priors3,
+                                    seed = SEED)
+  pp_check(m.all.Shannon.gamma_p3, ndraws=100)
+  summary(m.all.Shannon.gamma_p3, prob = 0.9)
+  
+  #compare them: 
+  loo(m.all.Shannon.gaus_p3, m.all.Shannon.gaus_p2, m.all.Shannon.gaus_p, m.all.Shannon.gaus_d,
+      m.all.Shannon.gamma_p3, m.all.Shannon.gamma_p2, m.all.Shannon.gamma_p, m.all.Shannon.gamma_d)
+  #best: all within 2 SE of elpd range, so all 
+  
+  save(m.all.Shannon.gaus_p3, m.all.Shannon.gaus_p2, m.all.Shannon.gaus_p, m.all.Shannon.gaus_d,
+       m.all.Shannon.gamma_p3, m.all.Shannon.gamma_p2, m.all.Shannon.gamma_p, m.all.Shannon.gamma_d,
+       file = "./statistics/brms/231214_all_HillQ1realdiv.RData")
+  
+  
+  
+  #### Shannon Ba ~ realdivLogStd ####
+  
+  #with default priors:  
+  m.Ba.Shannon.gaus_d <- brm(Hill_q1.Ba ~ realdivLogStd*treatment + (1|block/plot), 
+                             data = dat, family = "gaussian",
+                             chains = 3,
+                             cores = 3,
+                             iter = 2000, warmup = 1000,
+                             seed = SEED,
+                             control = list(adapt_delta = 0.99) ) #0 div
+  pp_check(m.Ba.Shannon.gaus_d, ndraws=100) #okay
+  summary(m.Ba.Shannon.gaus_d, prob = 0.9)
+  
+  m.Ba.Shannon.gamma_d <- brm(Hill_q1.Ba ~ realdivLogStd*treatment + (1|block/plot), 
+                              data = dat, family = "gamma",
+                              chains = 3,
+                              cores = 3,
+                              iter = 2000, warmup = 1000,
+                              seed = SEED,
+                              control = list(adapt_delta = 0.99) ) #0 div  
+  pp_check(m.Ba.Shannon.gamma_d, ndraws=100) #okay
+  summary(m.Ba.Shannon.gamma_d, prob = 0.9)
+  
+  
+  #with a normal(0,20) prior for beta coefficients
+  m.Ba.Shannon.gaus_p <- brm(Hill_q1.Ba ~ realdivLogStd*treatment + (1|block/plot), 
+                             data = dat, family = "gaussian",
+                             chains = 3,
+                             cores = 3,
+                             iter = 2000, warmup = 1000,
+                             prior = beta_coeff_priors,
+                             seed = SEED,
+                             control = list(adapt_delta = 0.99) )  
+  
+  m.Ba.Shannon.gamma_p <- brm(Hill_q1.Ba ~ realdivLogStd*treatment + (1|block/plot), 
+                              data = dat, family = "gamma",
+                              chains = 3,
+                              cores = 3,
+                              iter = 2000, warmup = 1000,
+                              prior = beta_coeff_priors,
+                              seed = SEED,
+                              control = list(adapt_delta = 0.99) )  
+  
+  #a narrower normal(0,5) prior:
+  m.Ba.Shannon.gaus_p2 <- update( m.Ba.Shannon.gaus_p,
+                                  prior =   beta_coeff_priors2,
+                                  seed = SEED)
+  
+  m.Ba.Shannon.gamma_p2 <- update( m.Ba.Shannon.gamma_p,
+                                   prior =   beta_coeff_priors2,
+                                   seed = SEED)
+  
+  pp_check(m.Ba.Shannon.gamma_p2, ndraws=100)
+  summary(m.Ba.Shannon.gamma_p2, prob = 0.9)
+  
+  #a narrower normal(0,2) prior:
+  m.Ba.Shannon.gaus_p3 <- update( m.Ba.Shannon.gaus_p2,
+                                  prior =   beta_coeff_priors3,
+                                  seed = SEED)
+  pp_check(m.Ba.Shannon.gaus_p3, ndraws=100)
+  summary(m.Ba.Shannon.gaus_p3, prob = 0.9)
+  
+  m.Ba.Shannon.gamma_p3 <- update( m.Ba.Shannon.gamma_p2,
+                                   prior =   beta_coeff_priors3,
+                                   seed = SEED)
+  pp_check(m.Ba.Shannon.gamma_p3, ndraws=100)
+  summary(m.Ba.Shannon.gamma_p3, prob = 0.9)
+  
+  #compare them: 
+  loo(m.Ba.Shannon.gaus_p3, m.Ba.Shannon.gaus_p2, m.Ba.Shannon.gaus_p, m.Ba.Shannon.gaus_d,
+      m.Ba.Shannon.gamma_p3, m.Ba.Shannon.gamma_p2, m.Ba.Shannon.gamma_p, m.Ba.Shannon.gamma_d)
+  #best:
+  summary(m.Ba.Shannon.gaus_p3, prob=0.9)
+  summary(m.Ba.Shannon.gamma_p, prob=0.9)
+  
+  save(m.Ba.Shannon.gaus_p3, m.Ba.Shannon.gaus_p2, m.Ba.Shannon.gaus_p, m.Ba.Shannon.gaus_d,
+       m.Ba.Shannon.gamma_p3, m.Ba.Shannon.gamma_p2, m.Ba.Shannon.gamma_p, m.Ba.Shannon.gamma_d,
+       file = "./statistics/brms/231214_Ba_HillQ1realdiv_.RData")
+  
+  rm(m.Ba.Shannon.gaus_p3, m.Ba.Shannon.gaus_p2, m.Ba.Shannon.gaus_p, m.Ba.Shannon.gaus_d,
+     m.Ba.Shannon.gamma_p3, m.Ba.Shannon.gamma_p2, m.Ba.Shannon.gamma_p, m.Ba.Shannon.gamma_d)
+  
+  #### Shannon Fu ~ realdivLogStd ####
+  
+  #with default priors:  
+  m.Fu.Shannon.gaus_d <- brm(Hill_q1.Fu ~ realdivLogStd*treatment + (1|block/plot), 
+                             data = dat, family = "gaussian",
+                             chains = 3,
+                             cores = 3,
+                             iter = 2000, warmup = 1000,
+                             seed = SEED,
+                             control = list(adapt_delta = 0.99) ) #0 div
+  pp_check(m.Fu.Shannon.gaus_d, ndraws=100) #okay
+  summary(m.Fu.Shannon.gaus_d, prob = 0.9)
+  
+  m.Fu.Shannon.gamma_d <- brm(Hill_q1.Fu ~ realdivLogStd*treatment + (1|block/plot), 
+                              data = dat, family = "gamma",
+                              chains = 3,
+                              cores = 3,
+                              iter = 2000, warmup = 1000,
+                              seed = SEED,
+                              control = list(adapt_delta = 0.99) ) #0 div  
+  pp_check(m.Fu.Shannon.gamma_d, ndraws=100) #okay
+  summary(m.Fu.Shannon.gamma_d, prob = 0.9)
+  
+  
+  #with a normal(0,20) prior for beta coefficients
+  m.Fu.Shannon.gaus_p <- brm(Hill_q1.Fu ~ realdivLogStd*treatment + (1|block/plot), 
+                             data = dat, family = "gaussian",
+                             chains = 3,
+                             cores = 3,
+                             iter = 2000, warmup = 1000,
+                             prior = beta_coeff_priors,
+                             seed = SEED,
+                             control = list(adapt_delta = 0.99) )  
+  
+  m.Fu.Shannon.gamma_p <- brm(Hill_q1.Fu ~ realdivLogStd*treatment + (1|block/plot), 
+                              data = dat, family = "gamma",
+                              chains = 3,
+                              cores = 3,
+                              iter = 2000, warmup = 1000,
+                              prior = beta_coeff_priors,
+                              seed = SEED,
+                              control = list(adapt_delta = 0.99) )  
+  
+  #a narrower normal(0,5) prior:
+  m.Fu.Shannon.gaus_p2 <- update( m.Fu.Shannon.gaus_p,
+                                  prior =   beta_coeff_priors2,
+                                  seed = SEED)
+  
+  m.Fu.Shannon.gamma_p2 <- update( m.Fu.Shannon.gamma_p,
+                                   prior =   beta_coeff_priors2,
+                                   seed = SEED)
+  
+  pp_check(m.Fu.Shannon.gamma_p2, ndraws=100)
+  summary(m.Fu.Shannon.gamma_p2, prob = 0.9)
+  
+  #a narrower normal(0,2) prior:
+  m.Fu.Shannon.gaus_p3 <- update( m.Fu.Shannon.gaus_p2,
+                                  prior =   beta_coeff_priors3,
+                                  seed = SEED)
+  pp_check(m.Fu.Shannon.gaus_p3, ndraws=100)
+  summary(m.Fu.Shannon.gaus_p3, prob = 0.9)
+  
+  m.Fu.Shannon.gamma_p3 <- update( m.Fu.Shannon.gamma_p2,
+                                   prior =   beta_coeff_priors3,
+                                   seed = SEED)
+  pp_check(m.Fu.Shannon.gamma_p3, ndraws=100)
+  summary(m.Fu.Shannon.gamma_p3, prob = 0.9)
+  
+  #compare them: 
+  loo(m.Fu.Shannon.gaus_p3, m.Fu.Shannon.gaus_p2, m.Fu.Shannon.gaus_p, m.Fu.Shannon.gaus_d,
+      m.Fu.Shannon.gamma_p3, m.Fu.Shannon.gamma_p2, m.Fu.Shannon.gamma_p, m.Fu.Shannon.gamma_d)
+  #best:
+  summary(m.Fu.Shannon.gaus_p3, prob=0.9)
+  summary(m.Fu.Shannon.gamma_p, prob=0.9)
+  
+  save(m.Fu.Shannon.gaus_p3, m.Fu.Shannon.gaus_p2, m.Fu.Shannon.gaus_p, m.Fu.Shannon.gaus_d,
+       m.Fu.Shannon.gamma_p3, m.Fu.Shannon.gamma_p2, m.Fu.Shannon.gamma_p, m.Fu.Shannon.gamma_d,
+       file = "./statistics/brms/231214_Fu_HillQ1realdiv_.RData")
+  
+  rm(m.Fu.Shannon.gaus_p3, m.Fu.Shannon.gaus_p2, m.Fu.Shannon.gaus_p, m.Fu.Shannon.gaus_d,
+     m.Fu.Shannon.gamma_p3, m.Fu.Shannon.gamma_p2, m.Fu.Shannon.gamma_p, m.Fu.Shannon.gamma_d)
+  
+  
+  #### Shannon Pl ~ realdivLogStd ####
+  
+  #with default priors:  
+  m.Pl.Shannon.gaus_d <- brm(Hill_q1.Pl ~ realdivLogStd*treatment + (1|block/plot), 
+                             data = dat, family = "gaussian",
+                             chains = 3,
+                             cores = 3,
+                             iter = 2000, warmup = 1000,
+                             seed = SEED,
+                             control = list(adapt_delta = 0.99) ) #0 div
+  pp_check(m.Pl.Shannon.gaus_d, ndraws=100) #okay
+  summary(m.Pl.Shannon.gaus_d, prob = 0.9)
+  
+  m.Pl.Shannon.gamma_d <- brm(Hill_q1.Pl ~ realdivLogStd*treatment + (1|block/plot), 
+                              data = dat, family = "gamma",
+                              chains = 3,
+                              cores = 3,
+                              iter = 2000, warmup = 1000,
+                              seed = SEED,
+                              control = list(adapt_delta = 0.99) ) #0 div  
+  pp_check(m.Pl.Shannon.gamma_d, ndraws=100) #okay
+  summary(m.Pl.Shannon.gamma_d, prob = 0.9)
+  
+  
+  #with a normal(0,20) prior for beta coefficients
+  m.Pl.Shannon.gaus_p <- brm(Hill_q1.Pl ~ realdivLogStd*treatment + (1|block/plot), 
+                             data = dat, family = "gaussian",
+                             chains = 3,
+                             cores = 3,
+                             iter = 2000, warmup = 1000,
+                             prior = beta_coeff_priors,
+                             seed = SEED,
+                             control = list(adapt_delta = 0.99) )  
+  
+  m.Pl.Shannon.gamma_p <- brm(Hill_q1.Pl ~ realdivLogStd*treatment + (1|block/plot), 
+                              data = dat, family = "gamma",
+                              chains = 3,
+                              cores = 3,
+                              iter = 2000, warmup = 1000,
+                              prior = beta_coeff_priors,
+                              seed = SEED,
+                              control = list(adapt_delta = 0.99) )  
+  
+  #a narrower normal(0,5) prior:
+  m.Pl.Shannon.gaus_p2 <- update( m.Pl.Shannon.gaus_p,
+                                  prior =   beta_coeff_priors2,
+                                  seed = SEED)
+  
+  m.Pl.Shannon.gamma_p2 <- update( m.Pl.Shannon.gamma_p,
+                                   prior =   beta_coeff_priors2,
+                                   seed = SEED)
+  
+  pp_check(m.Pl.Shannon.gamma_p2, ndraws=100)
+  summary(m.Pl.Shannon.gamma_p2, prob = 0.9)
+  
+  #a narrower normal(0,2) prior:
+  m.Pl.Shannon.gaus_p3 <- update( m.Pl.Shannon.gaus_p2,
+                                  prior =   beta_coeff_priors3,
+                                  seed = SEED)
+  pp_check(m.Pl.Shannon.gaus_p3, ndraws=100)
+  summary(m.Pl.Shannon.gaus_p3, prob = 0.9)
+  
+  m.Pl.Shannon.gamma_p3 <- update( m.Pl.Shannon.gamma_p2,
+                                   prior =   beta_coeff_priors3,
+                                   seed = SEED)
+  pp_check(m.Pl.Shannon.gamma_p3, ndraws=100)
+  summary(m.Pl.Shannon.gamma_p3, prob = 0.9)
+  
+  #compare them: 
+  loo(m.Pl.Shannon.gaus_p3, m.Pl.Shannon.gaus_p2, m.Pl.Shannon.gaus_p, m.Pl.Shannon.gaus_d,
+      m.Pl.Shannon.gamma_p3, m.Pl.Shannon.gamma_p2, m.Pl.Shannon.gamma_p, m.Pl.Shannon.gamma_d)
+  #best:
+  summary(m.Pl.Shannon.gaus_p3, prob=0.9)
+  summary(m.Pl.Shannon.gamma_p, prob=0.9)
+  
+  save(m.Pl.Shannon.gaus_p3, m.Pl.Shannon.gaus_p2, m.Pl.Shannon.gaus_p, m.Pl.Shannon.gaus_d,
+       m.Pl.Shannon.gamma_p3, m.Pl.Shannon.gamma_p2, m.Pl.Shannon.gamma_p, m.Pl.Shannon.gamma_d,
+       file = "./statistics/brms/231214_Pl_HillQ1_.RData")
+  
+  rm(m.Pl.Shannon.gaus_p3, m.Pl.Shannon.gaus_p2, m.Pl.Shannon.gaus_p, m.Pl.Shannon.gaus_d,
+     m.Pl.Shannon.gamma_p3, m.Pl.Shannon.gamma_p2, m.Pl.Shannon.gamma_p, m.Pl.Shannon.gamma_d)
+  
+  #### Shannon Pr ~ realdivLogStd ####
+  #with default priors:  
+  m.Pr.Shannon.gaus_d <- brm(Hill_q1.Pr ~ realdivLogStd*treatment + (1|block/plot), 
+                             data = dat, family = "gaussian",
+                             chains = 3,
+                             cores = 3,
+                             iter = 2000, warmup = 1000,
+                             seed = SEED,
+                             control = list(adapt_delta = 0.99) ) #0 div
+  pp_check(m.Pr.Shannon.gaus_d, ndraws=100) #okay
+  summary(m.Pr.Shannon.gaus_d, prob = 0.9)
+  
+  m.Pr.Shannon.gamma_d <- brm(Hill_q1.Pr ~ realdivLogStd*treatment + (1|block/plot), 
+                              data = dat, family = "gamma",
+                              chains = 3,
+                              cores = 3,
+                              iter = 2000, warmup = 1000,
+                              seed = SEED,
+                              control = list(adapt_delta = 0.99) ) #0 div  
+  pp_check(m.Pr.Shannon.gamma_d, ndraws=100) #okay
+  summary(m.Pr.Shannon.gamma_d, prob = 0.9)
+  
+  
+  #with a normal(0,20) prior for beta coefficients
+  m.Pr.Shannon.gaus_p <- brm(Hill_q1.Pr ~ realdivLogStd*treatment + (1|block/plot), 
+                             data = dat, family = "gaussian",
+                             chains = 3,
+                             cores = 3,
+                             iter = 2000, warmup = 1000,
+                             prior = beta_coeff_priors,
+                             seed = SEED,
+                             control = list(adapt_delta = 0.99) )  
+  
+  m.Pr.Shannon.gamma_p <- brm(Hill_q1.Pr ~ realdivLogStd*treatment + (1|block/plot), 
+                              data = dat, family = "gamma",
+                              chains = 3,
+                              cores = 3,
+                              iter = 2000, warmup = 1000,
+                              prior = beta_coeff_priors,
+                              seed = SEED,
+                              control = list(adapt_delta = 0.99) )  
+  
+  #a narrower normal(0,5) prior:
+  m.Pr.Shannon.gaus_p2 <- update( m.Pr.Shannon.gaus_p,
+                                  prior =   beta_coeff_priors2,
+                                  seed = SEED)
+  
+  m.Pr.Shannon.gamma_p2 <- update( m.Pr.Shannon.gamma_p,
+                                   prior =   beta_coeff_priors2,
+                                   seed = SEED)
+  
+  pp_check(m.Pr.Shannon.gamma_p2, ndraws=100)
+  summary(m.Pr.Shannon.gamma_p2, prob = 0.9)
+  
+  #a narrower normal(0,2) prior:
+  m.Pr.Shannon.gaus_p3 <- update( m.Pr.Shannon.gaus_p2,
+                                  prior =   beta_coeff_priors3,
+                                  seed = SEED)
+  pp_check(m.Pr.Shannon.gaus_p3, ndraws=100)
+  summary(m.Pr.Shannon.gaus_p3, prob = 0.9)
+  
+  m.Pr.Shannon.gamma_p3 <- update( m.Pr.Shannon.gamma_p2,
+                                   prior =   beta_coeff_priors3,
+                                   seed = SEED)
+  pp_check(m.Pr.Shannon.gamma_p3, ndraws=100)
+  summary(m.Pr.Shannon.gamma_p3, prob = 0.9)
+  
+  #compare them: 
+  loo(m.Pr.Shannon.gaus_p3, m.Pr.Shannon.gaus_p2, m.Pr.Shannon.gaus_p, m.Pr.Shannon.gaus_d,
+      m.Pr.Shannon.gamma_p3, m.Pr.Shannon.gamma_p2, m.Pr.Shannon.gamma_p, m.Pr.Shannon.gamma_d)
+  #best:
+  summary(m.Pr.Shannon.gaus_p3, prob=0.9)
+  summary(m.Pr.Shannon.gamma_p, prob=0.9)
+  
+  save(m.Pr.Shannon.gaus_p3, m.Pr.Shannon.gaus_p2, m.Pr.Shannon.gaus_p, m.Pr.Shannon.gaus_d,
+       m.Pr.Shannon.gamma_p3, m.Pr.Shannon.gamma_p2, m.Pr.Shannon.gamma_p, m.Pr.Shannon.gamma_d,
+       file = "./statistics/brms/231214_Pr_HillQ1realdiv_.RData")
+  
+  rm(m.Pr.Shannon.gaus_p3, m.Pr.Shannon.gaus_p2, m.Pr.Shannon.gaus_p, m.Pr.Shannon.gaus_d,
+     m.Pr.Shannon.gamma_p3, m.Pr.Shannon.gamma_p2, m.Pr.Shannon.gamma_p, m.Pr.Shannon.gamma_d)
+  
+  #### Shannon Om ~ realdivLogStd ####
+  
+  #with default priors:  
+  m.Om.Shannon.gaus_d <- brm(Hill_q1.Om ~ realdivLogStd*treatment + (1|block/plot), 
+                             data = dat, family = "gaussian",
+                             chains = 3,
+                             cores = 3,
+                             iter = 2000, warmup = 1000,
+                             seed = SEED,
+                             control = list(adapt_delta = 0.99) ) #0 div
+  pp_check(m.Om.Shannon.gaus_d, ndraws=100) #okay
+  summary(m.Om.Shannon.gaus_d, prob = 0.9)
+  
+  m.Om.Shannon.gamma_d <- brm(Hill_q1.Om ~ realdivLogStd*treatment + (1|block/plot), 
+                              data = dat, family = "gamma",
+                              chains = 3,
+                              cores = 3,
+                              iter = 2000, warmup = 1000,
+                              seed = SEED,
+                              control = list(adapt_delta = 0.99) ) #0 div  
+  pp_check(m.Om.Shannon.gamma_d, ndraws=100) #okay
+  summary(m.Om.Shannon.gamma_d, prob = 0.9)
+  
+  
+  #with a normal(0,20) prior for beta coefficients
+  m.Om.Shannon.gaus_p <- brm(Hill_q1.Om ~ realdivLogStd*treatment + (1|block/plot), 
+                             data = dat, family = "gaussian",
+                             chains = 3,
+                             cores = 3,
+                             iter = 2000, warmup = 1000,
+                             prior = beta_coeff_priors,
+                             seed = SEED,
+                             control = list(adapt_delta = 0.99) )  
+  
+  m.Om.Shannon.gamma_p <- brm(Hill_q1.Om ~ realdivLogStd*treatment + (1|block/plot), 
+                              data = dat, family = "gamma",
+                              chains = 3,
+                              cores = 3,
+                              iter = 2000, warmup = 1000,
+                              prior = beta_coeff_priors,
+                              seed = SEED,
+                              control = list(adapt_delta = 0.99) )  
+  
+  #a narrower normal(0,5) prior:
+  m.Om.Shannon.gaus_p2 <- update( m.Om.Shannon.gaus_p,
+                                  prior =   beta_coeff_priors2,
+                                  seed = SEED)
+  
+  m.Om.Shannon.gamma_p2 <- update( m.Om.Shannon.gamma_p,
+                                   prior =   beta_coeff_priors2,
+                                   seed = SEED)
+  
+  pp_check(m.Om.Shannon.gamma_p2, ndraws=100)
+  summary(m.Om.Shannon.gamma_p2, prob = 0.9)
+  
+  #a narrower normal(0,2) prior:
+  m.Om.Shannon.gaus_p3 <- update( m.Om.Shannon.gaus_p2,
+                                  prior =   beta_coeff_priors3,
+                                  seed = SEED)
+  pp_check(m.Om.Shannon.gaus_p3, ndraws=100)
+  summary(m.Om.Shannon.gaus_p3, prob = 0.9)
+  
+  m.Om.Shannon.gamma_p3 <- update( m.Om.Shannon.gamma_p2,
+                                   prior =   beta_coeff_priors3,
+                                   seed = SEED)
+  pp_check(m.Om.Shannon.gamma_p3, ndraws=100)
+  summary(m.Om.Shannon.gamma_p3, prob = 0.9)
+  
+  #compare them: 
+  loo(m.Om.Shannon.gaus_p3, m.Om.Shannon.gaus_p2, m.Om.Shannon.gaus_p, m.Om.Shannon.gaus_d,
+      m.Om.Shannon.gamma_p3, m.Om.Shannon.gamma_p2, m.Om.Shannon.gamma_p, m.Om.Shannon.gamma_d)
+  #best:
+  summary(m.Om.Shannon.gaus_p3, prob=0.9)
+  summary(m.Om.Shannon.gamma_p, prob=0.9)
+  
+  save(m.Om.Shannon.gaus_p3, m.Om.Shannon.gaus_p2, m.Om.Shannon.gaus_p, m.Om.Shannon.gaus_d,
+       m.Om.Shannon.gamma_p3, m.Om.Shannon.gamma_p2, m.Om.Shannon.gamma_p, m.Om.Shannon.gamma_d,
+       file = "./statistics/brms/231214_Om_HillQ1realdiv_.RData")
+  
+  rm(m.Om.Shannon.gaus_p3, m.Om.Shannon.gaus_p2, m.Om.Shannon.gaus_p, m.Om.Shannon.gaus_d,
+     m.Om.Shannon.gamma_p3, m.Om.Shannon.gamma_p2, m.Om.Shannon.gamma_p, m.Om.Shannon.gamma_d)
 
-m.Hill_q1.12 <- update(m.Hill_q1.11,
-                       control = list(adapt_delta = 0.99) )
 
-pp_check(m.Hill_q1.12, ndraws=100)
-mcmc_plot(m.Hill_q1.12 )
 
-#### Hill q1 without 60 species ####
-SEED = 22061996
-dat <- subset(dBEF_nem21, sowndiv != 60)
-dat %>% filter(is.na(Hill_q1.Fu)==FALSE) %>% pull(Hill_q1.Fu) %>% density %>% plot()
-
-  m.41.Hill_q1 <- brm(Hill_q1 ~ sowndivLog*treatment + (1|block/plot), 
-                      data = dat, family = "gaussian",
-                      chains = 3,
-                      cores = 3,
-                      iter = 2000, warmup = 1000,
-                      seed = SEED,
-                      control = list(adapt_delta = 0.99) ) 
-  
- 
-  
-  pp_check(m.41.Hill_q1, ndraws=100)
-  
-  m.41b.Hill_q1 <- brm(Hill_q1 ~ sowndivLog*treatment + (1|block/plot), 
-                      data = dat, family = "gamma",
-                      chains = 3,
-                      cores = 3,
-                      iter = 2000, warmup = 1000,
-                      seed = SEED,
-                      control = list(adapt_delta = 0.99) ) 
-  pp_check(m.41b.Hill_q1, ndraws=100)
-  
-#for Fu  
-  dat %>% filter(is.na(Hill_q1.Fu)==FALSE) %>% pull(Hill_q1.Fu) %>% density %>% plot()
-  m.41.Hill_q1.Fu <- brm(Hill_q1.Fu ~ sowndivLog*treatment + (1|block/plot), 
-                      data = dat, family = "gaussian",
-                      chains = 3,
-                      cores = 3,
-                      iter = 2000, warmup = 1000,
-                      seed = SEED,
-                      control = list(adapt_delta = 0.99) )
-  pp_check(m.41.Hill_q1.Fu, ndraws=100) #thats off
-  
-  m.41b.Hill_q1.Fu <- brm(Hill_q1.Fu ~ sowndivLog*treatment + (1|block/plot), 
-                         data = dat, family = "gamma",
-                         chains = 3,
-                         cores = 3,
-                         iter = 2000, warmup = 1000,
-                         seed = SEED,
-                         control = list(adapt_delta = 0.99) ) #all good
-  pp_check(m.41b.Hill_q1.Fu, ndraws=100) #better than the gaussian
-  conditional_effects(m.41b.Hill_q1.Fu)
-  
-  loo(m.41.Hill_q1.Fu, m.41b.Hill_q1.Fu)
-  
-  #for Ba 
-  dat %>% filter(is.na(Hill_q1.Ba)==FALSE) %>% pull(Hill_q1.Ba) %>% density %>% plot()
-  m.41.Hill_q1.Ba <- brm(Hill_q1.Ba ~ sowndivLog*treatment + (1|block/plot), 
-                         data = dat, family = "gaussian",
-                         chains = 3,
-                         cores = 3,
-                         iter = 2000, warmup = 1000,
-                         seed = SEED,
-                         control = list(adapt_delta = 0.99) )
-  pp_check(m.41.Hill_q1.Ba, ndraws=100) #all good
-  
-  m.41b.Hill_q1.Ba <- brm(Hill_q1.Ba ~ sowndivLog*treatment + (1|block/plot), 
-                         data = dat, family = "gamma",
-                         chains = 3,
-                         cores = 3,
-                         iter = 2000, warmup = 1000,
-                         seed = SEED,
-                         control = list(adapt_delta = 0.99) )
-  pp_check(m.41b.Hill_q1.Ba, ndraws=100) #looks better than gaussian
-  loo(m.41.Hill_q1.Ba, m.41b.Hill_q1.Ba)
-  conditional_effects(m.41b.Hill_q1.Ba)
-  
-  #for Pl  
-  dat %>% filter(is.na(Hill_q1.Pl)==FALSE) %>% pull(Hill_q1.Pl) %>% density %>% plot()
-  m.41.Hill_q1.Pl <- brm(Hill_q1.Pl ~ sowndivLog*treatment + (1|block/plot), 
-                         data = dat, family = "gaussian",
-                         chains = 3,
-                         cores = 3,
-                         iter = 2000, warmup = 1000,
-                         seed = SEED,
-                         control = list(adapt_delta = 0.99) ) 
-  pp_check(m.41.Hill_q1.Pl, ndraws=100) #all good
-  
-  m.41b.Hill_q1.Pl <- brm(Hill_q1.Pl ~ sowndivLog*treatment + (1|block/plot), 
-                         data = dat, family = "gamma",
-                         chains = 3,
-                         cores = 3,
-                         iter = 2000, warmup = 1000,
-                         seed = SEED,
-                         control = list(adapt_delta = 0.99) ) #all good
-  pp_check(m.41b.Hill_q1.Pl, ndraws=100) #okayish
-  conditional_effects( m.41b.Hill_q1.Pl)
-  
-  #for Pr  
-  dat %>% filter(is.na(Hill_q1.Pr)==FALSE) %>% pull(Hill_q1.Pr) %>% density %>% plot()
-  m.41.Hill_q1.Pr <- brm(Hill_q1.Pr ~ sowndivLog*treatment + (1|block/plot), 
-                         data = dat, family = "gaussian",
-                         chains = 3,
-                         cores = 3,
-                         iter = 2000, warmup = 1000,
-                         seed = SEED,
-                         control = list(adapt_delta = 0.99) ) #2 divergent transitions
-  m.42.Hill_q1.Pr <- update(m.41.Hill_q1.Pr, control = list(adapt_delta = 0.999)  ) #all good
-  pp_check(m.42.Hill_q1.Pr, ndraws=100)
-  
-  m.41b.Hill_q1.Pr <- brm(Hill_q1.Pr ~ sowndivLog*treatment + (1|block/plot), 
-                         data = dat, family = "gamma",
-                         chains = 3,
-                         cores = 3,
-                         iter = 2000, warmup = 1000,
-                         seed = SEED,
-                         control = list(adapt_delta = 0.99) ) #all good
-  pp_check(m.41b.Hill_q1.Pr, ndraws=100) #better than gaussian
-  conditional_effects( m.41b.Hill_q1.Pr)
-  
-  #for Om  
-  dat %>% filter(is.na(Hill_q1.Om)==FALSE) %>% pull(Hill_q1.Om) %>% density %>% plot()
-  sum(dat$Hill_q1.Om == TRUE )
-  m.41.Hill_q1.Om <- brm(Hill_q1.Om ~ sowndivLog*treatment + (1|block/plot), 
-                         data = dat, family = "gaussian",
-                         chains = 3,
-                         cores = 3,
-                         iter = 2000, warmup = 1000,
-                         seed = SEED,
-                         control = list(adapt_delta = 0.99) ) #1 divergent transition
-  
-  m.42.Hill_q1.Om <- update(m.41.Hill_q1.Om ,
-                            control = list(adapt_delta = 0.999))
-
-  pp_check(m.42.Hill_q1.Om, ndraws = 100) #completely off
-  
-  m.41b.Hill_q1.Om <- brm(Hill_q1.Om ~ sowndivLog*treatment + (1|block/plot), 
-                         data = dat, family = "gamma",
-                         chains = 3,
-                         cores = 3,
-                         iter = 2000, warmup = 1000,
-                         seed = SEED,
-                         control = list(adapt_delta = 0.99) )
-  pp_check( m.41b.Hill_q1.Om, ndraws=100) #still completely off
-  conditional_effects( m.41b.Hill_q1.Om)
-
-####save ####
-save( m.41.Hill_q1,
-        #m.41b.Hill_q1, 
-      m.41.Hill_q1.Fu,
-        m.41b.Hill_q1.Fu,
-      m.41.Hill_q1.Ba,
-        m.41b.Hill_q1.Ba,
-      m.41b.Hill_q1.Pl,
-        m.41.Hill_q1.Pl,
-      m.41.Hill_q1.Pr, m.42.Hill_q1.Pr,
-        m.41b.Hill_q1.Pr,
-      m.41.Hill_q1.Om, m.42.Hill_q1.Om,
-        m.41b.Hill_q1.Om,
-     file = "./statistics/brms/231127_Hill.RData" )
-
-load(file = "./statistics/brms/231124_Hill.RData" )
-conditional_effects(m.41.Hill_q1 , prob=0.89)

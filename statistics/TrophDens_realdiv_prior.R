@@ -25,7 +25,7 @@ beta_coeff_priors3 <- prior(normal(0,2), class = "b")
 
 
 #W2: _p has 1 div, _d has 4 div --> despite slightly better elpd (less than 2 SE difference), choose _p 
-load(file = "./statistics/brms/231213_Ba_realdiv_priors.RData")
+#load(file = "./statistics/brms/231213_Ba_realdiv_priors.RData")
 
 SEED = 22061996
 beta_coeff_priors <- prior(normal(0,20), class = "b")  
@@ -345,7 +345,7 @@ save(m.Ba_realdivW1_d, m.Ba_realdivW1_p,
      m.Ba_realdivW2_p2, m.Ba_realdivW2_p3,
      m.Ba_realdiv_d, m.Ba_realdiv_p,
      m.Ba_realdiv_d2, m.Ba_realdiv_d3, m.Ba_realdiv_d4,
-     m.Ba_realdiv_p4, m.Ba_realdiv_p5, m.Ba_realdiv_p6, m.Ba_realdiv_p7,
+     m.Ba_realdiv_p5, m.Ba_realdiv_p6, m.Ba_realdiv_p7,
      file = "./statistics/brms/231213_Ba_realdiv_priors.RData")
 
 #remove from workspace to prevent crashing
@@ -363,7 +363,7 @@ rm(m.Ba_realdivW1_d, m.Ba_realdivW1_p,
 #### Fu ~ realdiv:W1-p2, W2-d, both- ####
 #W1: _p2: 1 div, _d 7 div, elpd for p2 lower --> choose p2 
 #W2: _p: 1 div, _d 0 div, elpd for p slightly lower (less than 2 se) --> choose d
-load(file = "./statistics/brms/231213_Fu_realdiv_priors.RData")
+#load(file = "./statistics/brms/231213_Fu_realdiv_priors.RData")
 
 SEED = 22061996
 beta_coeff_priors <- prior(normal(0,20), class = "b")  
@@ -621,7 +621,7 @@ rm(m.Fu_realdivW1_d, m.Fu_realdivW1_p,
 #### Pl ~ realdiv: W1-p2, W2-p, both-p ####
 #W1: _p2: 1 div, _d 19 div, elpd for _p2 equal --> choose _p2
 #W2: _p: 2 div, _d 11 div, elpd for _p slightly worse (but less than 2 SE) --> choose _p
-load(file = "./statistics/brms/231213_Pl_realdiv_priors.RData")
+#load(file = "./statistics/brms/231213_Pl_realdiv_priors.RData")
 
 SEED = 22061996
 beta_coeff_priors <- prior(normal(0,20), class = "b")  
@@ -894,7 +894,7 @@ rm(m.Pl_realdivW1_d, m.Pl_realdivW1_p,
 #### Pr ~ realdiv: W1-p5, W2-p5, both-  ####
 #W1: _p5 6 div, _d3 9 div, loo is equal --> choose _p5
 #W2: _p5 5 div, _d4 13 div, loo is slightly better in _p5 (less than 2 SE) --> choose _p5
-load(file = "./statistics/brms/231213_Pr_realdiv_priors.RData")
+#load(file = "./statistics/brms/231213_Pr_realdiv_priors.RData")
 
 SEED = 22061996
 beta_coeff_priors <- prior(normal(0,20), class = "b")  
@@ -1175,14 +1175,14 @@ beta_coeff_priors2 <- prior(normal(0,5), class = "b")
 m.Pr_realdiv_p2 <- update(m.Pr_realdiv_p,
                           prior = beta_coeff_priors2,
                           seed = SEED) #0 div
-summary(m.Pr_realdiv_p3, prob=0.9)
+summary(m.Pr_realdiv_p2, prob=0.9)
 
 #using an even narrower prior:
 beta_coeff_priors3 <- prior(normal(0,2), class = "b")  
 m.Pr_realdiv_p3 <- update(m.Pr_realdiv_p2,
                           prior = beta_coeff_priors3,
                           seed = SEED) #0 div
-summary(m.Pr_realdiv_p4, prob=0.9)
+summary(m.Pr_realdiv_p3, prob=0.9)
 
 pp_check(m.Pr_realdiv_p, ndraws=100)+
   xlim(0,2000)
@@ -1237,7 +1237,7 @@ rm(m.Pr_realdivW1_d, m.Pr_realdivW1_p,
 #W1: _p3 13 div, _d3 10 div, p has slightly better elpd (less than 2 SE) -> d3 is best
 #W2: _p 1 div, _d 6 div, _p has slightly better elpd (less than 2 SE) --> _p is best
 #both: 10 div in p, zero in d, elpd slightly better in p
-load(file = "./statistics/brms/231213_Om_realdiv_priors.RData")
+#load(file = "./statistics/brms/231213_Om_realdiv_priors.RData")
 
 SEED = 22061996
 beta_coeff_priors <- prior(normal(0,20), class = "b")  
@@ -1563,3 +1563,4 @@ rm(m.Om_realdivW1_d, m.Om_realdivW1_p,
      m.Om_realdiv_d, m.Om_realdiv_p,
      m.Om_realdiv_p2, m.Om_realdiv_p3, m.Om_realdiv_p4, m.Om_realdiv_p5, m.Om_realdiv_p6,
      m.Om_realdiv_d2, m.Om_realdiv_d3, m.Om_realdiv_d4)
+
