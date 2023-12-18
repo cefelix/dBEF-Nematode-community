@@ -3,6 +3,7 @@ library(rstan)
 library(ggplot2)
 library(emmeans)
 library(bayestestR)
+library(dplyr)
 
 # fitting trophic group densities ~ sowndiv
 
@@ -35,10 +36,10 @@ library(bayestestR)
     exp(0.5) 
     #this would mean that increasing plant diversity by 1 SD would lead to 64% more individuals per dry weight of soil
     
-####Ba~sowndiv: W1-d4, W2-p , both- ####
+####Ba~sowndiv: W1-d4, W2-p2 , both- ####
     
     
-    #W2: _p has 1 div, _d has 4 div --> despite slightly better elpd (less than 2 SE difference), choose _p 
+    #W2: _p2 has 0 div, _d has 4 div --> despite slightly better elpd (less than 2 SE difference), choose _p2 
     load(file = "./statistics/brms/231213_Ba_sowndiv_priors.RData")
     
   SEED = 22061996
@@ -145,8 +146,15 @@ library(bayestestR)
       pp_check(m.Ba_sowndivW1_d4, ndraws=100)+
         xlim(0,2000)
       
-    #compare them  
-      loo(m.Ba_sowndivW1_p5, m.Ba_sowndivW1_d4)
+    #compare them 
+      #for default priors:
+      loo(m.Ba_sowndivW1_d, m.Ba_sowndivW1_d2, m.Ba_sowndivW1_d3, m.Ba_sowndivW1_d4)
+      #d4, as elpd for each model is in range of 2 SE and d4 is the simplest (principle of parsimony)
+      
+      #for normal(0,20)
+      loo(m.Ba_sowndivW1_p, m.Ba_sowndivW1_p2, m.Ba_sowndivW1_p3, m.Ba_sowndivW1_p4) 
+      #p4, as elpd for each model is in range of 2 SE and p4 is the simplest (principle of parsimony)
+      
       print(rstan::get_elapsed_time(m.Ba_sowndivW1_p$fit))
       print(rstan::get_elapsed_time(m.Ba_sowndivW1_d$fit))
       
@@ -170,16 +178,16 @@ m.Ba_sowndivW2_p <- brm(
 
     #using a narrower prior:
     beta_coeff_priors2 <- prior(normal(0,5), class = "b")  
-    m.Ba_sowndivW2_p2 <- update(m.Ba_sowndivW1_p,
+    m.Ba_sowndivW2_p2 <- update(m.Ba_sowndivW2_p,
                                 prior = beta_coeff_priors2,
-                                seed = SEED) # 3 div
+                                seed = SEED) # 0 div
     summary(m.Ba_sowndivW2_p2, prob=0.9)
     
     #using a even narrower prior:
     beta_coeff_priors3 <- prior(normal(0,2), class = "b")  
-    m.Ba_sowndivW2_p3 <- update(m.Ba_sowndivW1_p2,
+    m.Ba_sowndivW2_p3 <- update(m.Ba_sowndivW2_p2,
                                 prior = beta_coeff_priors3,
-                                seed = SEED) # 6div
+                                seed = SEED) # 1div
     summary(m.Ba_sowndivW2_p3, prob=0.9)
     
     #best _p
@@ -205,7 +213,7 @@ pp_check(m.Ba_sowndivW2_p, ndraws=100)
   pp_check(m.Ba_sowndivW2_d, ndraws=100)
   
   #compare them  
-  loo(m.Ba_sowndivW2_p, m.Ba_sowndivW2_d)
+  loo(m.Ba_sowndivW2_p, m.Ba_sowndivW2_p2, m.Ba_sowndivW2_p3, m.Ba_sowndivW2_d)
   print(rstan::get_elapsed_time(m.Ba_sowndivW2_p$fit))
   print(rstan::get_elapsed_time(m.Ba_sowndivW2_d$fit))
   loo(m.Ba_sowndivW2_d, m.Ba_sowndivW2_p)
@@ -217,8 +225,8 @@ pp_check(m.Ba_sowndivW2_p, ndraws=100)
   pred.Ba_def1 <- conditional_effects(m.Ba_sowndivW1_d4)[[3]]
   summary(m.Ba_sowndivW1_d4)
   
-  pred.Ba_prior2 <- conditional_effects(m.Ba_sowndivW2_p)[[3]]
-  #pred.Ba_def2 <- conditional_effects(m.Ba_sowndivW2_d)[[3]]
+  #pred.Ba_prior2 <- conditional_effects(m.Ba_sowndivW2_p2)[[3]]
+  pred.Ba_def2 <- conditional_effects(m.Ba_sowndivW2_d)[[3]]
   summary(m.Ba_sowndivW2_p)
   
   pred.Ba_prior  <- conditional_effects(m.Ba_sowndiv_p)[[3]]
@@ -246,7 +254,7 @@ pp_check(m.Ba_sowndivW2_p, ndraws=100)
               linewidth= 0.5, linetype=3,
               show.legend = FALSE)+
     #predictions week 2:
-    geom_line(data=pred.Ba_prior2, aes(x= sowndivLogStd, y=estimate__, 
+    geom_line(data=pred.Ba_def2, aes(x= sowndivLogStd, y=estimate__, 
                                        col=treatment),
               linewidth= 0.5, linetype=6,
               show.legend = FALSE)+
@@ -1179,6 +1187,8 @@ pp_check(m.Ba_sowndivW2_p, ndraws=100)
       control = list(adapt_delta=0.99)) #0 div
     summary(m.Pr_sowndiv_p, prob=0.9)
     
+    
+    
     #with default priors
     m.Pr_sowndiv_d <- brm(
       bf(Pr_per100g ~ sowndivLogStd*treatment*week + (1|block/plot),
@@ -1256,7 +1266,11 @@ pp_check(m.Ba_sowndivW2_p, ndraws=100)
       xlim(0,200)
     
     #compare them  
-    loo(m.Pr_sowndiv_d6, m.Pr_sowndiv_p7, m.Pr_sowndiv_p8, m.Pr_sowndiv_p9)
+    loo.Pr <- loo(m.Pr_sowndiv_d, m.Pr_sowndiv_d2, m.Pr_sowndiv_d3, m.Pr_sowndiv_d4, m.Pr_sowndiv_d5,
+        m.Pr_sowndiv_d6, m.Pr_sowndiv_p7, m.Pr_sowndiv_p8, m.Pr_sowndiv_p9, m.Pr_sowndiv_p)
+    loo.Pr
+    summary(m.Pr_sowndiv_d7, prob =0.9)
+    
     #choosing _p7, as it is the model with highest elpd and 0 divergent transitions
     print(rstan::get_elapsed_time(m.Pr_sowndiv_p$fit))
     print(rstan::get_elapsed_time(m.Pr_sowndiv_d$fit))  
@@ -1647,9 +1661,13 @@ pp_check(m.Ba_sowndivW2_p, ndraws=100)
         file = "./statistics/brms/231215_Trophic_sowndiv_BestFits.RData")
    
 ####emmeans####
-   emt = emtrends(m.Om_sowndiv_d7, specs = c("treatment"), var="sowndivLogStd")
+  
+   emt = emtrends( m.Pr_sowndiv_p, specs = c("treatment", "week"), var="sowndivLogStd")
    summary(emt, point.est=mean, level = .9) 
    emt.pairs <- pairs(emt)
    summary(emt.pairs, point.est=mean, level = .9)
    bayestestR::p_direction(emt.pairs)
+   
+   Pr.emm <- emmeans(m.Pr_sowndiv_p, ~ sowndivLogStd * treatment * week)
+   mvcontrast(Pr.emm, "pairwise", mult.name = c("treatment", "week"))
    

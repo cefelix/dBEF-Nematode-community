@@ -21,11 +21,11 @@ datW2 <- subset(dat, week=="W2")
 beta_coeff_priors <- prior(normal(0,20), class = "b")  
 beta_coeff_priors2 <- prior(normal(0,5), class = "b")  
 beta_coeff_priors3 <- prior(normal(0,2), class = "b")  
-####Ba~realdiv: W1-d4, W2-p , both- ####
+####Ba~realdiv: W1-d4, W2-p2 , both- ####
 
 
-#W2: _p has 1 div, _d has 4 div --> despite slightly better elpd (less than 2 SE difference), choose _p 
-#load(file = "./statistics/brms/231213_Ba_realdiv_priors.RData")
+#W2: _p has 2 div (model with least div transitions), all elpd are less than 2 SE difference, choose _p 
+load(file = "./statistics/brms/231213_Ba_realdiv_priors.RData")
 
 SEED = 22061996
 beta_coeff_priors <- prior(normal(0,20), class = "b")  
@@ -59,7 +59,7 @@ summary(m.Ba_realdivW1_p2, prob=0.9)
 m.Ba_realdivW1_p3 <- update(m.Ba_realdivW1_p2,
                             bf(Ba_per100g ~ realdivLogStd*treatment + (1|block/plot),
                                hu ~  treatment + (1|block/plot)),
-                            seed = SEED) # 0 div
+                            seed = SEED) # 2 div
 summary(m.Ba_realdivW1_p3, prob=0.9) 
 
 #removing hu-treatment:
@@ -67,20 +67,20 @@ m.Ba_realdivW1_p4 <- update(m.Ba_realdivW1_p3,
                             bf(Ba_per100g ~ realdivLogStd*treatment + (1|block/plot),
                                hu ~  1),
                             seed = SEED)
-summary(m.Ba_realdivW1_p4, prob=0.9) #12 div
+summary(m.Ba_realdivW1_p4, prob=0.9) #9 div
 
 #using a narrower prior:
 beta_coeff_priors2 <- prior(normal(0,5), class = "b")  
 m.Ba_realdivW1_p5 <- update(m.Ba_realdivW1_p4,
                             prior = beta_coeff_priors2,
-                            seed = SEED) #8 div
+                            seed = SEED) #5 div
 summary(m.Ba_realdivW1_p5, prob=0.9) 
 
 #using a even narrower prior:
 beta_coeff_priors <- prior(normal(0,2), class = "b")  
 m.Ba_realdivW1_p6 <- update(m.Ba_realdivW1_p5,
                             prior = beta_coeff_priors3,
-                            seed = SEED) #11 div
+                            seed = SEED) #9 div
 summary(m.Ba_realdivW1_p6, prob=0.9) 
 
 #  _p5 best
@@ -107,14 +107,14 @@ summary(m.Ba_realdivW1_d, prob=0.9)
 m.Ba_realdivW1_d2 <- update(m.Ba_realdivW1_d,
                             bf(Ba_per100g ~ realdivLogStd*treatment + (1|block/plot),
                                hu ~ realdivLogStd + treatment + (1|block/plot)),
-                            seed = SEED) #2 div
+                            seed = SEED) #1 div
 summary(m.Ba_realdivW1_d2, prob=0.9) 
 
 #removing hu-realdivLogStd
 m.Ba_realdivW1_d3 <- update(m.Ba_realdivW1_d2,
                             bf(Ba_per100g ~ realdivLogStd*treatment + (1|block/plot),
                                hu ~ treatment + (1|block/plot)),
-                            seed = SEED) # 4div
+                            seed = SEED) # 6 div
 summary(m.Ba_realdivW1_d3, prob=0.9) 
 
 
@@ -122,7 +122,7 @@ summary(m.Ba_realdivW1_d3, prob=0.9)
 m.Ba_realdivW1_d4 <- update(m.Ba_realdivW1_d3,
                             bf(Ba_per100g ~ realdivLogStd*treatment + (1|block/plot),
                                hu ~ 1),
-                            seed = SEED) # 7div
+                            seed = SEED) # 1 div
 summary(m.Ba_realdivW1_d4, prob=0.9) 
 
 #_d4 best
@@ -132,7 +132,7 @@ pp_check(m.Ba_realdivW1_d4, ndraws=100)+
   xlim(0,2000)
 
 #compare them  
-loo(m.Ba_realdivW1_p5, m.Ba_realdivW1_d4)
+loo(m.Ba_realdivW1_p4, m.Ba_realdivW1_p5, m.Ba_realdivW1_p6,  m.Ba_realdivW1_d4) #best d4
 print(rstan::get_elapsed_time(m.Ba_realdivW1_p$fit))
 print(rstan::get_elapsed_time(m.Ba_realdivW1_d$fit))
 
@@ -150,22 +150,22 @@ m.Ba_realdivW2_p <- brm(
   cores = 3,
   iter = 2000, warmup = 1000,
   seed = SEED,
-  control = list(adapt_delta=0.99)) #1 div
+  control = list(adapt_delta=0.99)) #3 div
 summary(m.Ba_realdivW2_p, prob=0.9) 
 
 
 #using a narrower prior:
 beta_coeff_priors2 <- prior(normal(0,5), class = "b")  
-m.Ba_realdivW2_p2 <- update(m.Ba_realdivW1_p,
+m.Ba_realdivW2_p2 <- update(m.Ba_realdivW2_p,
                             prior = beta_coeff_priors2,
-                            seed = SEED) # 3 div
+                            seed = SEED) # 2 div
 summary(m.Ba_realdivW2_p2, prob=0.9)
 
 #using a even narrower prior:
 beta_coeff_priors3 <- prior(normal(0,2), class = "b")  
-m.Ba_realdivW2_p3 <- update(m.Ba_realdivW1_p2,
+m.Ba_realdivW2_p3 <- update(m.Ba_realdivW2_p2,
                             prior = beta_coeff_priors3,
-                            seed = SEED) # 6div
+                            seed = SEED) # 3 div
 summary(m.Ba_realdivW2_p3, prob=0.9)
 
 #best _p
@@ -191,7 +191,7 @@ summary(m.Ba_realdivW2_d)
 pp_check(m.Ba_realdivW2_d, ndraws=100)
 
 #compare them  
-loo(m.Ba_realdivW2_p, m.Ba_realdivW2_d)
+loo(m.Ba_realdivW2_p, m.Ba_realdivW2_p2, m.Ba_realdivW2_p3, m.Ba_realdivW2_d)
 print(rstan::get_elapsed_time(m.Ba_realdivW2_p$fit))
 print(rstan::get_elapsed_time(m.Ba_realdivW2_d$fit))
 loo(m.Ba_realdivW2_d, m.Ba_realdivW2_p)
@@ -229,7 +229,7 @@ ggplot(data = dat, aes(x= realdivLogStd, y=Ba_per100g))+
   #predictions week1
   geom_line(data=pred.Ba_def1, aes(x= realdivLogStd, y=estimate__, 
                                    linetype="solid", col=treatment),
-            linewidth= 0.5, linetype=3,
+            linewidth= 0.5, linetype=1,
             show.legend = FALSE)+
   #predictions week 2:
   geom_line(data=pred.Ba_prior2, aes(x= realdivLogStd, y=estimate__, 
@@ -242,7 +242,7 @@ ggplot(data = dat, aes(x= realdivLogStd, y=Ba_per100g))+
   #          linewidth= 0.7, linetype="solid",
   #          show.legend = FALSE)+
   scale_color_manual(labels=treatments2, values = cols)+
-  scale_x_continuous(name = "sown plant diversity", breaks = BREAKS,
+  scale_x_continuous(name = "realized plant diversity", #breaks = BREAKS,
                      labels = c("16", "8", "4", "2", "1"))+
   scale_y_continuous(name = "Ba per 100g DW", limits = c(-1, 500))+
   theme_bw()+
