@@ -23,18 +23,17 @@ library(dplyr)
     SEED = 22061996
     
 #priors    
-    beta_coeff_priors <- prior(normal(0,20), class = "b")  
-    beta_coeff_priors2 <- prior(normal(0,5), class = "b")  
-    beta_coeff_priors3 <- prior(normal(0,2), class = "b")  
+    beta_coeff_priors <- prior(normal(0,5), class = "b")  
+   
     
     #the narrowest prior is still basically flat (at realistic values): 
-    ggplot(data.frame(density(rnorm(1e5, 0, 2)) ), 
+    ggplot(data.frame(density(rnorm(1e5, 0, 10)) ), 
            aes(x=x, y=y))+
       geom_point()+
-      xlim(-.5,.5)
+      xlim(-1.5,1.5)
     
-    exp(0.5) 
-    #this would mean that increasing plant diversity by 1 SD would lead to 64% more individuals per dry weight of soil
+    exp(4.5) 
+    #this would mean that increasing plant diversity by 1 SD would lead to 348% more individuals per dry weight of soil
     
 ####Ba~sowndiv: W1-d4, W2-p2 , both- ####
     
@@ -84,21 +83,6 @@ library(dplyr)
                                 seed = SEED)
     summary(m.Ba_sowndivW1_p4, prob=0.9) #12 div
   
-      #using a narrower prior:
-      beta_coeff_priors2 <- prior(normal(0,5), class = "b")  
-      m.Ba_sowndivW1_p5 <- update(m.Ba_sowndivW1_p4,
-                                  prior = beta_coeff_priors2,
-                                  seed = SEED) #8 div
-      summary(m.Ba_sowndivW1_p5, prob=0.9) 
-      
-      #using a even narrower prior:
-      beta_coeff_priors <- prior(normal(0,2), class = "b")  
-      m.Ba_sowndivW1_p6 <- update(m.Ba_sowndivW1_p5,
-                                  prior = beta_coeff_priors3,
-                                  seed = SEED) #11 div
-      summary(m.Ba_sowndivW1_p6, prob=0.9) 
-  
-      #  _p5 best
   summary(m.Ba_sowndivW1_p5, prob=0.9) 
   pp_check(m.Ba_sowndivW1_p, ndraws=100)+
     xlim(0,2000)
@@ -272,13 +256,17 @@ pp_check(m.Ba_sowndivW2_p, ndraws=100)
   
   #no substantial difference in slope or intercept --> dont include week into model!
 
-####Ba ~ sowndiv, both weeks: _p5  ####
-  #best is _p5, as it is the only one with 0 divergent transitions and elpd doesnt differ by more than 2 SE
+####Ba ~ sowndiv, both weeks:  ####
+  #selecting models based on looic,
+  #see here https://users.aalto.fi/~ave/CV-FAQ.html#12_What_is_the_interpretation_of_ELPD__elpd_loo__elpd_diff
+  
+  beta_coeff_priors <- prior(normal(0,10), class = "b")  
+  SEED = 22061996
   
   #for both weeks  
   m.Ba_sowndiv_p <- brm(
-    bf(Ba_per100g ~ sowndivLogStd*treatment + (1|block/plot),
-       hu ~ sowndivLogStd*treatment + (1|block/plot)),
+    bf(Ba_per100g ~ sowndivLogStd*treatment*week + (1|block/plot),
+       hu ~ sowndivLogStd + treatment + week + (1|block/plot)),
     data = dat, 
     prior = beta_coeff_priors,
     family = hurdle_lognormal,
@@ -292,104 +280,82 @@ pp_check(m.Ba_sowndivW2_p, ndraws=100)
   pp_check(m.Ba_sowndiv_p, ndraws=100)+
     xlim(0,2000)
   
-  #with default priors
-  m.Ba_sowndiv_d <- brm(
-    bf(Ba_per100g ~ sowndivLogStd*treatment + (1|block/plot),
-       hu ~ sowndivLogStd*treatment + (1|block/plot)),
-    data = dat, 
-    family = hurdle_lognormal,
-    chains = 3,
-    cores = 3,
-    iter = 2000, warmup = 1000,
-    seed = SEED,
-    control = list(adapt_delta=0.99))  #0 div
-  summary(m.Ba_sowndiv_d)
+  emtrends(m.Ba_sowndiv_p, specs = c("treatment", "week"), var="sowndivLogStd") %>%
+    summary() #CIs overlap
   
-    #remove hurdle interaction
-    m.Ba_sowndiv_d2 <- update(m.Ba_sowndiv_d,
-                              bf(Ba_per100g ~ sowndivLogStd*treatment + (1|block/plot),
-                                 hu ~ sowndivLogStd + treatment + (1|block/plot))) #0 div
-    summary(m.Ba_sowndiv_d2, prob=0.9)
-    
-    #remove hurdle ~ treatment
-    m.Ba_sowndiv_d3 <- update(m.Ba_sowndiv_d2,
-                              bf(Ba_per100g ~ sowndivLogStd*treatment + (1|block/plot),
-                                 hu ~ sowndivLogStd + (1|block/plot))) #0 div
-    summary(m.Ba_sowndiv_d3, prob=0.9)
-    
-    #remove hurdle ~ sowndivLogStd
-    m.Ba_sowndiv_d4 <- update(m.Ba_sowndiv_d3,
-                              bf(Ba_per100g ~ sowndivLogStd*treatment + (1|block/plot),
-                                 hu ~ 1)) #2 div
-    summary(m.Ba_sowndiv_d4, prob=0.9)
-    
-    #add a normal(0,20) prior:
-    beta_coeff_priors <- prior(normal(0,20), class = "b")  
-    m.Ba_sowndiv_p5 <- update(m.Ba_sowndiv_d4,
-                                prior = beta_coeff_priors,
-                                seed = SEED)  #0 div
-    summary(m.Ba_sowndiv_p5, prob=0.9)
-    
-    #add a normal(0,5) prior:
-    beta_coeff_priors2 <- prior(normal(0,5), class = "b")  
-    m.Ba_sowndiv_p6 <- update(m.Ba_sowndiv_p5,
-                              prior = beta_coeff_priors2,
-                              seed = SEED) 
-    summary(m.Ba_sowndiv_p6, prob=0.9) #1 div
-    
-    #add a normal(0,2) prior:
-    beta_coeff_priors3 <- prior(normal(0,2), class = "b")  
-    m.Ba_sowndiv_p7 <- update(m.Ba_sowndiv_p6,
-                              prior = beta_coeff_priors2,
-                              seed = SEED)
-    summary(m.Ba_sowndiv_p7, prob=0.9) #1 div
-    pp_check(m.Ba_sowndiv_p7, ndraws=100)+
-      xlim(0,2000)
-    
-    loo(m.Ba_sowndiv_p5,m.Ba_sowndiv_p7)
-    #best _p7
+  #remove 3way interaction:
+  m.Ba_sowndiv_p2 <- update(m.Ba_sowndiv_p, 
+                            bf(Ba_per100g ~ sowndivLogStd*treatment + sowndivLogStd*week + treatment*week + 
+                                 (1|block/plot),
+                               hu ~ sowndivLogStd + treatment + week + (1|block/plot)), 
+                            seed = SEED)
+  emtrends(m.Ba_sowndiv_p2, specs = c("treatment", "week"), var="sowndivLogStd") %>%
+    summary() #CIs overlap
   
+  #remove sowndivLogStd*week
+  m.Ba_sowndiv_p31 <- update(m.Ba_sowndiv_p, 
+                            bf(Ba_per100g ~ sowndivLogStd*treatment + treatment*week + (1|block/plot),
+                               hu ~ sowndivLogStd + treatment + week + (1|block/plot)), 
+                            seed = SEED)
+  
+  summary(m.Ba_sowndiv_p31, prob=0.9)
+  emtrends(m.Ba_sowndiv_p31, specs = c("treatment", "week"), var="sowndivLogStd") %>%
+    summary()
+  
+  #remove treatment*week 
+  m.Ba_sowndiv_p32 <- update(m.Ba_sowndiv_p, 
+                            bf(Ba_per100g ~ sowndivLogStd*treatment + sowndivLogStd*week + (1|block/plot),
+                               hu ~ sowndivLogStd + treatment + week + (1|block/plot)), 
+                            seed = SEED)
+  emtrends(m.Ba_sowndiv_p32, specs = c("treatment", "week"), var="sowndivLogStd") %>%
+    summary()
+  
+  #remove sowndivLogStd*week and treatment*week 
+  m.Ba_sowndiv_p4 <- update(m.Ba_sowndiv_p, 
+                            bf(Ba_per100g ~ sowndivLogStd*treatment + week + (1|block/plot),
+                               hu ~ sowndivLogStd + treatment + week + (1|block/plot)), 
+                            seed = SEED)
+  summary(m.Ba_sowndiv_p4, prob=0.9)
+  
+  #remove week
+  m.Ba_sowndiv_p5 <- update(m.Ba_sowndiv_p, 
+                            bf(Ba_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                               hu ~ sowndivLogStd + treatment + week + (1|block/plot)), 
+                            seed = SEED)
   summary(m.Ba_sowndiv_p5, prob=0.9)
-  pp_check(m.Ba_sowndiv_p5, ndraws=100)+
-    xlim(0,1000)
-  
-  #compare them  
-  loo(m.Ba_sowndiv_p5, m.Ba_sowndiv_p6, m.Ba_sowndiv_p7, m.Ba_sowndiv_d4) 
-  #best is _p5, as it has the highest elpd at 0 divergent transitions 
-  print(rstan::get_elapsed_time(m.Ba_sowndiv_p$fit))
-  print(rstan::get_elapsed_time(m.Ba_sowndiv_d$fit))  
-  
-  emt = emtrends(m.Ba_sowndiv_p5, specs = c("treatment"), var="sowndivLogStd")
-  summary(emt, point.est=mean, level = .9) 
-  emt.pairs <- pairs(emt)
-  summary(emt.pairs, point.est=mean, level = .9)
-  bayestestR::p_direction(emt.pairs)
-  p_direction.brmsfit(m.Ba_sowndiv_d4)
-  
-#save them:
-  save(m.Ba_sowndivW1_d, m.Ba_sowndivW1_p,
-        m.Ba_sowndivW1_p2, m.Ba_sowndivW1_p3, m.Ba_sowndivW1_p4, m.Ba_sowndivW1_p5, m.Ba_sowndivW1_p6,
-        m.Ba_sowndivW1_d2, m.Ba_sowndivW1_d3, m.Ba_sowndivW1_d4,
-       m.Ba_sowndivW2_d, m.Ba_sowndivW2_p,
-        m.Ba_sowndivW2_p2, m.Ba_sowndivW2_p3,
-       m.Ba_sowndiv_d, m.Ba_sowndiv_p,
-        m.Ba_sowndiv_d2, m.Ba_sowndiv_d3, m.Ba_sowndiv_d4,
-        m.Ba_sowndiv_p5, m.Ba_sowndiv_p6, m.Ba_sowndiv_p7,
-       file = "./statistics/brms/231213_Ba_sowndiv_priors.RData")
-  
-#remove from workspace to prevent crashing
-  rm(m.Ba_sowndivW1_d, m.Ba_sowndivW1_p,
-    m.Ba_sowndivW1_p2, m.Ba_sowndivW1_p3, m.Ba_sowndivW1_p4, m.Ba_sowndivW1_p5, m.Ba_sowndivW1_p6,
-    m.Ba_sowndivW1_d2, m.Ba_sowndivW1_d3, m.Ba_sowndivW1_d4,
-    m.Ba_sowndivW2_d, m.Ba_sowndivW2_p,
-    m.Ba_sowndivW2_p2, m.Ba_sowndivW2_p3,
-    m.Ba_sowndiv_d, m.Ba_sowndiv_p,
-    m.Ba_sowndiv_d2, m.Ba_sowndiv_d3, m.Ba_sowndiv_d4, #keeping the final model loaded
-    #m.Ba_sowndiv_p5, #keeping the final model loaded
-    m.Ba_sowndiv_p6, m.Ba_sowndiv_p7)
   
   
-
+  #remove hu~treatment
+  m.Ba_sowndiv_p6 <- update(m.Ba_sowndiv_p, 
+                            bf(Ba_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                               hu ~ sowndivLogStd + week + (1|block/plot)), 
+                            seed = SEED)
+  #remove hu~sowndiv
+  m.Ba_sowndiv_p7 <- update(m.Ba_sowndiv_p, 
+                            bf(Ba_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                               hu ~ week + (1|block/plot)), 
+                            seed = SEED)
+  summary(m.Ba_sowndiv_p7, prob=0.9)
+  
+  #remove hu~week
+  m.Ba_sowndiv_p8 <- update(m.Ba_sowndiv_p, 
+                            bf(Ba_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                               hu ~1), 
+                            seed = SEED)
+  summary(m.Ba_sowndiv_p8, prob=0.9)
+  
+  
+  loo.Ba <- loo(m.Ba_sowndiv_p, m.Ba_sowndiv_p2, m.Ba_sowndiv_p31, m.Ba_sowndiv_p32, m.Ba_sowndiv_p4,
+                m.Ba_sowndiv_p5, m.Ba_sowndiv_p6, m.Ba_sowndiv_p7, m.Ba_sowndiv_p8 )
+  loo.Ba
+  
+  save(m.Ba_sowndiv_p, m.Ba_sowndiv_p2, m.Ba_sowndiv_p31, m.Ba_sowndiv_p32, m.Ba_sowndiv_p4,
+       m.Ba_sowndiv_p5, m.Ba_sowndiv_p6, m.Ba_sowndiv_p7, m.Ba_sowndiv_p8,
+       file="./statistics/brms/231219_Ba_sowndiv_priors.RData")
+  
+  rm(m.Ba_sowndiv_p, m.Ba_sowndiv_p2, m.Ba_sowndiv_p31, m.Ba_sowndiv_p32, m.Ba_sowndiv_p4,
+       m.Ba_sowndiv_p5, m.Ba_sowndiv_p6, m.Ba_sowndiv_p7, m.Ba_sowndiv_p8)
+       
 #### Fu ~ sowndiv:W1-p2, W2-d, both- ####
     #W1: _p2: 1 div, _d 7 div, elpd for p2 lower --> choose p2 
     #W2: _p: 1 div, _d 0 div, elpd for p slightly lower (less than 2 se) --> choose d
@@ -569,13 +535,14 @@ pp_check(m.Ba_sowndivW2_p, ndraws=100)
 
     
     
-  #### Fu ~ sowndivLogStd, both weeks: _p3 ####
-    #_p3 2 div, _d 2 div, elpd in _p3 slightly better but less than 2 SE --> choose _p3
+####Fu ~ sowndiv, both weeks:  ####
+    beta_coeff_priors <- prior(normal(0,10), class = "b")  
+    SEED = 22061996
     
     #for both weeks  
     m.Fu_sowndiv_p <- brm(
-      bf(Fu_per100g ~ sowndivLogStd*treatment + week + (1|block/plot),
-         hu ~ 1),
+      bf(Fu_per100g ~ sowndivLogStd*treatment*week + (1|block/plot),
+         hu ~ sowndivLogStd + treatment + week + (1|block/plot)),
       data = dat, 
       prior = beta_coeff_priors,
       family = hurdle_lognormal,
@@ -583,71 +550,77 @@ pp_check(m.Ba_sowndivW2_p, ndraws=100)
       cores = 3,
       iter = 2000, warmup = 1000,
       seed = SEED,
-      control = list(adapt_delta=0.99))  #2 div
-    summary(m.Fu_sowndiv_p, prob=0.9)
+      control = list(adapt_delta=0.99)) #all good 
     
-    #add a normal(0,5) prior:
-    beta_coeff_priors2 <- prior(normal(0,5), class = "b")  
-    m.Fu_sowndiv_p2 <- update(m.Fu_sowndiv_p,
-                              prior = beta_coeff_priors2, #all good
-                              seed = SEED) #0 div
-    summary(m.Fu_sowndiv_p2, prob=0.9)
-    
-    #add a normal(0,2) prior:
-    beta_coeff_priors3 <- prior(normal(0,2), class = "b")  
-    m.Fu_sowndiv_p3 <- update(m.Fu_sowndiv_p2,
-                              prior = beta_coeff_priors3,
-                              seed = SEED)
-    summary(m.Fu_sowndiv_p3, prob=0.9) #2 div trans
-    
-    loo(m.Fu_sowndiv_p, m.Fu_sowndiv_p2) #same, use _p as it has a wider prior
-    
-    
-    summary(m.Fu_sowndiv_p, prob=0.9)
+    summary(m.Fu_sowndiv_p)
     pp_check(m.Fu_sowndiv_p, ndraws=100)+
       xlim(0,2000)
     
-    #with default priors
-    m.Fu_sowndiv_d <- brm(
-      bf(Fu_per100g ~ sowndivLogStd*treatment + week + (1|block/plot),
-         hu ~ 1),
-      data = dat, 
-      family = hurdle_lognormal,
-      chains = 3,
-      cores = 3,
-      iter = 2000, warmup = 1000,
-      seed = SEED,
-      control = list(adapt_delta=0.99)) #2 div
-    summary(m.Fu_sowndiv_d, prob=0.9)
+    #remove 3way interaction:
+    m.Fu_sowndiv_p2 <- update(m.Fu_sowndiv_p, 
+                              bf(Fu_per100g ~ sowndivLogStd*treatment + sowndivLogStd*week + treatment*week + 
+                                   (1|block/plot),
+                                 hu ~ sowndivLogStd + treatment + week + (1|block/plot)), 
+                              seed = SEED)
     
-    summary(m.Fu_sowndiv_d, prob=0.9)
-    pp_check(m.Fu_sowndiv_d, ndraws=100)+
-      xlim(0,2000)
+    #remove sowndivLogStd*week
+    m.Fu_sowndiv_p31 <- update(m.Fu_sowndiv_p, 
+                               bf(Fu_per100g ~ sowndivLogStd*treatment + treatment*week + (1|block/plot),
+                                  hu ~ sowndivLogStd + treatment + week + (1|block/plot)), 
+                               seed = SEED)
     
-    #compare them  
-    loo(m.Fu_sowndiv_p, m.Fu_sowndiv_p2, m.Fu_sowndiv_p3, m.Fu_sowndiv_d)  
-      #--> best is _p3, as _p2 without any divergent transitions does have significantly worse elpd (>2 SE)
-    print(rstan::get_elapsed_time(m.Fu_sowndiv_p$fit))
-    print(rstan::get_elapsed_time(m.Fu_sowndiv_d$fit))  
+    #remove treatment*week 
+    m.Fu_sowndiv_p32 <- update(m.Fu_sowndiv_p, 
+                               bf(Fu_per100g ~ sowndivLogStd*treatment + sowndivLogStd*week + (1|block/plot),
+                                  hu ~ sowndivLogStd + treatment + week + (1|block/plot)), 
+                               seed = SEED)
     
-#save models:
-    save(m.Fu_sowndivW1_d, m.Fu_sowndivW1_p,
-          m.Fu_sowndivW1_p2, m.Fu_sowndivW1_p3,
-         m.Fu_sowndivW2_d, m.Fu_sowndivW2_p,
-          m.Fu_sowndivW2_p2, m.Fu_sowndivW2_p3,
-         m.Fu_sowndiv_d, m.Fu_sowndiv_p,
-          m.Fu_sowndiv_p2, m.Fu_sowndiv_p3,
-         file = "./statistics/brms/231213_Fu_sowndiv_priors.RData")
+    #remove sowndivLogStd*week and treatment*week 
+    m.Fu_sowndiv_p4 <- update(m.Fu_sowndiv_p, 
+                              bf(Fu_per100g ~ sowndivLogStd*treatment + week + (1|block/plot),
+                                 hu ~ sowndivLogStd + treatment + week + (1|block/plot)), 
+                              seed = SEED)
+    summary(m.Fu_sowndiv_p4, prob=0.9)
     
-#remove models to prevent crashes:
-    rm(m.Fu_sowndivW1_d, m.Fu_sowndivW1_p,
-      m.Fu_sowndivW1_p2, m.Fu_sowndivW1_p3,
-      m.Fu_sowndivW2_d, m.Fu_sowndivW2_p,
-      m.Fu_sowndivW2_p2, m.Fu_sowndivW2_p3,
-      m.Fu_sowndiv_d, m.Fu_sowndiv_p,
-      m.Fu_sowndiv_p2#, m.Fu_sowndiv_p3
-      )
+    #remove week
+    m.Fu_sowndiv_p5 <- update(m.Fu_sowndiv_p, 
+                              bf(Fu_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                                 hu ~ sowndivLogStd + treatment + week + (1|block/plot)), 
+                              seed = SEED)
+    summary(m.Fu_sowndiv_p5, prob=0.9)
     
+    
+    #remove hu~treatment
+    m.Fu_sowndiv_p6 <- update(m.Fu_sowndiv_p, 
+                              bf(Fu_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                                 hu ~ sowndivLogStd + week + (1|block/plot)), 
+                              seed = SEED)
+    #remove hu~sowndiv
+    m.Fu_sowndiv_p7 <- update(m.Fu_sowndiv_p, 
+                              bf(Fu_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                                 hu ~ week + (1|block/plot)), 
+                              seed = SEED)
+    summary(m.Fu_sowndiv_p7, prob=0.9)
+    
+    #remove hu~week
+    m.Fu_sowndiv_p8 <- update(m.Fu_sowndiv_p, 
+                              bf(Fu_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                                 hu ~1), 
+                              seed = SEED)
+    summary(m.Fu_sowndiv_p8, prob=0.9)
+    
+    
+    loo.Fu <- loo(m.Fu_sowndiv_p, m.Fu_sowndiv_p2, m.Fu_sowndiv_p31, m.Fu_sowndiv_p32, m.Fu_sowndiv_p4,
+                  m.Fu_sowndiv_p5, m.Fu_sowndiv_p6, m.Fu_sowndiv_p7, m.Fu_sowndiv_p8 )
+    
+    loo.Fu
+    
+    save(m.Fu_sowndiv_p, m.Fu_sowndiv_p2, m.Fu_sowndiv_p31, m.Fu_sowndiv_p32, m.Fu_sowndiv_p4,
+         m.Fu_sowndiv_p5, m.Fu_sowndiv_p6, m.Fu_sowndiv_p7, m.Fu_sowndiv_p8,
+         file="./statistics/brms/231219_Fu_sowndiv_priors.RData")  
+    
+    rm(m.Fu_sowndiv_p, m.Fu_sowndiv_p2, m.Fu_sowndiv_p31, m.Fu_sowndiv_p32, m.Fu_sowndiv_p4,
+       m.Fu_sowndiv_p5, m.Fu_sowndiv_p6, m.Fu_sowndiv_p7, m.Fu_sowndiv_p8)
     
 #### Pl ~ sowndiv: W1-p2, W2-p, both-p ####
     #W1: _p2: 1 div, _d 19 div, elpd for _p2 equal --> choose _p2
@@ -823,92 +796,92 @@ pp_check(m.Ba_sowndivW2_p, ndraws=100)
       theme_bw()+
       theme(legend.position ="bottom")  
 
-#### Pl ~ sowndiv, both weeks: _p3 ####
-    #_p3 has 1 div transition (least) and best elpd
+####Pl ~ sowndiv, both weeks:  ####
+    beta_coeff_priors <- prior(normal(0,10), class = "b")  
+    SEED = 22061996
     
     #for both weeks  
     m.Pl_sowndiv_p <- brm(
-      bf(Pl_per100g ~ sowndivLogStd*treatment + week + (1|block/plot),
-         hu ~ 1),
+      bf(Pl_per100g ~ sowndivLogStd*treatment*week + (1|block/plot),
+         hu ~ sowndivLogStd + treatment + week + (1|block/plot)),
       data = dat, 
       prior = beta_coeff_priors,
       family = hurdle_lognormal,
       chains = 3,
       cores = 3,
       iter = 2000, warmup = 1000,
-      seed = SEED, 
-      control = list(adapt_delta=0.99))  #10 div
-    summary(m.Pl_sowndiv_p, prob=0.9) #week is significant --> keep it
-    
-    #using a narrower prior:
-    beta_coeff_priors2 <- prior(normal(0,5), class = "b")  
-    m.Pl_sowndiv_p2 <- update(m.Pl_sowndiv_p,
-                                prior = beta_coeff_priors2,
-                                seed = SEED) #0 div
-    summary(m.Pl_sowndiv_p2, prob=0.9) #56 div 
-    
-    #using an even narrower prior:
-    beta_coeff_priors3 <- prior(normal(0,2), class = "b")  
-    m.Pl_sowndiv_p3 <- update(m.Pl_sowndiv_p,
-                              prior = beta_coeff_priors3,
-                              seed = SEED) #0 div
-    summary(m.Pl_sowndiv_p3, prob=0.9) #1 div
-    
-    loo(m.Pl_sowndiv_p, m.Pl_sowndiv_p2, m.Pl_sowndiv_p3) #no substantial difference (less than 2 SE) -->
-      # best: _p2
-    
-    
-    pp_check(m.Pl_sowndiv_p2, ndraws=100)+
-      xlim(0,2000)
-    
-    #with default priors
-    m.Pl_sowndiv_d <- brm(
-      bf(Pl_per100g ~ sowndivLogStd*treatment + week + (1|block/plot),
-         hu ~ 1),
-      data = dat, 
-      family = hurdle_lognormal,
-      chains = 3,
-      cores = 3,
-      iter = 2000, warmup = 1000,
       seed = SEED,
-      control = list(adapt_delta=0.99)) #19 div
-    summary(m.Pl_sowndiv_d, prob=0.9)
+      control = list(adapt_delta=0.99)) #all good 
     
-    #best: _d2
-    summary(m.Pl_sowndiv_d2, prob=0.9)
-    pp_check(m.Pl_sowndiv_d, ndraws=100)+
+    summary(m.Pl_sowndiv_p)
+    pp_check(m.Pl_sowndiv_p, ndraws=100)+
       xlim(0,2000)
     
-    #compare them  
-    loo(m.Pl_sowndiv_p, m.Pl_sowndiv_p2, m.Pl_sowndiv_p3, m.Pl_sowndiv_d)
-      #choose _p3, as it has least divergent transitions
+    #remove 3way interaction:
+    m.Pl_sowndiv_p2 <- update(m.Pl_sowndiv_p, 
+                              bf(Pl_per100g ~ sowndivLogStd*treatment + sowndivLogStd*week + treatment*week + 
+                                   (1|block/plot),
+                                 hu ~ sowndivLogStd + treatment + week + (1|block/plot)), 
+                              seed = SEED)
     
-    print(rstan::get_elapsed_time(m.Pl_sowndiv_p$fit))
-    print(rstan::get_elapsed_time(m.Pl_sowndiv_d$fit))  
+    #remove sowndivLogStd*week
+    m.Pl_sowndiv_p31 <- update(m.Pl_sowndiv_p, 
+                               bf(Pl_per100g ~ sowndivLogStd*treatment + treatment*week + (1|block/plot),
+                                  hu ~ sowndivLogStd + treatment + week + (1|block/plot)), 
+                               seed = SEED)
+    
+    #remove treatment*week 
+    m.Pl_sowndiv_p32 <- update(m.Pl_sowndiv_p, 
+                               bf(Pl_per100g ~ sowndivLogStd*treatment + sowndivLogStd*week + (1|block/plot),
+                                  hu ~ sowndivLogStd + treatment + week + (1|block/plot)), 
+                               seed = SEED)
+    
+    #remove sowndivLogStd*week and treatment*week 
+    m.Pl_sowndiv_p4 <- update(m.Pl_sowndiv_p, 
+                              bf(Pl_per100g ~ sowndivLogStd*treatment + week + (1|block/plot),
+                                 hu ~ sowndivLogStd + treatment + week + (1|block/plot)), 
+                              seed = SEED)
+    summary(m.Pl_sowndiv_p4, prob=0.9)
+    
+    #remove week
+    m.Pl_sowndiv_p5 <- update(m.Pl_sowndiv_p, 
+                              bf(Pl_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                                 hu ~ sowndivLogStd + treatment + week + (1|block/plot)), 
+                              seed = SEED)
+    summary(m.Pl_sowndiv_p5, prob=0.9)
     
     
-#save the models
-    save(m.Pl_sowndivW1_d, m.Pl_sowndivW1_p,
-          m.Pl_sowndivW1_p2, m.Pl_sowndivW1_p3,
-         m.Pl_sowndivW2_d, m.Pl_sowndivW2_p,
-          m.Pl_sowndivW2_p2, m.Pl_sowndivW2_p3,
-         m.Pl_sowndiv_d, m.Pl_sowndiv_p,
-          m.Pl_sowndiv_p2, m.Pl_sowndiv_p3,
-         file = "./statistics/brms/231213_Pl_sowndiv_priors.RData")
+    #remove hu~treatment
+    m.Pl_sowndiv_p6 <- update(m.Pl_sowndiv_p, 
+                              bf(Pl_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                                 hu ~ sowndivLogStd + week + (1|block/plot)), 
+                              seed = SEED)
+    #remove hu~sowndiv
+    m.Pl_sowndiv_p7 <- update(m.Pl_sowndiv_p, 
+                              bf(Pl_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                                 hu ~ week + (1|block/plot)), 
+                              seed = SEED)
+    summary(m.Pl_sowndiv_p7, prob=0.9)
     
-#remove to prevent crashes:
-    rm(m.Pl_sowndivW1_d, m.Pl_sowndivW1_p,
-      m.Pl_sowndivW1_p2, m.Pl_sowndivW1_p3,
-      m.Pl_sowndivW2_d, m.Pl_sowndivW2_p,
-      m.Pl_sowndivW2_p2, m.Pl_sowndivW2_p3,
-      m.Pl_sowndiv_d, m.Pl_sowndiv_p,
-      m.Pl_sowndiv_p2#, m.Pl_sowndiv_p3
-      )
-    
-   
-    
+    #remove hu~week
+    m.Pl_sowndiv_p8 <- update(m.Pl_sowndiv_p, 
+                              bf(Pl_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                                 hu ~1), 
+                              seed = SEED)
+    summary(m.Pl_sowndiv_p8, prob=0.9)
     
     
+    loo.Pl <- loo(m.Pl_sowndiv_p, m.Pl_sowndiv_p2, m.Pl_sowndiv_p31, m.Pl_sowndiv_p32, m.Pl_sowndiv_p4,
+                  m.Pl_sowndiv_p5, m.Pl_sowndiv_p6, m.Pl_sowndiv_p7, m.Pl_sowndiv_p8 )
+    loo.Pl
+    
+    save(m.Pl_sowndiv_p, m.Pl_sowndiv_p2, m.Pl_sowndiv_p31, m.Pl_sowndiv_p32, m.Pl_sowndiv_p4,
+         m.Pl_sowndiv_p5, m.Pl_sowndiv_p6, m.Pl_sowndiv_p7, m.Pl_sowndiv_p8,
+         file="./statistics/brms/231219_Pl_sowndiv_priors.RData")  
+    
+    rm(m.Pl_sowndiv_p, m.Pl_sowndiv_p2, m.Pl_sowndiv_p31, m.Pl_sowndiv_p32, m.Pl_sowndiv_p4,
+        m.Pl_sowndiv_p5, m.Pl_sowndiv_p6, m.Pl_sowndiv_p7, m.Pl_sowndiv_p8)
+        
 #### Pr ~ sowndiv: W1-p5, W2-p5, both-  ####
     #W1: _p5 6 div, _d3 9 div, loo is equal --> choose _p5
     #W2: _p5 5 div, _d4 13 div, loo is slightly better in _p5 (less than 2 SE) --> choose _p5
@@ -1172,7 +1145,10 @@ pp_check(m.Ba_sowndivW2_p, ndraws=100)
       theme_bw()+
       theme(legend.position ="bottom")  
     
-#### Pr ~ sowndiv, both weeks: _p7 ####
+####Pr ~ sowndiv, both weeks:  ####
+    beta_coeff_priors <- prior(normal(0,10), class = "b")  
+    SEED = 22061996
+    
     #for both weeks  
     m.Pr_sowndiv_p <- brm(
       bf(Pr_per100g ~ sowndivLogStd*treatment*week + (1|block/plot),
@@ -1184,124 +1160,77 @@ pp_check(m.Ba_sowndivW2_p, ndraws=100)
       cores = 3,
       iter = 2000, warmup = 1000,
       seed = SEED,
-      control = list(adapt_delta=0.99)) #0 div
-    summary(m.Pr_sowndiv_p, prob=0.9)
+      control = list(adapt_delta=0.99)) #all good 
     
+    summary(m.Pr_sowndiv_p)
+    pp_check(m.Pr_sowndiv_p, ndraws=100)+
+      xlim(0,2000)
     
-    
-    #with default priors
-    m.Pr_sowndiv_d <- brm(
-      bf(Pr_per100g ~ sowndivLogStd*treatment*week + (1|block/plot),
-         hu ~ sowndivLogStd + treatment + week + (1|block/plot)),
-      data = dat, 
-      family = hurdle_lognormal,
-      chains = 3,
-      cores = 3,
-      iter = 2000, warmup = 1000,
-      seed = SEED,
-      control = list(adapt_delta=0.99)) #1 div trans
-    summary(m.Pr_sowndiv_d, prob=0.9)
-      #simplifying with the default priors from now on
-    
-    #remove 3 fold interaction:
-    m.Pr_sowndiv_d2 <- update(m.Pr_sowndiv_d,
-                             bf(Pr_per100g ~ sowndivLogStd*treatment + week*treatment + week*sowndivLogStd + (1|block/plot),
-                                hu ~ sowndivLogStd + treatment + week + (1|block/plot)),
-                             seed = SEED) #13 div
-    summary(m.Pr_sowndiv_d2, prob=0.9)
-    
-    #remove week*treatment:
-    m.Pr_sowndiv_d3 <- update(m.Pr_sowndiv_d2,
-                              bf(Pr_per100g ~ sowndivLogStd*treatment + week*sowndivLogStd + (1|block/plot),
-                                 hu ~ sowndivLogStd + treatment + week + (1|block/plot)),
-                              seed = SEED) #6 div
-    summary(m.Pr_sowndiv_d3, prob=0.9)
-    
-    #remove week*sowndivLogStd:
-    m.Pr_sowndiv_d4 <- update(m.Pr_sowndiv_d3,
-                              bf(Pr_per100g ~ sowndivLogStd*treatment + week + (1|block/plot),
-                                 hu ~ sowndivLogStd + treatment + week + (1|block/plot)),
-                              seed = SEED) #3 div, tail ESS too low
-    summary(m.Pr_sowndiv_d4, prob=0.9) 
-    
-    #remove hu~sowndivLogStd:
-    m.Pr_sowndiv_d5 <- update(m.Pr_sowndiv_d4,
-                              bf(Pr_per100g ~ sowndivLogStd*treatment + week + (1|block/plot),
-                                 hu ~ treatment + week + (1|block/plot)),
-                              seed = SEED) #19 div
-    summary(m.Pr_sowndiv_d5, prob=0.9) 
-    
-    #remove week:
-    m.Pr_sowndiv_d6 <- update(m.Pr_sowndiv_d5,
-                              bf(Pr_per100g ~ sowndivLogStd*treatment + (1|block/plot),
-                                 hu ~ treatment + week + (1|block/plot)),
-                              seed = SEED) #1 div
-    summary(m.Pr_sowndiv_d6, prob=0.9) 
-        #NOTE: removing the very marginally sigifnificant hu~treatment 
-        #does not substantially change anything  in the other terms
-    
-    #add a wide normal(0,20) prior
-    beta_coeff_priors <- prior(normal(0,20), class = "b")  
-    m.Pr_sowndiv_p7 <- update(m.Pr_sowndiv_d6,
-                              prior = beta_coeff_priors,
-                              seed = SEED) #0 div
-    summary(m.Pr_sowndiv_p7, prob=0.9) 
-    
-    #add a normal(0,5) prior
-    beta_coeff_priors2 <- prior(normal(0,5), class = "b")  
-    m.Pr_sowndiv_p8 <- update(m.Pr_sowndiv_d6,
-                              prior = beta_coeff_priors2,
-                              seed = SEED) #1 div
-    summary(m.Pr_sowndiv_p8, prob=0.9) 
-    
-    #add a normal(0,2) prior
-    beta_coeff_priors3 <- prior(normal(0,2), class = "b")  
-    m.Pr_sowndiv_p9 <- update(m.Pr_sowndiv_d6,
-                              prior = beta_coeff_priors3,
+    #remove 3way interaction:
+    m.Pr_sowndiv_p2 <- update(m.Pr_sowndiv_p, 
+                              bf(Pr_per100g ~ sowndivLogStd*treatment + sowndivLogStd*week + treatment*week + 
+                                   (1|block/plot),
+                                 hu ~ sowndivLogStd + treatment + week + (1|block/plot)), 
                               seed = SEED)
-    summary(m.Pr_sowndiv_p9, prob=0.9) 
     
-    summary(m.Pr_sowndiv_p7, prob=0.90) 
-    pp_check(m.Pr_sowndiv_p7, ndraws=100)+
-      xlim(0,200)
+    #remove sowndivLogStd*week
+    m.Pr_sowndiv_p31 <- update(m.Pr_sowndiv_p, 
+                               bf(Pr_per100g ~ sowndivLogStd*treatment + treatment*week + (1|block/plot),
+                                  hu ~ sowndivLogStd + treatment + week + (1|block/plot)), 
+                               seed = SEED)
     
-    #compare them  
-    loo.Pr <- loo(m.Pr_sowndiv_d, m.Pr_sowndiv_d2, m.Pr_sowndiv_d3, m.Pr_sowndiv_d4, m.Pr_sowndiv_d5,
-        m.Pr_sowndiv_d6, m.Pr_sowndiv_p7, m.Pr_sowndiv_p8, m.Pr_sowndiv_p9, m.Pr_sowndiv_p)
+    #remove treatment*week 
+    m.Pr_sowndiv_p32 <- update(m.Pr_sowndiv_p, 
+                               bf(Pr_per100g ~ sowndivLogStd*treatment + sowndivLogStd*week + (1|block/plot),
+                                  hu ~ sowndivLogStd + treatment + week + (1|block/plot)), 
+                               seed = SEED)
+    
+    #remove sowndivLogStd*week and treatment*week 
+    m.Pr_sowndiv_p4 <- update(m.Pr_sowndiv_p, 
+                              bf(Pr_per100g ~ sowndivLogStd*treatment + week + (1|block/plot),
+                                 hu ~ sowndivLogStd + treatment + week + (1|block/plot)), 
+                              seed = SEED)
+    summary(m.Pr_sowndiv_p4, prob=0.9)
+    
+    #remove week
+    m.Pr_sowndiv_p5 <- update(m.Pr_sowndiv_p, 
+                              bf(Pr_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                                 hu ~ sowndivLogStd + treatment + week + (1|block/plot)), 
+                              seed = SEED)
+    summary(m.Pr_sowndiv_p5, prob=0.9)
+    
+    
+    #remove hu~treatment
+    m.Pr_sowndiv_p6 <- update(m.Pr_sowndiv_p, 
+                              bf(Pr_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                                 hu ~ sowndivLogStd + week + (1|block/plot)), 
+                              seed = SEED)
+    #remove hu~sowndiv
+    m.Pr_sowndiv_p7 <- update(m.Pr_sowndiv_p, 
+                              bf(Pr_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                                 hu ~ week + (1|block/plot)), 
+                              seed = SEED)
+    summary(m.Pr_sowndiv_p7, prob=0.9)
+    
+    #remove hu~week
+    m.Pr_sowndiv_p8 <- update(m.Pr_sowndiv_p, 
+                              bf(Pr_per100g ~ sowndivLogStd*treatment + (1|block/plot),
+                                 hu ~1), 
+                              seed = SEED)
+    summary(m.Pr_sowndiv_p8, prob=0.9)
+    
+    
+    loo.Pr <- loo(m.Pr_sowndiv_p, m.Pr_sowndiv_p2, m.Pr_sowndiv_p31, m.Pr_sowndiv_p32, m.Pr_sowndiv_p4,
+                  m.Pr_sowndiv_p5, m.Pr_sowndiv_p6, m.Pr_sowndiv_p7, m.Pr_sowndiv_p8 )
+    
     loo.Pr
-    summary(m.Pr_sowndiv_d7, prob =0.9)
     
-    #choosing _p7, as it is the model with highest elpd and 0 divergent transitions
-    print(rstan::get_elapsed_time(m.Pr_sowndiv_p$fit))
-    print(rstan::get_elapsed_time(m.Pr_sowndiv_d$fit))  
+    save(m.Pr_sowndiv_p, m.Pr_sowndiv_p2, m.Pr_sowndiv_p31, m.Pr_sowndiv_p32, m.Pr_sowndiv_p4,
+         m.Pr_sowndiv_p5, m.Pr_sowndiv_p6, m.Pr_sowndiv_p7, m.Pr_sowndiv_p8,
+         file="./statistics/brms/231219_Pr_sowndiv_priors.RData")  
     
-#save the models: 
-    save(m.Pr_sowndivW1_d, m.Pr_sowndivW1_p,
-          m.Pr_sowndivW1_d2, m.Pr_sowndivW1_d3,
-          m.Pr_sowndivW1_p2, m.Pr_sowndivW1_p3, m.Pr_sowndivW1_p4, m.Pr_sowndivW1_p5, m.Pr_sowndivW1_p6,
-         m.Pr_sowndivW2_d, m.Pr_sowndivW2_p,
-          m.Pr_sowndivW2_d2, m.Pr_sowndivW2_d3, m.Pr_sowndivW2_d4,
-          m.Pr_sowndivW2_p2, m.Pr_sowndivW2_p3, m.Pr_sowndivW2_p4, m.Pr_sowndivW2_p5, m.Pr_sowndivW2_p6,
-         m.Pr_sowndiv_d, m.Pr_sowndiv_p,
-          m.Pr_sowndiv_d2,m.Pr_sowndiv_d3, m.Pr_sowndiv_d4,m.Pr_sowndiv_d5, m.Pr_sowndiv_d6,
-          m.Pr_sowndiv_p7, m.Pr_sowndiv_p8, m.Pr_sowndiv_p9, 
-         file = "./statistics/brms/231213_Pr_sowndiv_priors.RData")
-    
-#unload the models to prevent crashes:
-    rm(m.Pr_sowndivW1_d, m.Pr_sowndivW1_p,
-       m.Pr_sowndivW1_d2, m.Pr_sowndivW1_d3,
-       m.Pr_sowndivW1_p2, m.Pr_sowndivW1_p3, m.Pr_sowndivW1_p4, m.Pr_sowndivW1_p5, m.Pr_sowndivW1_p6,
-       m.Pr_sowndivW2_d, m.Pr_sowndivW2_p,
-       m.Pr_sowndivW2_d2, m.Pr_sowndivW2_d3, m.Pr_sowndivW2_d4,
-       m.Pr_sowndivW2_p2, m.Pr_sowndivW2_p3, m.Pr_sowndivW2_p4, m.Pr_sowndivW2_p5, m.Pr_sowndivW2_p6,
-       m.Pr_sowndiv_d, m.Pr_sowndiv_p,
-       m.Pr_sowndiv_d2,m.Pr_sowndiv_d3, m.Pr_sowndiv_d4,m.Pr_sowndiv_d5, m.Pr_sowndiv_d6,
-       #m.Pr_sowndiv_p7, #keep the best
-       m.Pr_sowndiv_p8, m.Pr_sowndiv_p9)
-    
-    
-    
-    
+    rm(m.Pr_sowndiv_p, m.Pr_sowndiv_p2, m.Pr_sowndiv_p31, m.Pr_sowndiv_p32, m.Pr_sowndiv_p4,
+       m.Pr_sowndiv_p5, m.Pr_sowndiv_p6, m.Pr_sowndiv_p7, m.Pr_sowndiv_p8)
     
 #### Om ~ sowndiv: W1-d3, W2-p, both-d4 ####
     #W1: _p3 13 div, _d3 10 div, p has slightly better elpd (less than 2 SE) -> d3 is best
@@ -1525,14 +1454,13 @@ pp_check(m.Ba_sowndivW2_p, ndraws=100)
           width = 4)
    
    
-#### Om ~ sowndiv, both weeks: _d7 ####
-   #_d7: 1 div transition, _p8 and _p9 1 div, elpd in _d7 marginally better (less than 2SE)
-   # --> choose d7
+####Om ~ sowndiv, both weeks:  ####
+   beta_coeff_priors <- prior(normal(0,10), class = "b")  
+   SEED = 22061996
    
-   #for both weeks 
-   #with prior
+   #for both weeks  
    m.Om_sowndiv_p <- brm(
-     bf(Om_per100g ~ sowndivLogStd*treatment*week +(1|block/plot),
+     bf(Om_per100g ~ sowndivLogStd*treatment*week + (1|block/plot),
         hu ~ sowndivLogStd + treatment + week + (1|block/plot)),
      data = dat, 
      prior = beta_coeff_priors,
@@ -1541,124 +1469,81 @@ pp_check(m.Ba_sowndivW2_p, ndraws=100)
      cores = 3,
      iter = 2000, warmup = 1000,
      seed = SEED,
-     control = list(adapt_delta=0.99)) #10 div
-   summary(m.Om_sowndiv_p, prob =0.9)
+     control = list(adapt_delta=0.99)) #all good 
    
-   #with default priors
-   m.Om_sowndiv_d <- brm(
-     bf(Om_per100g ~ sowndivLogStd*treatment*week + (1|block/plot),
-        hu ~ sowndivLogStd + treatment + week +  (1|block/plot)),
-     data = dat, 
-     family = hurdle_lognormal,
-     chains = 3,
-     cores = 3,
-     iter = 2000, warmup = 1000,
-     seed = SEED,
-     control = list(adapt_delta=0.99)) #all good
-   summary(m.Om_sowndiv_d, prob =0.9)
+   summary(m.Om_sowndiv_p)
+   pp_check(m.Om_sowndiv_p, ndraws=100)+
+     xlim(0,2000)
    
-   #parsimony: remove week:sowndivLogStd:treatment:
-   m.Om_sowndiv_d2 <- update(m.Om_sowndiv_d,
-                             bf(Om_per100g ~ sowndivLogStd*treatment+ treatment*week + sowndivLogStd*week + (1|block/plot),
-                                hu ~ sowndivLogStd + treatment + (1|block/plot)),
-                             seed=SEED)
-   summary(m.Om_sowndiv_d2, prob = 0.9)
-   emt.pairs <- emtrends(m.Om_sowndiv_d2, specs = c("treatment", "week"), var="sowndivLogStd") %>%
-     pairs()
-   bayestestR::p_direction(emt.pairs) #t1W1 - t1W2 : 71%; t2W1 -t2W2
+   #remove 3way interaction:
+   m.Om_sowndiv_p2 <- update(m.Om_sowndiv_p, 
+                             bf(Om_per100g ~ sowndivLogStd*treatment + sowndivLogStd*week + treatment*week + 
+                                  (1|block/plot),
+                                hu ~ sowndivLogStd + treatment + week + (1|block/plot)), 
+                             seed = SEED)
    
-   #parsimony: remove treatment*week
-   m.Om_sowndiv_d3 <- update(m.Om_sowndiv_d,
-                             bf(Om_per100g ~ sowndivLogStd*treatment + sowndivLogStd*week + (1|block/plot),
-                                hu ~ sowndivLogStd + treatment + (1|block/plot)),
-                             seed=SEED) #1 div
-   summary(m.Om_sowndiv_d3, prob = 0.9)
+   #remove sowndivLogStd*week
+   m.Om_sowndiv_p31 <- update(m.Om_sowndiv_p, 
+                              bf(Om_per100g ~ sowndivLogStd*treatment + treatment*week + (1|block/plot),
+                                 hu ~ sowndivLogStd + treatment + week + (1|block/plot)), 
+                              seed = SEED)
    
-   #parsimony: remove sowndivLogStd*week
-   m.Om_sowndiv_d4 <- update(m.Om_sowndiv_d,
+   #remove treatment*week 
+   m.Om_sowndiv_p32 <- update(m.Om_sowndiv_p, 
+                              bf(Om_per100g ~ sowndivLogStd*treatment + sowndivLogStd*week + (1|block/plot),
+                                 hu ~ sowndivLogStd + treatment + week + (1|block/plot)), 
+                              seed = SEED)
+   
+   #remove sowndivLogStd*week and treatment*week 
+   m.Om_sowndiv_p4 <- update(m.Om_sowndiv_p, 
                              bf(Om_per100g ~ sowndivLogStd*treatment + week + (1|block/plot),
-                                hu ~ sowndivLogStd + treatment + (1|block/plot)),
-                             seed=SEED) #39 div
-   summary(m.Om_sowndiv_d4, prob = 0.9)
+                                hu ~ sowndivLogStd + treatment + week + (1|block/plot)), 
+                             seed = SEED)
+   summary(m.Om_sowndiv_p4, prob=0.9)
    
-   #parsimony: remove week
-   m.Om_sowndiv_d5 <- update(m.Om_sowndiv_d,
+   #remove week
+   m.Om_sowndiv_p5 <- update(m.Om_sowndiv_p, 
                              bf(Om_per100g ~ sowndivLogStd*treatment + (1|block/plot),
-                                hu ~ sowndivLogStd + treatment + (1|block/plot)),
-                             seed=SEED)
-   summary(m.Om_sowndiv_d5, prob = 0.9)
+                                hu ~ sowndivLogStd + treatment + week + (1|block/plot)), 
+                             seed = SEED)
+   summary(m.Om_sowndiv_p5, prob=0.9)
    
-   #parsimony: remove hurdle~sowndivLogStd
-   m.Om_sowndiv_d6 <- update(m.Om_sowndiv_d,
+   
+   #remove hu~treatment
+   m.Om_sowndiv_p6 <- update(m.Om_sowndiv_p, 
                              bf(Om_per100g ~ sowndivLogStd*treatment + (1|block/plot),
-                                hu ~ treatment + (1|block/plot)),
-                             seed=SEED) #0 div
-   summary(m.Om_sowndiv_d6, prob = 0.9)
-   
-   #parsimony: remove hurdle~treatment
-   m.Om_sowndiv_d7 <- update(m.Om_sowndiv_d,
+                                hu ~ sowndivLogStd + week + (1|block/plot)), 
+                             seed = SEED)
+   #remove hu~sowndiv
+   m.Om_sowndiv_p7 <- update(m.Om_sowndiv_p, 
                              bf(Om_per100g ~ sowndivLogStd*treatment + (1|block/plot),
-                                hu ~ 1),
-                             seed=SEED) #1 div
-   summary(m.Om_sowndiv_d7, prob = 0.9) 
+                                hu ~ week + (1|block/plot)), 
+                             seed = SEED)
+   summary(m.Om_sowndiv_p7, prob=0.9)
    
-   #add a normal(0,20) prior for beta coefficients
-   m.Om_sowndiv_p7 <- update(m.Om_sowndiv_d,
+   #remove hu~week
+   m.Om_sowndiv_p8 <- update(m.Om_sowndiv_p, 
                              bf(Om_per100g ~ sowndivLogStd*treatment + (1|block/plot),
-                                hu ~ 1),
-                             prior = beta_coeff_priors,
-                             seed=SEED) #7 div
-   summary(m.Om_sowndiv_p7, prob = 0.9)
-   
-   #add a normal(0,5) prior for beta coefficients
-   m.Om_sowndiv_p8 <- update(m.Om_sowndiv_d,
-                             bf(Om_per100g ~ sowndivLogStd*treatment + (1|block/plot),
-                                hu ~ 1),
-                             prior = beta_coeff_priors2,
-                             seed=SEED) #1 div
-   summary(m.Om_sowndiv_p8, prob = 0.9)
-   
-   #add a normal(0,2) prior for beta coefficients
-   m.Om_sowndiv_p9 <- update(m.Om_sowndiv_d,
-                             bf(Om_per100g ~ sowndivLogStd*treatment + (1|block/plot),
-                                hu ~ 1),
-                             prior = beta_coeff_priors3,
-                             seed=SEED) #1div
-   summary(m.Om_sowndiv_p9, prob = 0.9)
-   
-   pp_check(m.Om_sowndiv_p9, ndraws=100)+
-     xlim(0,200)
-   loo(m.Om_sowndiv_p9, m.Om_sowndiv_p8, m.Om_sowndiv_p7, m.Om_sowndiv_d7) 
-   #best elpd _d7, 1 divergent transition like _p8 and _p9 --> choose d7
+                                hu ~1), 
+                             seed = SEED)
+   summary(m.Om_sowndiv_p8, prob=0.9)
    
    
+   loo.Om <- loo(m.Om_sowndiv_p, m.Om_sowndiv_p2, m.Om_sowndiv_p31, m.Om_sowndiv_p32, m.Om_sowndiv_p4,
+                 m.Om_sowndiv_p5, m.Om_sowndiv_p6, m.Om_sowndiv_p7, m.Om_sowndiv_p8 )
    
-
-#save them:
-   save(m.Om_sowndivW1_d, m.Om_sowndivW1_p, #basic
-        m.Om_sowndivW1_d2 , m.Om_sowndivW1_d3, 
-        m.Om_sowndivW1_p2, m.Om_sowndivW1_p3, m.Om_sowndivW1_p4, #simplified according to Ockham's razor
-        m.Om_sowndivW2_d, m.Om_sowndivW2_p,
-        m.Om_sowndivW2_p2 ,m.Om_sowndivW2_p3, # _d is most simplified already
-        m.Om_sowndiv_d, m.Om_sowndiv_p,
-        m.Om_sowndiv_p7, m.Om_sowndiv_p8, m.Om_sowndiv_p9, 
-        m.Om_sowndiv_d2, m.Om_sowndiv_d3, m.Om_sowndiv_d4,m.Om_sowndiv_d5, m.Om_sowndiv_d6, m.Om_sowndiv_d7,
-        file = "./statistics/brms/231213_Om_sowndiv_priors.RData")
+   loo.Om
    
-#unload to prevent crashes:    
-   rm(m.Om_sowndivW1_d, m.Om_sowndivW1_p, #basic
-      m.Om_sowndivW1_d2 , m.Om_sowndivW1_d3, 
-      m.Om_sowndivW1_p2, m.Om_sowndivW1_p3, m.Om_sowndivW1_p4, 
-      m.Om_sowndivW2_d, m.Om_sowndivW2_p,
-      m.Om_sowndivW2_p2 ,m.Om_sowndivW2_p3, 
-      m.Om_sowndiv_d, m.Om_sowndiv_p,
-      m.Om_sowndiv_p7, m.Om_sowndiv_p8, m.Om_sowndiv_p9, 
-      m.Om_sowndiv_d2, m.Om_sowndiv_d3, m.Om_sowndiv_d4,m.Om_sowndiv_d5, m.Om_sowndiv_d6#, m.Om_sowndiv_d7
-      )
-
+   save(m.Om_sowndiv_p, m.Om_sowndiv_p2, m.Om_sowndiv_p31, m.Om_sowndiv_p32, m.Om_sowndiv_p4,
+        m.Om_sowndiv_p5, m.Om_sowndiv_p6, m.Om_sowndiv_p7, m.Om_sowndiv_p8,
+        file="./statistics/brms/231219_Om_sowndiv_priors.RData")  
+   
+   rm(m.Om_sowndiv_p, m.Om_sowndiv_p2, m.Om_sowndiv_p31, m.Om_sowndiv_p32, m.Om_sowndiv_p4,
+      m.Om_sowndiv_p5, m.Om_sowndiv_p6, m.Om_sowndiv_p7, m.Om_sowndiv_p8)
+  
 ####save best fit models####
    save(m.Ba_sowndiv_p5, m.Fu_sowndiv_p3, m.Om_sowndiv_d7, m.Pl_sowndiv_p3, m.Pr_sowndiv_p7,
-        file = "./statistics/brms/231215_Trophic_sowndiv_BestFits.RData")
+        file = "./statistics/brms/231219_Trophic_sowndiv_BestFits.RData")
    
 ####emmeans####
   
