@@ -23,7 +23,7 @@ library(dplyr)
     SEED = 22061996
     
 #priors    
-    beta_coeff_priors <- prior(normal(0,5), class = "b")  
+    beta_coeff_priors <- prior(normal(0,10), class = "b")  
    
     
     #the narrowest prior is still basically flat (at realistic values): 

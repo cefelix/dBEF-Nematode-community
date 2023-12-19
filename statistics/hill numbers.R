@@ -26,7 +26,7 @@ SEED = 19111996
   datW2 <- subset(dat, week=="W2")
 
 #priors    
-  beta_coeff_priors <- prior(normal(0,20), class = "b")  
+  beta_coeff_priors <- prior(normal(0,10), class = "b")  
   beta_coeff_priors2 <- prior(normal(0,5), class = "b")  
   beta_coeff_priors3 <- prior(normal(0,2), class = "b")  
 
