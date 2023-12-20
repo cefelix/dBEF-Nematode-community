@@ -27,9 +27,6 @@ SEED = 19111996
 
 #priors    
   beta_coeff_priors <- prior(normal(0,10), class = "b")  
-  beta_coeff_priors2 <- prior(normal(0,5), class = "b")  
-  beta_coeff_priors3 <- prior(normal(0,2), class = "b")  
-
   
 #### Shannon all ~ sowndivLogStd ####
 #with default priors:  
@@ -53,8 +50,9 @@ SEED = 19111996
   pp_check(m.all.Shannon.gamma_d, ndraws=100) #okay
   summary(m.all.Shannon.gamma_d, prob = 0.9)
     
-
-  #with a normal(0,20) prior for beta coefficients
+  loo(m.all.Shannon.gamma_d, m.all.Shannon.gaus_d)
+  
+  #with a normal(0,10) prior for beta coefficients
     m.all.Shannon.gaus_p <- brm(Hill_q1 ~ sowndivLogStd*treatment + (1|block/plot), 
                                  data = dat, family = "gaussian",
                                  chains = 3,
@@ -63,6 +61,7 @@ SEED = 19111996
                                  prior = beta_coeff_priors,
                                  seed = SEED,
                                  control = list(adapt_delta = 0.99) )  
+    summary(m.all.Shannon.gaus_p, prob=0.9 )
     
     m.all.Shannon.gamma_p <- brm(Hill_q1 ~ sowndivLogStd*treatment + (1|block/plot), 
                              data = dat, family = "gamma",
@@ -72,31 +71,8 @@ SEED = 19111996
                              prior = beta_coeff_priors,
                              seed = SEED,
                              control = list(adapt_delta = 0.99) )  
+    m.all.Shannon.gaus_p 
     
-  #a narrower normal(0,5) prior:
-    m.all.Shannon.gaus_p2 <- update( m.all.Shannon.gaus_p,
-                                      prior =   beta_coeff_priors2,
-                                      seed = SEED)
-    
-    m.all.Shannon.gamma_p2 <- update( m.all.Shannon.gamma_p,
-                                      prior =   beta_coeff_priors2,
-                                      seed = SEED)
-    
-    pp_check(m.all.Shannon.gamma_p2, ndraws=100)
-    summary(m.all.Shannon.gamma_p2, prob = 0.9)
-    
-  #a narrower normal(0,2) prior:
-    m.all.Shannon.gaus_p3 <- update( m.all.Shannon.gaus_p2,
-                                      prior =   beta_coeff_priors3,
-                                      seed = SEED)
-    pp_check(m.all.Shannon.gaus_p3, ndraws=100)
-    summary(m.all.Shannon.gaus_p3, prob = 0.9)
-    
-    m.all.Shannon.gamma_p3 <- update( m.all.Shannon.gamma_p2,
-                               prior =   beta_coeff_priors3,
-                               seed = SEED)
-    pp_check(m.all.Shannon.gamma_p3, ndraws=100)
-    summary(m.all.Shannon.gamma_p3, prob = 0.9)
   
 #compare them: 
   loo(m.all.Shannon.gaus_p3, m.all.Shannon.gaus_p2, m.all.Shannon.gaus_p, m.all.Shannon.gaus_d,
