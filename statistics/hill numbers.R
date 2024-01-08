@@ -34,6 +34,8 @@ SEED = 19111996
   #looic: gauss_p5, as it is the most parsimonous model whose looic doesnt 
     #differ significantly (less than 2 SE) from the best fit model
   
+  load("./statistics/brms/231221_hill_all_sowndiv.RData")
+  
   #using a gaussian distribution with a normal(0,10) prior for beta coefficients
     m.all.Shannon.gaus_p <- brm(Hill_q1 ~ sowndivLogStd*treatment*week + (1|block/plot), 
                                  data = dat, family = "gaussian",
@@ -70,8 +72,8 @@ SEED = 19111996
     m.all.Shannon.gaus_p4 <- update(m.all.Shannon.gaus_p, 
                                      bf(Hill_q1 ~ sowndivLogStd*treatment + week + (1|block/plot)),
                                      seed = SEED)
-    summary(m.all.Shannon.gaus_p4, prob=0.95 )
-      #stepwise simplification: choose p4, as week is significant (95% CI)
+    summary(m.all.Shannon.gaus_p4, prob=0.9 )
+      #stepwise simplification: choose p4, as week is marginally significant (90% CI)
     
     #remove week:
     m.all.Shannon.gaus_p5 <- update(m.all.Shannon.gaus_p, 
@@ -148,11 +150,12 @@ SEED = 19111996
       m.all.Shannon.gaus_p5,m.all.Shannon.gaus_p4, m.all.Shannon.gaus_p32, m.all.Shannon.gaus_p31,
       m.all.Shannon.gaus_p2, m.all.Shannon.gaus_p)
 
-#### Shannon Ba ~ sowndivLogStd:  ####
+#### Shannon Ba ~ sowndivLogStd: gamma_p4 (looic: gamma_p4)  ####
     #all gaussian models show significantly better fit than the gamma models (elpd_diff > 2 SE_diff)
     # stepwise elimiantion: gaus_p4, as week is significant (95% CI)
     #looic: gauss_p5, as it is the most parsimonous model whose looic doesnt 
     #differ significantly (less than 2 SE) from the best fit model
+    load("./statistics/brms/231221_hill_Ba_sowndiv.RData")
     
     #using a gaussian distribution with a normal(0,10) prior for beta coefficients
     m.Ba.Shannon.gaus_p <- brm(Hill_q1.Ba ~ sowndivLogStd*treatment*week + (1|block/plot), 
@@ -176,28 +179,28 @@ SEED = 19111996
     m.Ba.Shannon.gaus_p31 <- update(m.Ba.Shannon.gaus_p, 
                                      bf(Hill_q1.Ba ~ sowndivLogStd*treatment + sowndivLogStd*week + 
                                           (1|block/plot)),
-                                     seed = SEED) #3 div
+                                     seed = SEED) #10 div
     summary(m.Ba.Shannon.gaus_p31, prob=0.9 )
     
     #remove sowndiv*week
     m.Ba.Shannon.gaus_p32 <- update(m.Ba.Shannon.gaus_p, 
                                      bf(Hill_q1.Ba ~ sowndivLogStd*treatment + treatment*week + 
                                           (1|block/plot)),
-                                     seed = SEED) # 4 div
+                                     seed = SEED) # 9 div
     summary(m.Ba.Shannon.gaus_p32, prob=0.9 )
     
     #remove both treatment*week and sowndiv*week:
     m.Ba.Shannon.gaus_p4 <- update(m.Ba.Shannon.gaus_p, 
                                     bf(Hill_q1.Ba ~ sowndivLogStd*treatment + week + (1|block/plot)),
                                     seed = SEED)
-    summary(m.Ba.Shannon.gaus_p4, prob=0.95 )
+    summary(m.Ba.Shannon.gaus_p4, prob=0.95 ) #77 divergent transitions
     #stepwise simplification: choose p4, as week is significant (95% CI)
     
     #remove week:
     m.Ba.Shannon.gaus_p5 <- update(m.Ba.Shannon.gaus_p, 
                                     bf(Hill_q1.Ba ~ sowndivLogStd*treatment + (1|block/plot)),
                                     seed = SEED)
-    summary(m.Ba.Shannon.gaus_p5, prob=0.9 )
+    summary(m.Ba.Shannon.gaus_p5, prob=0.9 ) #0 div trans
     
     loo(m.Ba.Shannon.gaus_p5,m.Ba.Shannon.gaus_p4, m.Ba.Shannon.gaus_p32, m.Ba.Shannon.gaus_p31,
         m.Ba.Shannon.gaus_p2, m.Ba.Shannon.gaus_p)
@@ -210,14 +213,14 @@ SEED = 19111996
                                  iter = 2000, warmup = 1000,
                                  prior = beta_coeff_priors,
                                  seed = SEED,
-                                 control = list(adapt_delta = 0.99) )  # 8 div
+                                 control = list(adapt_delta = 0.99) )  #14 div
     summary(m.Ba.Shannon.gamma_p, prob=0.9)
     
     #remove 3 way interaction:
     m.Ba.Shannon.gamma_p2 <- update(m.Ba.Shannon.gamma_p, 
                                      bf(Hill_q1.Ba ~ sowndivLogStd*treatment + treatment*week + 
                                           sowndivLogStd*week + (1|block/plot)),
-                                     seed = SEED) # 5 div
+                                     seed = SEED) # 22 div
     summary(m.Ba.Shannon.gamma_p2, prob=0.9)
     
     #remove treatment*week
@@ -237,9 +240,9 @@ SEED = 19111996
     #remove both treatment*week and sowndiv*week:
     m.Ba.Shannon.gamma_p4 <- update(m.Ba.Shannon.gamma_p, 
                                      bf(Hill_q1.Ba ~ sowndivLogStd*treatment + week + (1|block/plot)),
-                                     seed = SEED)
-    summary(m.Ba.Shannon.gamma_p4, prob=0.9 )
-    #stepwise simplification keep week, as it is marginally significant (CI=90%)
+                                     seed = SEED) #14 div
+    summary(m.Ba.Shannon.gamma_p4, prob=0.95 )
+    #stepwise simplification: use gamma_p4 keep week, as it is significant (CI=95%)
     pp_check(m.Ba.Shannon.gamma_p4, ndraws=100)
     
     
@@ -255,7 +258,7 @@ SEED = 19111996
                    m.Ba.Shannon.gaus_p5,m.Ba.Shannon.gaus_p4, m.Ba.Shannon.gaus_p32, m.Ba.Shannon.gaus_p31,
                    m.Ba.Shannon.gaus_p2, m.Ba.Shannon.gaus_p)
     Ba.loo
-    #using a gaussian distribution shows better fit
+    #use gamma p4, as it is most parsimonous model with an elpd_diff < 2 SE 
     
     save(m.Ba.Shannon.gamma_p5, m.Ba.Shannon.gamma_p4, m.Ba.Shannon.gamma_p32,m.Ba.Shannon.gamma_p31,
          m.Ba.Shannon.gamma_p2, m.Ba.Shannon.gamma_p,
@@ -268,12 +271,13 @@ SEED = 19111996
        m.Ba.Shannon.gaus_p5,m.Ba.Shannon.gaus_p4, m.Ba.Shannon.gaus_p32, m.Ba.Shannon.gaus_p31,
        m.Ba.Shannon.gaus_p2, m.Ba.Shannon.gaus_p)
     
-#### Shannon Fu ~ sowndivLogStd:  ####
+#### Shannon Fu ~ sowndivLogStd: gamma_p4 (looic: gamma_p4) ####
     #all gaussian models show significantly better fit than the gamma models (elpd_diff > 2 SE_diff)
     # stepwise elimiantion: gaus_p4, as week is significant (95% CI)
     #looic: gauss_p5, as it is the most parsimonous model whose looic doesnt 
     #differ significantly (less than 2 SE) from the best fit model
-    
+    load(file="./statistics/brms/231221_hill_Fu_sowndiv.RData")
+      
     #using a gaussian distribution with a normal(0,10) prior for beta coefficients
     m.Fu.Shannon.gaus_p <- brm(Hill_q1.Fu ~ sowndivLogStd*treatment*week + (1|block/plot), 
                                data = dat, family = "gaussian",
@@ -282,14 +286,14 @@ SEED = 19111996
                                iter = 2000, warmup = 1000,
                                prior = beta_coeff_priors,
                                seed = SEED,
-                               control = list(adapt_delta = 0.99) )  #4 div
+                               control = list(adapt_delta = 0.99) )  #1 div
     summary(m.Fu.Shannon.gaus_p, prob=0.9 )
     
     #remove 3 way interaction:
     m.Fu.Shannon.gaus_p2 <- update(m.Fu.Shannon.gaus_p, 
                                    bf(Hill_q1.Fu ~ sowndivLogStd*treatment + treatment*week + 
                                         sowndivLogStd*week + (1|block/plot)),
-                                   seed = SEED) # 8 div
+                                   seed = SEED) # 12 div
     summary(m.Fu.Shannon.gaus_p2, prob=0.9)
     
     #remove treatment*week
@@ -310,16 +314,17 @@ SEED = 19111996
     m.Fu.Shannon.gaus_p4 <- update(m.Fu.Shannon.gaus_p, 
                                    bf(Hill_q1.Fu ~ sowndivLogStd*treatment + week + (1|block/plot)),
                                    seed = SEED)
-    summary(m.Fu.Shannon.gaus_p4, prob=0.95 )
-    #stepwise simplification: choose p4, as week is significant (95% CI)
-    
+    summary(m.Fu.Shannon.gaus_p4, prob=0.9 ) 
+    #keep week as it is marginally significant (CI 90%)
+  
     #remove week:
     m.Fu.Shannon.gaus_p5 <- update(m.Fu.Shannon.gaus_p, 
                                    bf(Hill_q1.Fu ~ sowndivLogStd*treatment + (1|block/plot)),
                                    seed = SEED)
     summary(m.Fu.Shannon.gaus_p5, prob=0.9 )
-    
-    loo(m.Fu.Shannon.gaus_p5,m.Fu.Shannon.gaus_p4, m.Fu.Shannon.gaus_p32, m.Fu.Shannon.gaus_p31,
+    #stepwise simplification
+  
+      loo(m.Fu.Shannon.gaus_p5,m.Fu.Shannon.gaus_p4, m.Fu.Shannon.gaus_p32, m.Fu.Shannon.gaus_p31,
         m.Fu.Shannon.gaus_p2, m.Fu.Shannon.gaus_p)
     
     #using a gamma distribution with a normal(0,10) prior for beta coefficients
@@ -358,8 +363,8 @@ SEED = 19111996
     m.Fu.Shannon.gamma_p4 <- update(m.Fu.Shannon.gamma_p, 
                                     bf(Hill_q1.Fu ~ sowndivLogStd*treatment + week + (1|block/plot)),
                                     seed = SEED)
-    summary(m.Fu.Shannon.gamma_p4, prob=0.9 )
-    #stepwise simplification keep week, as it is marginally significant (CI=90%)
+    summary(m.Fu.Shannon.gamma_p4, prob=0.95 )
+    #stepwise simplification keep week, as it is significant (CI=95%)
     pp_check(m.Fu.Shannon.gamma_p4, ndraws=100)
     
     
@@ -375,7 +380,7 @@ SEED = 19111996
                   m.Fu.Shannon.gaus_p5,m.Fu.Shannon.gaus_p4, m.Fu.Shannon.gaus_p32, m.Fu.Shannon.gaus_p31,
                   m.Fu.Shannon.gaus_p2, m.Fu.Shannon.gaus_p)
     Fu.loo
-    #using a gaussian distribution shows better fit
+    #using a gamma distribution shows better fit
     
     save(m.Fu.Shannon.gamma_p5, m.Fu.Shannon.gamma_p4, m.Fu.Shannon.gamma_p32,m.Fu.Shannon.gamma_p31,
          m.Fu.Shannon.gamma_p2, m.Fu.Shannon.gamma_p,
@@ -388,11 +393,12 @@ SEED = 19111996
        m.Fu.Shannon.gaus_p5,m.Fu.Shannon.gaus_p4, m.Fu.Shannon.gaus_p32, m.Fu.Shannon.gaus_p31,
        m.Fu.Shannon.gaus_p2, m.Fu.Shannon.gaus_p)
 
-####Shannon Pl ~ sowndivLogStd:  ####
+####Shannon Pl ~ sowndivLogStd: gaus_p5 (looic: gaus_p5)  ####
     #all gaussian models show significantly better fit than the gamma models (elpd_diff > 2 SE_diff)
     # stepwise elimiantion: gaus_p4, as week is significant (95% CI)
     #looic: gauss_p5, as it is the most parsimonous model whose looic doesnt 
     #differ significantly (less than 2 SE) from the best fit model
+    load(file="./statistics/brms/231221_hill_Pl_sowndiv.RData")
     
     #using a gaussian distribution with a normal(0,10) prior for beta coefficients
     m.Pl.Shannon.gaus_p <- brm(Hill_q1.Pl ~ sowndivLogStd*treatment*week + (1|block/plot), 
@@ -402,7 +408,7 @@ SEED = 19111996
                                iter = 2000, warmup = 1000,
                                prior = beta_coeff_priors,
                                seed = SEED,
-                               control = list(adapt_delta = 0.99) )  #4 div
+                               control = list(adapt_delta = 0.99) )  #3 div
     summary(m.Pl.Shannon.gaus_p, prob=0.9 )
     
     #remove 3 way interaction:
@@ -431,13 +437,16 @@ SEED = 19111996
                                    bf(Hill_q1.Pl ~ sowndivLogStd*treatment + week + (1|block/plot)),
                                    seed = SEED)
     summary(m.Pl.Shannon.gaus_p4, prob=0.95 )
-    #stepwise simplification: choose p4, as week is significant (95% CI)
+   
     
     #remove week:
     m.Pl.Shannon.gaus_p5 <- update(m.Pl.Shannon.gaus_p, 
                                    bf(Hill_q1.Pl ~ sowndivLogStd*treatment + (1|block/plot)),
                                    seed = SEED)
     summary(m.Pl.Shannon.gaus_p5, prob=0.9 )
+    #stepwise simplification: choose p5, as none of additional terms is significant
+    pp_check(m.Pl.Shannon.gaus_p5, ndraws = 100)
+    
     
     loo(m.Pl.Shannon.gaus_p5,m.Pl.Shannon.gaus_p4, m.Pl.Shannon.gaus_p32, m.Pl.Shannon.gaus_p31,
         m.Pl.Shannon.gaus_p2, m.Pl.Shannon.gaus_p)
@@ -480,6 +489,7 @@ SEED = 19111996
                                     seed = SEED)
     summary(m.Pl.Shannon.gamma_p4, prob=0.9 )
     #stepwise simplification keep week, as it is marginally significant (CI=90%)
+    
     pp_check(m.Pl.Shannon.gamma_p4, ndraws=100)
     
     
@@ -508,11 +518,13 @@ SEED = 19111996
        m.Pl.Shannon.gaus_p5,m.Pl.Shannon.gaus_p4, m.Pl.Shannon.gaus_p32, m.Pl.Shannon.gaus_p31,
        m.Pl.Shannon.gaus_p2, m.Pl.Shannon.gaus_p)
     
-#### Shannon Pr ~ sowndivLogStd:  ####
+#### Shannon Pr ~ sowndivLogStd: gamma_p (looic: gamma_p5)  ####
     #all gaussian models show significantly better fit than the gamma models (elpd_diff > 2 SE_diff)
     # stepwise elimiantion: gaus_p4, as week is significant (95% CI)
     #looic: gauss_p5, as it is the most parsimonous model whose looic doesnt 
     #differ significantly (less than 2 SE) from the best fit model
+    load(file="./statistics/brms/231221_hill_Pr_sowndiv.RData")
+    
     
     #using a gaussian distribution with a normal(0,10) prior for beta coefficients
     m.Pr.Shannon.gaus_p <- brm(Hill_q1.Pr ~ sowndivLogStd*treatment*week + (1|block/plot), 
@@ -523,7 +535,8 @@ SEED = 19111996
                                prior = beta_coeff_priors,
                                seed = SEED,
                                control = list(adapt_delta = 0.99) )  #4 div
-    summary(m.Pr.Shannon.gaus_p, prob=0.9 )
+    summary(m.Pr.Shannon.gaus_p, prob=0.95 )
+    #keep 3-fold interaction as it is significant (CI = 0.95)
     
     #remove 3 way interaction:
     m.Pr.Shannon.gaus_p2 <- update(m.Pr.Shannon.gaus_p, 
@@ -550,14 +563,15 @@ SEED = 19111996
     m.Pr.Shannon.gaus_p4 <- update(m.Pr.Shannon.gaus_p, 
                                    bf(Hill_q1.Pr ~ sowndivLogStd*treatment + week + (1|block/plot)),
                                    seed = SEED)
-    summary(m.Pr.Shannon.gaus_p4, prob=0.95 )
-    #stepwise simplification: choose p4, as week is significant (95% CI)
+    summary(m.Pr.Shannon.gaus_p4, prob=0.9 )
+    #stepwise simplification (when not considering 3-fold interactions): choose p4, as week is marginally significant (90% CI)
     
     #remove week:
     m.Pr.Shannon.gaus_p5 <- update(m.Pr.Shannon.gaus_p, 
                                    bf(Hill_q1.Pr ~ sowndivLogStd*treatment + (1|block/plot)),
                                    seed = SEED)
     summary(m.Pr.Shannon.gaus_p5, prob=0.9 )
+    pp_check(m.Pr.Shannon.gaus_p, ndraws=100)
     
     loo(m.Pr.Shannon.gaus_p5,m.Pr.Shannon.gaus_p4, m.Pr.Shannon.gaus_p32, m.Pr.Shannon.gaus_p31,
         m.Pr.Shannon.gaus_p2, m.Pr.Shannon.gaus_p)
@@ -570,8 +584,11 @@ SEED = 19111996
                                 iter = 2000, warmup = 1000,
                                 prior = beta_coeff_priors,
                                 seed = SEED,
-                                control = list(adapt_delta = 0.99) )  # 8 div
+                                control = list(adapt_delta = 0.99) )  # 1 div
     summary(m.Pr.Shannon.gamma_p, prob=0.9)
+    pp_check(m.Pr.Shannon.gamma_p, ndraws = 100) #visually much better fit than gaus_p
+    
+    #keep 3-way interaction
     
     #remove 3 way interaction:
     m.Pr.Shannon.gamma_p2 <- update(m.Pr.Shannon.gamma_p, 
@@ -599,8 +616,9 @@ SEED = 19111996
                                     bf(Hill_q1.Pr ~ sowndivLogStd*treatment + week + (1|block/plot)),
                                     seed = SEED)
     summary(m.Pr.Shannon.gamma_p4, prob=0.9 )
-    #stepwise simplification keep week, as it is marginally significant (CI=90%)
-    pp_check(m.Pr.Shannon.gamma_p4, ndraws=100)
+    #stepwise simplification without 3-way interaction: keep week, as it is marginally significant (CI=90%)
+    
+    pp_check(m.Pr.Shannon.gamma_p, ndraws=100)
     
     
     #remove week:
@@ -628,11 +646,8 @@ SEED = 19111996
        m.Pr.Shannon.gaus_p5,m.Pr.Shannon.gaus_p4, m.Pr.Shannon.gaus_p32, m.Pr.Shannon.gaus_p31,
        m.Pr.Shannon.gaus_p2, m.Pr.Shannon.gaus_p)
     
-#### Shannon Om ~ sowndivLogStd:  ####
-    #all gaussian models show significantly better fit than the gamma models (elpd_diff > 2 SE_diff)
-    # stepwise elimiantion: gaus_p4, as week is significant (95% CI)
-    #looic: gauss_p5, as it is the most parsimonous model whose looic doesnt 
-    #differ significantly (less than 2 SE) from the best fit model
+#### Shannon Om ~ sowndivLogStd: none of the models can predict the actual data, leave out the analysis ####
+    load(file="./statistics/brms/231221_hill_Om_sowndiv.RData")
     
     #using a gaussian distribution with a normal(0,10) prior for beta coefficients
     m.Om.Shannon.gaus_p <- brm(Hill_q1.Om ~ sowndivLogStd*treatment*week + (1|block/plot), 
@@ -649,35 +664,36 @@ SEED = 19111996
     m.Om.Shannon.gaus_p2 <- update(m.Om.Shannon.gaus_p, 
                                    bf(Hill_q1.Om ~ sowndivLogStd*treatment + treatment*week + 
                                         sowndivLogStd*week + (1|block/plot)),
-                                   seed = SEED) # 8 div
+                                   seed = SEED) # 15 div
     summary(m.Om.Shannon.gaus_p2, prob=0.9)
     
     #remove treatment*week
     m.Om.Shannon.gaus_p31 <- update(m.Om.Shannon.gaus_p, 
                                     bf(Hill_q1.Om ~ sowndivLogStd*treatment + sowndivLogStd*week + 
                                          (1|block/plot)),
-                                    seed = SEED) #3 div
+                                    seed = SEED) #4 div
     summary(m.Om.Shannon.gaus_p31, prob=0.9 )
     
     #remove sowndiv*week
     m.Om.Shannon.gaus_p32 <- update(m.Om.Shannon.gaus_p, 
                                     bf(Hill_q1.Om ~ sowndivLogStd*treatment + treatment*week + 
                                          (1|block/plot)),
-                                    seed = SEED) # 4 div
+                                    seed = SEED) # 3 div
     summary(m.Om.Shannon.gaus_p32, prob=0.9 )
     
     #remove both treatment*week and sowndiv*week:
     m.Om.Shannon.gaus_p4 <- update(m.Om.Shannon.gaus_p, 
                                    bf(Hill_q1.Om ~ sowndivLogStd*treatment + week + (1|block/plot)),
                                    seed = SEED)
-    summary(m.Om.Shannon.gaus_p4, prob=0.95 )
-    #stepwise simplification: choose p4, as week is significant (95% CI)
+    summary(m.Om.Shannon.gaus_p4, prob=0.9 )
     
     #remove week:
     m.Om.Shannon.gaus_p5 <- update(m.Om.Shannon.gaus_p, 
                                    bf(Hill_q1.Om ~ sowndivLogStd*treatment + (1|block/plot)),
                                    seed = SEED)
     summary(m.Om.Shannon.gaus_p5, prob=0.9 )
+    #stepwise simplification: remove all additional terms, as none is significant
+    pp_check(m.Om.Shannon.gaus_p5, ndraws=100)
     
     loo(m.Om.Shannon.gaus_p5,m.Om.Shannon.gaus_p4, m.Om.Shannon.gaus_p32, m.Om.Shannon.gaus_p31,
         m.Om.Shannon.gaus_p2, m.Om.Shannon.gaus_p)
@@ -690,14 +706,14 @@ SEED = 19111996
                                 iter = 2000, warmup = 1000,
                                 prior = beta_coeff_priors,
                                 seed = SEED,
-                                control = list(adapt_delta = 0.99) )  # 8 div
+                                control = list(adapt_delta = 0.99) )  # 5 div
     summary(m.Om.Shannon.gamma_p, prob=0.9)
-    
+    pp_check(m.Om.Shannon.gamma_p, ndraws=100)      
     #remove 3 way interaction:
     m.Om.Shannon.gamma_p2 <- update(m.Om.Shannon.gamma_p, 
                                     bf(Hill_q1.Om ~ sowndivLogStd*treatment + treatment*week + 
                                          sowndivLogStd*week + (1|block/plot)),
-                                    seed = SEED) # 5 div
+                                    seed = SEED) # 25 div
     summary(m.Om.Shannon.gamma_p2, prob=0.9)
     
     #remove treatment*week
@@ -711,7 +727,7 @@ SEED = 19111996
     m.Om.Shannon.gamma_p32 <- update(m.Om.Shannon.gamma_p, 
                                      bf(Hill_q1.Om ~ sowndivLogStd*treatment + treatment*week + 
                                           (1|block/plot)),
-                                     seed = SEED) #4 div
+                                     seed = SEED) #9 div
     summary(m.Om.Shannon.gamma_p32, prob=0.9 )
     
     #remove both treatment*week and sowndiv*week:
@@ -719,7 +735,8 @@ SEED = 19111996
                                     bf(Hill_q1.Om ~ sowndivLogStd*treatment + week + (1|block/plot)),
                                     seed = SEED)
     summary(m.Om.Shannon.gamma_p4, prob=0.9 )
-    #stepwise simplification keep week, as it is marginally significant (CI=90%)
+    #stepwise simplification: keep week, as it is marginally significant (CI=90%) #horrible fit
+    
     pp_check(m.Om.Shannon.gamma_p4, ndraws=100)
     
     
@@ -728,6 +745,8 @@ SEED = 19111996
                                     bf(Hill_q1.Om ~ sowndivLogStd*treatment + (1|block/plot)),
                                     seed = SEED)
     summary(m.Om.Shannon.gamma_p5, prob=0.9 )
+    pp_check(m.Om.Shannon.gamma_p4, ndraws=100)
+    
     
     #compare
     Om.loo <- loo(m.Om.Shannon.gamma_p5, m.Om.Shannon.gamma_p4, m.Om.Shannon.gamma_p32,m.Om.Shannon.gamma_p31,

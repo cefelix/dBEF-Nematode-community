@@ -23,9 +23,9 @@ datW2 <- subset(dat, week=="W2")
 #priors    
 beta_coeff_priors <- prior(normal(0,10), class = "b")  
 
-####Ba ~ realdiv, both weeks: p6 (looic p8) ####
+####Ba ~ realdiv, both weeks: p6 (looic p5) ####
 #stepwise elimination: p6, as realdiv:week is marginally significant (90%CI)
-#looic: p8, as it the most parsimonous with a elpd_diff less than 2 se_diff to the best elpd model 
+#looic: p5, as it the most parsimonous with a elpd_diff less 4 to the best elpd model 
 
 #see here https://users.aalto.fi/~ave/CV-FAQ.html#12_What_is_the_interpretation_of_ELPD__elpd_loo__elpd_diff
 load("./statistics/brms/231219_Ba_realdiv_priors.RData")
