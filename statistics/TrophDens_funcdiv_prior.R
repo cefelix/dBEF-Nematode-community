@@ -2,7 +2,7 @@ library(brms)
 library(rstan)
 library(ggplot2)
 
-# fitting trophic group densities ~ realdiv
+# fitting trophic group densities ~ funcdiv
 #data:
 #exclude 60 sp.:
 dat <- subset(dBEF_nem21, sowndiv != 60) 
@@ -21,7 +21,7 @@ datW2 <- subset(dat, week=="W2")
 #priors    
 beta_coeff_priors <- prior(normal(0,10), class = "b")  
 
-####Ba ~ funcdiv, both weeks:  ####
+####Ba ~ funcdiv, both weeks ####
 #selecting models based on looic,
 #see here https://users.aalto.fi/~ave/CV-FAQ.html#12_What_is_the_interpretation_of_ELPD__elpd_loo__elpd_diff
 
@@ -31,7 +31,7 @@ SEED = 22061996
 #for both weeks  
 m.Ba_funcdiv_p <- brm(
   bf(Ba_per100g ~ funcdivLogStd*treatment*week + (1|block/plot),
-     hu ~ funcdivLogStd + treatment + week + (1|block/plot)),
+     hu ~ 1 ),
   data = dat, 
   prior = beta_coeff_priors,
   family = hurdle_lognormal,
@@ -39,12 +39,14 @@ m.Ba_funcdiv_p <- brm(
   cores = 3,
   iter = 2000, warmup = 1000,
   seed = SEED,
-  control = list(adapt_delta=0.99)) #all good 
+  control = list(adapt_delta=0.99)) #1 div
 
-summary(m.Ba_funcdiv_p)
 pp_check(m.Ba_funcdiv_p, ndraws=100)+
   xlim(0,2000)
+summary(m.Ba_funcdiv_p, prob =0.9)
 
+#as different orientation of funcdivLogStd:treatment2:weekW2 and funcdivLogStd:treatment3:weekW2 -->
+#check pairwise with emmeans:
 emtrends(m.Ba_funcdiv_p, specs = c("treatment", "week"), var="funcdivLogStd") %>%
   summary() #CIs overlap
 
@@ -52,16 +54,18 @@ emtrends(m.Ba_funcdiv_p, specs = c("treatment", "week"), var="funcdivLogStd") %>
 m.Ba_funcdiv_p2 <- update(m.Ba_funcdiv_p, 
                           bf(Ba_per100g ~ funcdivLogStd*treatment + funcdivLogStd*week + treatment*week + 
                                (1|block/plot),
-                             hu ~ funcdivLogStd + treatment + week + (1|block/plot)), 
-                          seed = SEED)
+                             hu ~ 1), 
+                          seed = SEED) #2 div
+summary(m.Ba_funcdiv_p2, prob =0.9)
+
 emtrends(m.Ba_funcdiv_p2, specs = c("treatment", "week"), var="funcdivLogStd") %>%
   summary() #CIs overlap
 
 #remove funcdivLogStd*week
 m.Ba_funcdiv_p31 <- update(m.Ba_funcdiv_p, 
                            bf(Ba_per100g ~ funcdivLogStd*treatment + treatment*week + (1|block/plot),
-                              hu ~ funcdivLogStd + treatment + week + (1|block/plot)), 
-                           seed = SEED)
+                              hu ~ 1 + (1|block/plot)), 
+                           seed = SEED) #4 div
 
 summary(m.Ba_funcdiv_p31, prob=0.9)
 emtrends(m.Ba_funcdiv_p31, specs = c("treatment", "week"), var="funcdivLogStd") %>%
@@ -70,56 +74,35 @@ emtrends(m.Ba_funcdiv_p31, specs = c("treatment", "week"), var="funcdivLogStd") 
 #remove treatment*week 
 m.Ba_funcdiv_p32 <- update(m.Ba_funcdiv_p, 
                            bf(Ba_per100g ~ funcdivLogStd*treatment + funcdivLogStd*week + (1|block/plot),
-                              hu ~ funcdivLogStd + treatment + week + (1|block/plot)), 
+                              hu ~ 1), 
                            seed = SEED)
+summary(m.Ba_funcdiv_p32, prob=0.9)
+
 emtrends(m.Ba_funcdiv_p32, specs = c("treatment", "week"), var="funcdivLogStd") %>%
   summary()
 
-#remove funcdivLogStd*week and treatment*week 
+#remove funcdivLogStd:week
 m.Ba_funcdiv_p4 <- update(m.Ba_funcdiv_p, 
                           bf(Ba_per100g ~ funcdivLogStd*treatment + week + (1|block/plot),
-                             hu ~ funcdivLogStd + treatment + week + (1|block/plot)), 
+                             hu ~ 1), 
                           seed = SEED)
 summary(m.Ba_funcdiv_p4, prob=0.9)
+pp_check(m.Ba_funcdiv_p4, ndraws=100)+xlim(0,500)
 
 #remove week
 m.Ba_funcdiv_p5 <- update(m.Ba_funcdiv_p, 
                           bf(Ba_per100g ~ funcdivLogStd*treatment + (1|block/plot),
-                             hu ~ funcdivLogStd + treatment + week + (1|block/plot)), 
+                             hu ~ 1), 
                           seed = SEED)
 summary(m.Ba_funcdiv_p5, prob=0.9)
-
-
-#remove hu~treatment
-m.Ba_funcdiv_p6 <- update(m.Ba_funcdiv_p, 
-                          bf(Ba_per100g ~ funcdivLogStd*treatment + (1|block/plot),
-                             hu ~ funcdivLogStd + week + (1|block/plot)), 
-                          seed = SEED)
-#remove hu~funcdiv
-m.Ba_funcdiv_p7 <- update(m.Ba_funcdiv_p, 
-                          bf(Ba_per100g ~ funcdivLogStd*treatment + (1|block/plot),
-                             hu ~ week + (1|block/plot)), 
-                          seed = SEED)
-summary(m.Ba_funcdiv_p7, prob=0.9)
-
-#remove hu~week
-m.Ba_funcdiv_p8 <- update(m.Ba_funcdiv_p, 
-                          bf(Ba_per100g ~ funcdivLogStd*treatment + (1|block/plot),
-                             hu ~1), 
-                          seed = SEED)
-summary(m.Ba_funcdiv_p8, prob=0.9)
-
-
-loo.Ba <- loo(m.Ba_funcdiv_p, m.Ba_funcdiv_p2, m.Ba_funcdiv_p31, m.Ba_funcdiv_p32, m.Ba_funcdiv_p4,
-              m.Ba_funcdiv_p5, m.Ba_funcdiv_p6, m.Ba_funcdiv_p7, m.Ba_funcdiv_p8 )
-loo.Ba
+pp_check(m.Ba_funcdiv_p5, ndraws=100)+xlim(0,500)
 
 save(m.Ba_funcdiv_p, m.Ba_funcdiv_p2, m.Ba_funcdiv_p31, m.Ba_funcdiv_p32, m.Ba_funcdiv_p4,
-     m.Ba_funcdiv_p5, m.Ba_funcdiv_p6, m.Ba_funcdiv_p7, m.Ba_funcdiv_p8,
-     file="./statistics/brms/231219_Ba_funcdiv_priors.RData")
+     m.Ba_funcdiv_p5,
+     file="./statistics/brms/240108_Ba_funcdiv_priors.RData")
 
 rm(m.Ba_funcdiv_p, m.Ba_funcdiv_p2, m.Ba_funcdiv_p31, m.Ba_funcdiv_p32, m.Ba_funcdiv_p4,
-   m.Ba_funcdiv_p5, m.Ba_funcdiv_p6, m.Ba_funcdiv_p7, m.Ba_funcdiv_p8)
+   m.Ba_funcdiv_p5)  
 
 ####Fu ~ funcdiv, both weeks:  ####
 beta_coeff_priors <- prior(normal(0,10), class = "b")  
@@ -128,7 +111,7 @@ SEED = 22061996
 #for both weeks  
 m.Fu_funcdiv_p <- brm(
   bf(Fu_per100g ~ funcdivLogStd*treatment*week + (1|block/plot),
-     hu ~ funcdivLogStd + treatment + week + (1|block/plot)),
+     hu ~ 1),
   data = dat, 
   prior = beta_coeff_priors,
   family = hurdle_lognormal,
@@ -146,67 +129,42 @@ pp_check(m.Fu_funcdiv_p, ndraws=100)+
 m.Fu_funcdiv_p2 <- update(m.Fu_funcdiv_p, 
                           bf(Fu_per100g ~ funcdivLogStd*treatment + funcdivLogStd*week + treatment*week + 
                                (1|block/plot),
-                             hu ~ funcdivLogStd + treatment + week + (1|block/plot)), 
+                             hu ~ 1), 
                           seed = SEED)
 
 #remove funcdivLogStd*week
 m.Fu_funcdiv_p31 <- update(m.Fu_funcdiv_p, 
                            bf(Fu_per100g ~ funcdivLogStd*treatment + treatment*week + (1|block/plot),
-                              hu ~ funcdivLogStd + treatment + week + (1|block/plot)), 
+                              hu ~ 1), 
                            seed = SEED)
 
 #remove treatment*week 
 m.Fu_funcdiv_p32 <- update(m.Fu_funcdiv_p, 
                            bf(Fu_per100g ~ funcdivLogStd*treatment + funcdivLogStd*week + (1|block/plot),
-                              hu ~ funcdivLogStd + treatment + week + (1|block/plot)), 
+                              hu ~ 1), 
                            seed = SEED)
 
 #remove funcdivLogStd*week and treatment*week 
 m.Fu_funcdiv_p4 <- update(m.Fu_funcdiv_p, 
                           bf(Fu_per100g ~ funcdivLogStd*treatment + week + (1|block/plot),
-                             hu ~ funcdivLogStd + treatment + week + (1|block/plot)), 
+                             hu ~ 1), 
                           seed = SEED)
 summary(m.Fu_funcdiv_p4, prob=0.9)
 
 #remove week
 m.Fu_funcdiv_p5 <- update(m.Fu_funcdiv_p, 
                           bf(Fu_per100g ~ funcdivLogStd*treatment + (1|block/plot),
-                             hu ~ funcdivLogStd + treatment + week + (1|block/plot)), 
+                             hu ~ 1), 
                           seed = SEED)
 summary(m.Fu_funcdiv_p5, prob=0.9)
 
 
-#remove hu~treatment
-m.Fu_funcdiv_p6 <- update(m.Fu_funcdiv_p, 
-                          bf(Fu_per100g ~ funcdivLogStd*treatment + (1|block/plot),
-                             hu ~ funcdivLogStd + week + (1|block/plot)), 
-                          seed = SEED)
-#remove hu~funcdiv
-m.Fu_funcdiv_p7 <- update(m.Fu_funcdiv_p, 
-                          bf(Fu_per100g ~ funcdivLogStd*treatment + (1|block/plot),
-                             hu ~ week + (1|block/plot)), 
-                          seed = SEED)
-summary(m.Fu_funcdiv_p7, prob=0.9)
-
-#remove hu~week
-m.Fu_funcdiv_p8 <- update(m.Fu_funcdiv_p, 
-                          bf(Fu_per100g ~ funcdivLogStd*treatment + (1|block/plot),
-                             hu ~1), 
-                          seed = SEED)
-summary(m.Fu_funcdiv_p8, prob=0.9)
-
-
-loo.Fu <- loo(m.Fu_funcdiv_p, m.Fu_funcdiv_p2, m.Fu_funcdiv_p31, m.Fu_funcdiv_p32, m.Fu_funcdiv_p4,
-              m.Fu_funcdiv_p5, m.Fu_funcdiv_p6, m.Fu_funcdiv_p7, m.Fu_funcdiv_p8 )
-
-loo.Fu
-
 save(m.Fu_funcdiv_p, m.Fu_funcdiv_p2, m.Fu_funcdiv_p31, m.Fu_funcdiv_p32, m.Fu_funcdiv_p4,
-     m.Fu_funcdiv_p5, m.Fu_funcdiv_p6, m.Fu_funcdiv_p7, m.Fu_funcdiv_p8,
-     file="./statistics/brms/231219_Fu_funcdiv_priors.RData")  
+     m.Fu_funcdiv_p5,
+     file="./statistics/brms/240109_Fu_funcdiv_priors.RData")  
 
 rm(m.Fu_funcdiv_p, m.Fu_funcdiv_p2, m.Fu_funcdiv_p31, m.Fu_funcdiv_p32, m.Fu_funcdiv_p4,
-   m.Fu_funcdiv_p5, m.Fu_funcdiv_p6, m.Fu_funcdiv_p7, m.Fu_funcdiv_p8)
+   m.Fu_funcdiv_p5)
 
 ####Pl ~ funcdiv, both weeks:  ####
 beta_coeff_priors <- prior(normal(0,10), class = "b")  
@@ -215,7 +173,7 @@ SEED = 22061996
 #for both weeks  
 m.Pl_funcdiv_p <- brm(
   bf(Pl_per100g ~ funcdivLogStd*treatment*week + (1|block/plot),
-     hu ~ funcdivLogStd + treatment + week + (1|block/plot)),
+     hu ~ 1),
   data = dat, 
   prior = beta_coeff_priors,
   family = hurdle_lognormal,
@@ -233,66 +191,42 @@ pp_check(m.Pl_funcdiv_p, ndraws=100)+
 m.Pl_funcdiv_p2 <- update(m.Pl_funcdiv_p, 
                           bf(Pl_per100g ~ funcdivLogStd*treatment + funcdivLogStd*week + treatment*week + 
                                (1|block/plot),
-                             hu ~ funcdivLogStd + treatment + week + (1|block/plot)), 
+                             hu ~ 1), 
                           seed = SEED)
 
 #remove funcdivLogStd*week
 m.Pl_funcdiv_p31 <- update(m.Pl_funcdiv_p, 
                            bf(Pl_per100g ~ funcdivLogStd*treatment + treatment*week + (1|block/plot),
-                              hu ~ funcdivLogStd + treatment + week + (1|block/plot)), 
+                              hu ~ 1), 
                            seed = SEED)
 
 #remove treatment*week 
 m.Pl_funcdiv_p32 <- update(m.Pl_funcdiv_p, 
                            bf(Pl_per100g ~ funcdivLogStd*treatment + funcdivLogStd*week + (1|block/plot),
-                              hu ~ funcdivLogStd + treatment + week + (1|block/plot)), 
+                              hu ~ 1), 
                            seed = SEED)
 
 #remove funcdivLogStd*week and treatment*week 
 m.Pl_funcdiv_p4 <- update(m.Pl_funcdiv_p, 
                           bf(Pl_per100g ~ funcdivLogStd*treatment + week + (1|block/plot),
-                             hu ~ funcdivLogStd + treatment + week + (1|block/plot)), 
+                             hu ~ 1), 
                           seed = SEED)
 summary(m.Pl_funcdiv_p4, prob=0.9)
 
 #remove week
 m.Pl_funcdiv_p5 <- update(m.Pl_funcdiv_p, 
                           bf(Pl_per100g ~ funcdivLogStd*treatment + (1|block/plot),
-                             hu ~ funcdivLogStd + treatment + week + (1|block/plot)), 
+                             hu ~ 1), 
                           seed = SEED)
 summary(m.Pl_funcdiv_p5, prob=0.9)
 
 
-#remove hu~treatment
-m.Pl_funcdiv_p6 <- update(m.Pl_funcdiv_p, 
-                          bf(Pl_per100g ~ funcdivLogStd*treatment + (1|block/plot),
-                             hu ~ funcdivLogStd + week + (1|block/plot)), 
-                          seed = SEED)
-#remove hu~funcdiv
-m.Pl_funcdiv_p7 <- update(m.Pl_funcdiv_p, 
-                          bf(Pl_per100g ~ funcdivLogStd*treatment + (1|block/plot),
-                             hu ~ week + (1|block/plot)), 
-                          seed = SEED)
-summary(m.Pl_funcdiv_p7, prob=0.9)
-
-#remove hu~week
-m.Pl_funcdiv_p8 <- update(m.Pl_funcdiv_p, 
-                          bf(Pl_per100g ~ funcdivLogStd*treatment + (1|block/plot),
-                             hu ~1), 
-                          seed = SEED)
-summary(m.Pl_funcdiv_p8, prob=0.9)
-
-
-loo.Pl <- loo(m.Pl_funcdiv_p, m.Pl_funcdiv_p2, m.Pl_funcdiv_p31, m.Pl_funcdiv_p32, m.Pl_funcdiv_p4,
-              m.Pl_funcdiv_p5, m.Pl_funcdiv_p6, m.Pl_funcdiv_p7, m.Pl_funcdiv_p8 )
-loo.Pl
 
 save(m.Pl_funcdiv_p, m.Pl_funcdiv_p2, m.Pl_funcdiv_p31, m.Pl_funcdiv_p32, m.Pl_funcdiv_p4,
-     m.Pl_funcdiv_p5, m.Pl_funcdiv_p6, m.Pl_funcdiv_p7, m.Pl_funcdiv_p8,
-     file="./statistics/brms/231219_Pl_funcdiv_priors.RData")  
+     m.Pl_funcdiv_p5, file="./statistics/brms/240109_Pl_funcdiv_priors.RData")  
 
 rm(m.Pl_funcdiv_p, m.Pl_funcdiv_p2, m.Pl_funcdiv_p31, m.Pl_funcdiv_p32, m.Pl_funcdiv_p4,
-   m.Pl_funcdiv_p5, m.Pl_funcdiv_p6, m.Pl_funcdiv_p7, m.Pl_funcdiv_p8)
+   m.Pl_funcdiv_p5)
 
 ####Pr ~ funcdiv, both weeks:  ####
 beta_coeff_priors <- prior(normal(0,10), class = "b")  
@@ -376,7 +310,7 @@ loo.Pr
 
 save(m.Pr_funcdiv_p, m.Pr_funcdiv_p2, m.Pr_funcdiv_p31, m.Pr_funcdiv_p32, m.Pr_funcdiv_p4,
      m.Pr_funcdiv_p5, m.Pr_funcdiv_p6, m.Pr_funcdiv_p7, m.Pr_funcdiv_p8,
-     file="./statistics/brms/231219_Pr_funcdiv_priors.RData")  
+     file="./statistics/brms/240109_Pr_funcdiv_priors.RData")  
 
 rm(m.Pr_funcdiv_p, m.Pr_funcdiv_p2, m.Pr_funcdiv_p31, m.Pr_funcdiv_p32, m.Pr_funcdiv_p4,
    m.Pr_funcdiv_p5, m.Pr_funcdiv_p6, m.Pr_funcdiv_p7, m.Pr_funcdiv_p8)
@@ -455,15 +389,64 @@ m.Om_funcdiv_p8 <- update(m.Om_funcdiv_p,
                           seed = SEED)
 summary(m.Om_funcdiv_p8, prob=0.9)
 
-
-loo.Om <- loo(m.Om_funcdiv_p, m.Om_funcdiv_p2, m.Om_funcdiv_p31, m.Om_funcdiv_p32, m.Om_funcdiv_p4,
-              m.Om_funcdiv_p5, m.Om_funcdiv_p6, m.Om_funcdiv_p7, m.Om_funcdiv_p8 )
-
-loo.Om
-
 save(m.Om_funcdiv_p, m.Om_funcdiv_p2, m.Om_funcdiv_p31, m.Om_funcdiv_p32, m.Om_funcdiv_p4,
      m.Om_funcdiv_p5, m.Om_funcdiv_p6, m.Om_funcdiv_p7, m.Om_funcdiv_p8,
-     file="./statistics/brms/231219_Om_funcdiv_priors.RData")  
+     file="./statistics/brms/240109_Om_funcdiv_priors.RData")  
 
 rm(m.Om_funcdiv_p, m.Om_funcdiv_p2, m.Om_funcdiv_p31, m.Om_funcdiv_p32, m.Om_funcdiv_p4,
    m.Om_funcdiv_p5, m.Om_funcdiv_p6, m.Om_funcdiv_p7, m.Om_funcdiv_p8)
+
+
+#### model selection ####
+library(brms)
+library(ggplot2)
+
+#selection criteria: picking the most parsimonious model which has an elpd_diff > -4 to the model with the best fit
+#saving the selected models in a seperate file:
+
+#Ba ~ funcdiv
+load("./statistics/brms/240108_Ba_funcdiv_priors.RData")
+loo.Ba <- loo(m.Ba_funcdiv_p, m.Ba_funcdiv_p2, m.Ba_funcdiv_p31, m.Ba_funcdiv_p32, m.Ba_funcdiv_p4,
+              m.Ba_funcdiv_p5)
+loo.Ba
+
+rm(m.Ba_funcdiv_p, m.Ba_funcdiv_p2, m.Ba_funcdiv_p31, m.Ba_funcdiv_p32, m.Ba_funcdiv_p4) 
+
+#Fu ~ realdviv
+load("./statistics/brms/231219_Fu_funcdiv_priors.RData")  
+loo.Fu <- loo(m.Fu_funcdiv_p, m.Fu_funcdiv_p2, m.Fu_funcdiv_p31, m.Fu_funcdiv_p32, m.Fu_funcdiv_p4,
+              m.Fu_funcdiv_p5)
+loo.Fu
+
+rm(m.Fu_funcdiv_p, m.Fu_funcdiv_p2, m.Fu_funcdiv_p31, m.Fu_funcdiv_p32, m.Fu_funcdiv_p4)
+
+#Pl ~ funcdiv
+load("./statistics/brms/231219_Pl_funcdiv_priors.RData")  
+loo.Pl <- loo(m.Pl_funcdiv_p, m.Pl_funcdiv_p2, m.Pl_funcdiv_p31, m.Pl_funcdiv_p32, m.Pl_funcdiv_p4,
+              m.Pl_funcdiv_p5 )
+loo.Pl
+
+rm(m.Pl_funcdiv_p, m.Pl_funcdiv_p2, m.Pl_funcdiv_p31, m.Pl_funcdiv_p32, m.Pl_funcdiv_p4)
+
+#Pr ~ funcdiv
+load("./statistics/brms/231219_Pr_funcdiv_priors.RData")  
+loo.Pr <- loo(m.Pr_funcdiv_p, m.Pr_funcdiv_p2, m.Pr_funcdiv_p31, m.Pr_funcdiv_p32, m.Pr_funcdiv_p4,
+              m.Pr_funcdiv_p5, m.Pr_funcdiv_p6, m.Pr_funcdiv_p7, m.Pr_funcdiv_p8 )
+loo.Pr
+
+rm(m.Pr_funcdiv_p, m.Pr_funcdiv_p2, m.Pr_funcdiv_p31, m.Pr_funcdiv_p32, m.Pr_funcdiv_p4,
+   m.Pr_funcdiv_p5, m.Pr_funcdiv_p6, m.Pr_funcdiv_p8)
+
+#Om ~ funcdiv 
+load("./statistics/brms/231219_Om_funcdiv_priors.RData")  
+
+loo.Om <- loo(m.Om_funcdiv_p, m.Om_funcdiv_p2, m.Om_funcdiv_p31, m.Om_funcdiv_p32, m.Om_funcdiv_p4,
+              m.Om_funcdiv_p5, m.Om_funcdiv_p6, m.Om_funcdiv_p7, m.Om_funcdiv_p8 )
+loo.Om
+
+rm(m.Om_funcdiv_p, m.Om_funcdiv_p2, m.Om_funcdiv_p31, m.Om_funcdiv_p32, m.Om_funcdiv_p4,
+   m.Om_funcdiv_p5, m.Om_funcdiv_p6, m.Om_funcdiv_p8)
+
+#save the best fit models:
+save(m.Ba_funcdiv_p5, m.Fu_funcdiv_p5, m.Pl_funcdiv_p5, m.Om_funcdiv_p7, m.Pr_funcdiv_p7,
+     file = "./statistics/brms/240109_TrophDens_funcdiv_mselect.RData")

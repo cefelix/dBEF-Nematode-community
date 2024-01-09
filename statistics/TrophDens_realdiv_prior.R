@@ -23,12 +23,12 @@ datW2 <- subset(dat, week=="W2")
 #priors    
 beta_coeff_priors <- prior(normal(0,10), class = "b")  
 
-####Ba ~ realdiv, both weeks: p6 (looic p5) ####
+####Ba ~ realdiv, both weeks: ####
 #stepwise elimination: p6, as realdiv:week is marginally significant (90%CI)
 #looic: p5, as it the most parsimonous with a elpd_diff less 4 to the best elpd model 
 
 #see here https://users.aalto.fi/~ave/CV-FAQ.html#12_What_is_the_interpretation_of_ELPD__elpd_loo__elpd_diff
-load("./statistics/brms/231219_Ba_realdiv_priors.RData")
+load("./statistics/brms/240108_Ba_realdiv_priors.RData")
 
 beta_coeff_priors <- prior(normal(0,10), class = "b")  
 SEED = 22061996
@@ -38,7 +38,7 @@ sum(subset(dat, week=="W2")$Ba_per100g == 0) #2
 #for both weeks  
 m.Ba_realdiv_p <- brm(
   bf(Ba_per100g ~ realdivLogStd*treatment*week + (1|block/plot),
-     hu ~ realdivLogStd + treatment + week + (1|block/plot)),
+     hu ~ 1 ),
   data = dat, 
   prior = beta_coeff_priors,
   family = hurdle_lognormal,
@@ -61,7 +61,7 @@ emtrends(m.Ba_realdiv_p, specs = c("treatment", "week"), var="realdivLogStd") %>
 m.Ba_realdiv_p2 <- update(m.Ba_realdiv_p, 
                           bf(Ba_per100g ~ realdivLogStd*treatment + realdivLogStd*week + treatment*week + 
                                (1|block/plot),
-                             hu ~ realdivLogStd + treatment + week + (1|block/plot)), 
+                             hu ~ 1), 
                           seed = SEED) #2 div
 summary(m.Ba_realdiv_p2, prob =0.9)
 
@@ -71,7 +71,7 @@ emtrends(m.Ba_realdiv_p2, specs = c("treatment", "week"), var="realdivLogStd") %
 #remove realdivLogStd*week
 m.Ba_realdiv_p31 <- update(m.Ba_realdiv_p, 
                            bf(Ba_per100g ~ realdivLogStd*treatment + treatment*week + (1|block/plot),
-                              hu ~ realdivLogStd + treatment + week + (1|block/plot)), 
+                              hu ~ 1 + (1|block/plot)), 
                            seed = SEED) #4 div
 
 summary(m.Ba_realdiv_p31, prob=0.9)
@@ -81,62 +81,36 @@ emtrends(m.Ba_realdiv_p31, specs = c("treatment", "week"), var="realdivLogStd") 
 #remove treatment*week 
 m.Ba_realdiv_p32 <- update(m.Ba_realdiv_p, 
                            bf(Ba_per100g ~ realdivLogStd*treatment + realdivLogStd*week + (1|block/plot),
-                              hu ~ realdivLogStd + treatment + week + (1|block/plot)), 
+                              hu ~ 1), 
                            seed = SEED)
 summary(m.Ba_realdiv_p32, prob=0.9)
 
 emtrends(m.Ba_realdiv_p32, specs = c("treatment", "week"), var="realdivLogStd") %>%
   summary()
 
-#remove hu~treatment
+#remove realdivLogStd:week
 m.Ba_realdiv_p4 <- update(m.Ba_realdiv_p, 
-                          bf(Ba_per100g ~ realdivLogStd*treatment + realdivLogStd*week + (1|block/plot),
-                             hu ~ realdivLogStd + week + (1|block/plot)), 
-                          seed = SEED)
-summary(m.Ba_realdiv_p4, prob=0.9)
-
-#remove hu~week
-m.Ba_realdiv_p5 <- update(m.Ba_realdiv_p, 
-                          bf(Ba_per100g ~ realdivLogStd*treatment + realdivLogStd*week + (1|block/plot),
-                             hu ~ realdivLogStd + (1|block/plot)), 
-                          seed = SEED) #3 div
-summary(m.Ba_realdiv_p5, prob=0.9)
-
-#remove hu~realdivLogStd
-m.Ba_realdiv_p6 <- update(m.Ba_realdiv_p, 
-                          bf(Ba_per100g ~ realdivLogStd*treatment + realdivLogStd*week + (1|block/plot),
-                             hu ~ 1), 
-                          seed = SEED) #2 div
-summary(m.Ba_realdiv_p6, prob=0.9)
-  #stepwise elimination: choose this model, as realdiv:week is marginally significant (CI 90%)
-
-#remove realdivLogStd*week
-m.Ba_realdiv_p7 <- update(m.Ba_realdiv_p, 
                           bf(Ba_per100g ~ realdivLogStd*treatment + week + (1|block/plot),
                              hu ~ 1), 
                           seed = SEED)
-summary(m.Ba_realdiv_p7, prob=0.9)
+summary(m.Ba_realdiv_p4, prob=0.9)
+pp_check(m.Ba_realdiv_p4, ndraws=100)+xlim(0,500)
 
 #remove week
-m.Ba_realdiv_p8 <- update(m.Ba_realdiv_p, 
-                          bf(Ba_per100g ~ realdivLogStd*treatment + (1|block/plot),
-                             hu ~ 1), 
-                          seed = SEED)
-summary(m.Ba_realdiv_p8, prob=0.9)
+m.Ba_realdiv_p5 <- update(m.Ba_realdiv_p, 
+                           bf(Ba_per100g ~ realdivLogStd*treatment + (1|block/plot),
+                              hu ~ 1), 
+                           seed = SEED)
+summary(m.Ba_realdiv_p5, prob=0.9)
+pp_check(m.Ba_realdiv_p5, ndraws=100)+xlim(0,500)
 
 #compare models
-
-loo.Ba <- loo(m.Ba_realdiv_p, m.Ba_realdiv_p2, m.Ba_realdiv_p31, m.Ba_realdiv_p32, m.Ba_realdiv_p4,
-              m.Ba_realdiv_p5, m.Ba_realdiv_p6, m.Ba_realdiv_p7, m.Ba_realdiv_p8 )
-loo.Ba
-
 save(m.Ba_realdiv_p, m.Ba_realdiv_p2, m.Ba_realdiv_p31, m.Ba_realdiv_p32, m.Ba_realdiv_p4,
-     m.Ba_realdiv_p5, m.Ba_realdiv_p6, m.Ba_realdiv_p7, m.Ba_realdiv_p8,
-     file="./statistics/brms/231219_Ba_realdiv_priors.RData")
+     m.Ba_realdiv_p5,
+     file="./statistics/brms/240108_Ba_realdiv_priors.RData")
 
 rm(m.Ba_realdiv_p, m.Ba_realdiv_p2, m.Ba_realdiv_p31, m.Ba_realdiv_p32, m.Ba_realdiv_p4,
-   m.Ba_realdiv_p5, m.Ba_realdiv_p7, m.Ba_realdiv_p8)
-
+   m.Ba_realdiv_p5)
 
 ####Fu ~ realdiv, both weeks: p4 (looic p5) ####
 #stepwise elimination of non-significant terms: p4, as week is marginally significant
@@ -204,22 +178,18 @@ m.Fu_realdiv_p5 <- update(m.Fu_realdiv_p,
                           seed = SEED)
 summary(m.Fu_realdiv_p5, prob=0.9)
 
-
-loo.Fu <- loo(m.Fu_realdiv_p, m.Fu_realdiv_p2, m.Fu_realdiv_p31, m.Fu_realdiv_p32, m.Fu_realdiv_p4,
-              m.Fu_realdiv_p5)
-
-loo.Fu
-
 save(m.Fu_realdiv_p, m.Fu_realdiv_p2, m.Fu_realdiv_p31, m.Fu_realdiv_p32, m.Fu_realdiv_p4,
      m.Fu_realdiv_p5,
      file="./statistics/brms/231219_Fu_realdiv_priors.RData")  
 
 rm(m.Fu_realdiv_p, m.Fu_realdiv_p2, m.Fu_realdiv_p31, m.Fu_realdiv_p32,
-   m.Fu_realdiv_p5)
+   m.Fu_realdiv_p4, m.Fu_realdiv_p5)
 
 ####Pl ~ realdiv, both weeks: p4 (looic p4) ####
 #stepwise elimination of non-significant terms: p4, as week is significant
 #looic: p4, as it is the most parsimonous model with a elpd_se_diff of less than 2 SE
+sum(subset(dat, week=="W1")$Pl_per100g == 0) #2
+sum(subset(dat, week=="W2")$Pl_per100g == 0) #0
 
 load("./statistics/brms/231219_Pl_realdiv_priors.RData")
 beta_coeff_priors <- prior(normal(0,10), class = "b")  
@@ -281,24 +251,23 @@ m.Pl_realdiv_p5 <- update(m.Pl_realdiv_p,
 summary(m.Pl_realdiv_p5, prob=0.9)
 
 
-loo.Pl <- loo(m.Pl_realdiv_p, m.Pl_realdiv_p2, m.Pl_realdiv_p31, m.Pl_realdiv_p32, m.Pl_realdiv_p4,
-              m.Pl_realdiv_p5 )
-loo.Pl
-
 save(m.Pl_realdiv_p, m.Pl_realdiv_p2, m.Pl_realdiv_p31, m.Pl_realdiv_p32, m.Pl_realdiv_p4,
      m.Pl_realdiv_p5,
      file="./statistics/brms/231219_Pl_realdiv_priors.RData")  
 
 rm(m.Pl_realdiv_p, m.Pl_realdiv_p2, m.Pl_realdiv_p31, m.Pl_realdiv_p32, 
-   m.Pl_realdiv_p5)
+   m.Pl_realdiv_p4, m.Pl_realdiv_p5)
 
-####Pr ~ realdiv, both weeks: p6 (looic p8) ####
+####Pr ~ realdiv, both weeks: p6 (looic p8), simplification CHECKED####
 #looic p8, as most parsimonious with elpd not differing significantly (less than 2 SE)
 #stepwise removal p6, as hu~term is marginally significant 
+sum(subset(dat, week=="W1")$Pr_per100g == 0) #44
+sum(subset(dat, week=="W2")$Pr_per100g == 0) #13
 
 load("./statistics/brms/231219_Pr_realdiv_priors.RData")
 beta_coeff_priors <- prior(normal(0,10), class = "b")  
 SEED = 22061996
+
 
 #for both weeks  
 m.Pr_realdiv_p <- brm(
@@ -367,7 +336,7 @@ m.Pr_realdiv_p7 <- update(m.Pr_realdiv_p,
                           bf(Pr_per100g ~ realdivLogStd*treatment + (1|block/plot),
                              hu ~ week + (1|block/plot)), 
                           seed = SEED)
-summary(m.Pr_realdiv_p7, prob=0.9)
+summary(m.Pr_realdiv_p7, prob=0.95) #hu~week is "significant" as 95% CI doesnt cut zero
 
 #remove hu~week
 m.Pr_realdiv_p8 <- update(m.Pr_realdiv_p, 
@@ -375,12 +344,6 @@ m.Pr_realdiv_p8 <- update(m.Pr_realdiv_p,
                              hu ~1), 
                           seed = SEED) #2 div
 summary(m.Pr_realdiv_p8, prob=0.9)
-
-
-loo.Pr <- loo(m.Pr_realdiv_p, m.Pr_realdiv_p2, m.Pr_realdiv_p31, m.Pr_realdiv_p32, m.Pr_realdiv_p4,
-              m.Pr_realdiv_p5, m.Pr_realdiv_p6, m.Pr_realdiv_p7, m.Pr_realdiv_p8 )
-
-loo.Pr
 
 save(m.Pr_realdiv_p, m.Pr_realdiv_p2, m.Pr_realdiv_p31, m.Pr_realdiv_p32, m.Pr_realdiv_p4,
      m.Pr_realdiv_p5, m.Pr_realdiv_p6, m.Pr_realdiv_p7, m.Pr_realdiv_p8,
@@ -392,6 +355,9 @@ rm(m.Pr_realdiv_p, m.Pr_realdiv_p2, m.Pr_realdiv_p31, m.Pr_realdiv_p32, m.Pr_rea
 ####Om ~ realdiv, both weeks: p7 (looic-p7)  ####
 #looic: p7 is most parsimonous with a elpd that is not significantly worse (more than 2 SE elpd diff), while elpd_diff < 4
 #stepwise term removal at 90% CI: p7, as hu~treatment is not marginally significant, but hu~week is significant (95% CI)
+sum(subset(dat, week=="W1")$Om_per100g == 0) #89
+sum(subset(dat, week=="W2")$Om_per100g == 0) #42
+
 
 load("./statistics/brms/231219_Om_realdiv_priors.RData")
 beta_coeff_priors <- prior(normal(0,10), class = "b")  
@@ -474,16 +440,66 @@ m.Om_realdiv_p8 <- update(m.Om_realdiv_p,
                           seed = SEED) #1 div
 summary(m.Om_realdiv_p8, prob=0.9)
 
-
-loo.Om <- loo(m.Om_realdiv_p, m.Om_realdiv_p2, m.Om_realdiv_p31, m.Om_realdiv_p32, m.Om_realdiv_p4,
-              m.Om_realdiv_p5, m.Om_realdiv_p6, m.Om_realdiv_p7, m.Om_realdiv_p8 )
-
-loo.Om
-
 save(m.Om_realdiv_p, m.Om_realdiv_p2, m.Om_realdiv_p31, m.Om_realdiv_p32, m.Om_realdiv_p4,
      m.Om_realdiv_p5, m.Om_realdiv_p6, m.Om_realdiv_p7, m.Om_realdiv_p8,
      file="./statistics/brms/231219_Om_realdiv_priors.RData")  
 
 rm(m.Om_realdiv_p, m.Om_realdiv_p2, m.Om_realdiv_p31, m.Om_realdiv_p32, m.Om_realdiv_p4,
-   m.Om_realdiv_p5, m.Om_realdiv_p6, m.Om_realdiv_p8)
+   m.Om_realdiv_p5, m.Om_realdiv_p6, m.Om_realdiv_p7, m.Om_realdiv_p8)
 
+
+
+#### model selection ####
+library(brms)
+library(ggplot2)
+
+#selection criteria: picking the most parsimonious model which has an elpd_diff > -4 to the model with the best fit
+#saving the selected models in a seperate file:
+
+#Ba ~ realdiv
+  load("./statistics/brms/240108_Ba_realdiv_priors.RData")
+  loo.Ba <- loo(m.Ba_realdiv_p, m.Ba_realdiv_p2, m.Ba_realdiv_p31, m.Ba_realdiv_p32, m.Ba_realdiv_p4,
+                m.Ba_realdiv_p5)
+  loo.Ba
+  
+  rm(m.Ba_realdiv_p, m.Ba_realdiv_p2, m.Ba_realdiv_p31, m.Ba_realdiv_p32, m.Ba_realdiv_p4) 
+
+#Fu ~ realdviv
+  load("./statistics/brms/231219_Fu_realdiv_priors.RData")  
+  loo.Fu <- loo(m.Fu_realdiv_p, m.Fu_realdiv_p2, m.Fu_realdiv_p31, m.Fu_realdiv_p32, m.Fu_realdiv_p4,
+                m.Fu_realdiv_p5)
+  loo.Fu
+  
+  rm(m.Fu_realdiv_p, m.Fu_realdiv_p2, m.Fu_realdiv_p31, m.Fu_realdiv_p32, m.Fu_realdiv_p4)
+
+#Pl ~ realdiv
+  load("./statistics/brms/231219_Pl_realdiv_priors.RData")  
+  loo.Pl <- loo(m.Pl_realdiv_p, m.Pl_realdiv_p2, m.Pl_realdiv_p31, m.Pl_realdiv_p32, m.Pl_realdiv_p4,
+                m.Pl_realdiv_p5 )
+  loo.Pl
+  
+  rm(m.Pl_realdiv_p, m.Pl_realdiv_p2, m.Pl_realdiv_p31, m.Pl_realdiv_p32, m.Pl_realdiv_p4)
+
+#Pr ~ realdiv
+  load("./statistics/brms/231219_Pr_realdiv_priors.RData")  
+  loo.Pr <- loo(m.Pr_realdiv_p, m.Pr_realdiv_p2, m.Pr_realdiv_p31, m.Pr_realdiv_p32, m.Pr_realdiv_p4,
+                m.Pr_realdiv_p5, m.Pr_realdiv_p6, m.Pr_realdiv_p7, m.Pr_realdiv_p8 )
+  loo.Pr
+  
+  rm(m.Pr_realdiv_p, m.Pr_realdiv_p2, m.Pr_realdiv_p31, m.Pr_realdiv_p32, m.Pr_realdiv_p4,
+     m.Pr_realdiv_p5, m.Pr_realdiv_p6, m.Pr_realdiv_p8)
+
+#Om ~ realdiv 
+  load("./statistics/brms/231219_Om_realdiv_priors.RData")  
+  
+  loo.Om <- loo(m.Om_realdiv_p, m.Om_realdiv_p2, m.Om_realdiv_p31, m.Om_realdiv_p32, m.Om_realdiv_p4,
+                m.Om_realdiv_p5, m.Om_realdiv_p6, m.Om_realdiv_p7, m.Om_realdiv_p8 )
+  loo.Om
+  
+  rm(m.Om_realdiv_p, m.Om_realdiv_p2, m.Om_realdiv_p31, m.Om_realdiv_p32, m.Om_realdiv_p4,
+     m.Om_realdiv_p5, m.Om_realdiv_p6, m.Om_realdiv_p8)
+  
+#save the best fit models:
+  save(m.Ba_realdiv_p5, m.Fu_realdiv_p5, m.Pl_realdiv_p5, m.Om_realdiv_p7, m.Pr_realdiv_p7,
+    file = "./statistics/brms/240109_TrophDens_realdiv_mselect.RData")
+  
