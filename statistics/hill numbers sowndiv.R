@@ -766,6 +766,45 @@ SEED = 19111996
        m.Om.Shannon.gamma_p2, m.Om.Shannon.gamma_p,
        m.Om.Shannon.gaus_p5,m.Om.Shannon.gaus_p4, m.Om.Shannon.gaus_p32, m.Om.Shannon.gaus_p31,
        m.Om.Shannon.gaus_p2, m.Om.Shannon.gaus_p)
+ 
+#### model selection Shannon H' ~ sowndiv, by looic ####
+    #selection criteria: picking the most parsimonious model which has an elpd_diff > -4 to the model with the best fit
+    #saving the selected models in a seperate file:
+    
+#all trophic guilds:
+    load(file="./statistics/brms/231221_hill_all_sowndiv.RData")
+    
+    all.loo <- loo(m.all.Shannon.gamma_p5, m.all.Shannon.gamma_p4, m.all.Shannon.gamma_p32,m.all.Shannon.gamma_p31,
+                   m.all.Shannon.gamma_p2, m.all.Shannon.gamma_p,
+                   m.all.Shannon.gaus_p5,m.all.Shannon.gaus_p4, m.all.Shannon.gaus_p32, m.all.Shannon.gaus_p31,
+                   m.all.Shannon.gaus_p2, m.all.Shannon.gaus_p)
+    all.loo
+    #select gaus_p5
+    
+    rm(m.all.Shannon.gamma_p5, m.all.Shannon.gamma_p4, m.all.Shannon.gamma_p32,m.all.Shannon.gamma_p31,
+       m.all.Shannon.gamma_p2, m.all.Shannon.gamma_p,
+       #m.all.Shannon.gaus_p5,
+       m.all.Shannon.gaus_p4, m.all.Shannon.gaus_p32, m.all.Shannon.gaus_p31,
+       m.all.Shannon.gaus_p2, m.all.Shannon.gaus_p)
+    
+#Ba
+    load(file="./statistics/brms/231221_hill_Ba_sowndiv.RData")
+    Ba.loo <- loo(m.Ba.Shannon.gamma_p5, m.Ba.Shannon.gamma_p4, m.Ba.Shannon.gamma_p32,m.Ba.Shannon.gamma_p31,
+                  m.Ba.Shannon.gamma_p2, m.Ba.Shannon.gamma_p,
+                  m.Ba.Shannon.gaus_p5,m.Ba.Shannon.gaus_p4, m.Ba.Shannon.gaus_p32, m.Ba.Shannon.gaus_p31,
+                  m.Ba.Shannon.gaus_p2, m.Ba.Shannon.gaus_p)
+    Ba.loo
+    #use gamma p5
+    
+    
+    rm(#m.Ba.Shannon.gamma_p5, 
+       m.Ba.Shannon.gamma_p4, m.Ba.Shannon.gamma_p32,m.Ba.Shannon.gamma_p31,
+       m.Ba.Shannon.gamma_p2, m.Ba.Shannon.gamma_p,
+       m.Ba.Shannon.gaus_p5,m.Ba.Shannon.gaus_p4, m.Ba.Shannon.gaus_p32, m.Ba.Shannon.gaus_p31,
+       m.Ba.Shannon.gaus_p2, m.Ba.Shannon.gaus_p)
+    
+    
+    
     
     
 
