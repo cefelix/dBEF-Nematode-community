@@ -848,20 +848,96 @@ rm(m.Om.Shannon.gamma_p5, m.Om.Shannon.gamma_p4, m.Om.Shannon.gamma_p32,m.Om.Sha
    m.Om.Shannon.gaus_p5,m.Om.Shannon.gaus_p4, m.Om.Shannon.gaus_p32, m.Om.Shannon.gaus_p31,
    m.Om.Shannon.gaus_p2, m.Om.Shannon.gaus_p)
 
-#### saving selected Shannon_realdiv models separetely####
+#### model selection ####
+library(brms)
+library(ggplot2)
 
-#stepwise:
-  save(m.all.Shannon.gaus_p4,
-       m.Ba.Shannon.gaus_p, 
-       m.Fu.Shannon.gaus_p4, 
-       m.Pl.Shannon.gaus_p,
-       m.Pr.Shannon.gamma_p,
-    file = "./statistics/brms/240105_hill_realdiv_stepwise.RData")
+#selection criteria: picking the most parsimonious model which has an elpd_diff > -4 to the model with the best fit
+#saving the selected models in a seperate file:
 
-#looic:
-  save(
-    m.Ba.Shannon.gaus_p5, 
-    m.Fu.Shannon.gaus_p5, 
-    m.Pl.Shannon.gaus_p5,
-    m.Pr.Shannon.gamma_p5,
-    file = "./statistics/brms/240105_hill_realdiv_stepwise.RData")
+#all ~ realdiv: gaus_p5
+load("./statistics/brms/231221_hill_all_realdiv.RData")
+  all.loo <- loo(m.all.Shannon.gamma_p5, m.all.Shannon.gamma_p4, m.all.Shannon.gamma_p32,m.all.Shannon.gamma_p31,
+                m.all.Shannon.gamma_p2, m.all.Shannon.gamma_p,
+                m.all.Shannon.gaus_p5,m.all.Shannon.gaus_p4, m.all.Shannon.gaus_p32, m.all.Shannon.gaus_p31,
+                m.all.Shannon.gaus_p2, m.all.Shannon.gaus_p)
+  all.loo
+  rm(m.all.Shannon.gamma_p5, m.all.Shannon.gamma_p4, m.all.Shannon.gamma_p32,m.all.Shannon.gamma_p31,
+     m.all.Shannon.gamma_p2, m.all.Shannon.gamma_p,
+     #m.all.Shannon.gaus_p5,
+     m.all.Shannon.gaus_p4, m.all.Shannon.gaus_p32, m.all.Shannon.gaus_p31,
+     m.all.Shannon.gaus_p2, m.all.Shannon.gaus_p)
+
+
+#Ba ~ realdiv: gaus_p5
+load("./statistics/brms/231221_hill_Ba_realdiv.RData")
+Ba.loo <- loo(m.Ba.Shannon.gamma_p5, m.Ba.Shannon.gamma_p4, m.Ba.Shannon.gamma_p32,m.Ba.Shannon.gamma_p31,
+                        m.Ba.Shannon.gamma_p2, m.Ba.Shannon.gamma_p,
+                        m.Ba.Shannon.gaus_p5,m.Ba.Shannon.gaus_p4, m.Ba.Shannon.gaus_p32, m.Ba.Shannon.gaus_p31,
+                        m.Ba.Shannon.gaus_p2, m.Ba.Shannon.gaus_p)
+Ba.loo
+rm(m.Ba.Shannon.gamma_p5, m.Ba.Shannon.gamma_p4, m.Ba.Shannon.gamma_p32,m.Ba.Shannon.gamma_p31,
+    m.Ba.Shannon.gamma_p2, m.Ba.Shannon.gamma_p,
+    #m.Ba.Shannon.gaus_p5,
+   m.Ba.Shannon.gaus_p4, m.Ba.Shannon.gaus_p32, m.Ba.Shannon.gaus_p31,
+    m.Ba.Shannon.gaus_p2, m.Ba.Shannon.gaus_p)
+
+#Fu ~ realdiv: gaus_p5
+  load("./statistics/brms/231221_hill_Fu_realdiv.RData")
+  Fu.loo <- loo(m.Fu.Shannon.gamma_p5, m.Fu.Shannon.gamma_p4, m.Fu.Shannon.gamma_p32,m.Fu.Shannon.gamma_p31,
+                m.Fu.Shannon.gamma_p2, m.Fu.Shannon.gamma_p,
+                m.Fu.Shannon.gaus_p5,m.Fu.Shannon.gaus_p4, m.Fu.Shannon.gaus_p32, m.Fu.Shannon.gaus_p31,
+                m.Fu.Shannon.gaus_p2, m.Fu.Shannon.gaus_p)
+  Fu.loo
+  rm(#m.Fu.Shannon.gamma_p5, 
+     m.Fu.Shannon.gamma_p4, m.Fu.Shannon.gamma_p32,m.Fu.Shannon.gamma_p31,
+     m.Fu.Shannon.gamma_p2, m.Fu.Shannon.gamma_p,
+     m.Fu.Shannon.gaus_p5,
+     m.Fu.Shannon.gaus_p4, m.Fu.Shannon.gaus_p32, m.Fu.Shannon.gaus_p31,
+     m.Fu.Shannon.gaus_p2, m.Fu.Shannon.gaus_p)
+
+#Pl ~ realdiv: gaus_p5
+  load("./statistics/brms/231221_hill_Pl_realdiv.RData")
+  Pl.loo <- loo(m.Pl.Shannon.gamma_p5, m.Pl.Shannon.gamma_p4, m.Pl.Shannon.gamma_p32,m.Pl.Shannon.gamma_p31,
+                m.Pl.Shannon.gamma_p2, m.Pl.Shannon.gamma_p,
+                m.Pl.Shannon.gaus_p5,m.Pl.Shannon.gaus_p4, m.Pl.Shannon.gaus_p32, m.Pl.Shannon.gaus_p31,
+                m.Pl.Shannon.gaus_p2, m.Pl.Shannon.gaus_p)
+  Pl.loo
+  rm(m.Pl.Shannon.gamma_p5, 
+    m.Pl.Shannon.gamma_p4, m.Pl.Shannon.gamma_p32,m.Pl.Shannon.gamma_p31,
+    m.Pl.Shannon.gamma_p2, m.Pl.Shannon.gamma_p,
+    #m.Pl.Shannon.gaus_p5,
+    m.Pl.Shannon.gaus_p4, m.Pl.Shannon.gaus_p32, m.Pl.Shannon.gaus_p31,
+    m.Pl.Shannon.gaus_p2, m.Pl.Shannon.gaus_p)
+
+#Pr ~ realdiv: gamma_p5
+  load("./statistics/brms/231221_hill_Pr_realdiv.RData")
+  Pr.loo <- loo(m.Pr.Shannon.gamma_p5, m.Pr.Shannon.gamma_p4, m.Pr.Shannon.gamma_p32,m.Pr.Shannon.gamma_p31,
+                m.Pr.Shannon.gamma_p2, m.Pr.Shannon.gamma_p,
+                m.Pr.Shannon.gaus_p5,m.Pr.Shannon.gaus_p4, m.Pr.Shannon.gaus_p32, m.Pr.Shannon.gaus_p31,
+                m.Pr.Shannon.gaus_p2, m.Pr.Shannon.gaus_p)
+  Pr.loo
+  rm(#m.Pr.Shannon.gamma_p5, 
+    m.Pr.Shannon.gamma_p4, m.Pr.Shannon.gamma_p32,m.Pr.Shannon.gamma_p31,
+    m.Pr.Shannon.gamma_p2, m.Pr.Shannon.gamma_p,
+    m.Pr.Shannon.gaus_p5,
+    m.Pr.Shannon.gaus_p4, m.Pr.Shannon.gaus_p32, m.Pr.Shannon.gaus_p31,
+    m.Pr.Shannon.gaus_p2, m.Pr.Shannon.gaus_p)
+
+#Om ~ realdiv: no model can predict accurately enough, as most samples have only one or two identified omnivorous individuals in them
+  
+#save selected models in .RData file:
+  save(m.all.Shannon.gaus_p5, 
+       m.Ba.Shannon.gaus_p5,
+       m.Fu.Shannon.gamma_p5,
+       m.Pl.Shannon.gaus_p5,
+       m.Pr.Shannon.gamma_p5,
+       file = "./statistics/brms/240116_Hill_realdiv_mselect.RData")
+  
+  
+  
+  
+  
+  
+  
+
