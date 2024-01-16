@@ -94,13 +94,45 @@ summarise_models <- function(brmsfit, predictor, level=.95) {
     bind_rows()
   funcdiv.summary
   
-  
 #### summarise_models() for Shannon H' ~sowndiv, ~realdiv, ~funcdiv #####
-  #load models
-  load("./statistics/brms/240109_TrophDens_sowndiv_mselect.RData")
   
-  
+#sowndiv:
+  load("./statistics/brms/240116_Hill_sowndiv_mselect.RData")
 
+  Shannon.sown.list <-  list(m.all.Shannon.gaus_p5, m.Ba.Shannon.gaus_p5, m.Fu.Shannon.gamma_p5,
+                       m.Pl.Shannon.gaus_p5, m.Pr.Shannon.gamma_p5)  
+  
+  Shannon.sowndiv.summary <- lapply(Shannon.sown.list, summarise_models, predictor = "sowndivLogStd", level =.9) %>% 
+    bind_rows()
+  Shannon.sowndiv.summary
+
+#realdiv:
+  load("./statistics/brms/240116_Hill_realdiv_mselect.RData")
+  
+  Shannon.real.list <-  list(m.all.Shannon.gaus_p5, m.Ba.Shannon.gaus_p5, m.Fu.Shannon.gamma_p5,
+                             m.Pl.Shannon.gaus_p5, m.Pr.Shannon.gamma_p5)  
+  
+  Shannon.realdiv.summary <- lapply(Shannon.real.list, summarise_models, predictor = "realdivLogStd", level =.9) %>% 
+    bind_rows()
+  Shannon.realdiv.summary
+  
+#funcdiv: YET TO COME
+  
+  
+#### write each model summary into a .xlsx sheet  ####
+  library(openxlsx)
+  list.msummaries <- list('TrophDens ~ realdiv' = sowndiv.summary, 
+                          'TrophDens ~ realdiv' = realdiv.summary, 
+                          'TrophDens ~ funcdiv' =funcdiv.summary,
+                          'Shannon H ~ sowndiv' = Shannon.sowndiv.summary, 
+                          'Shannon H ~ realdiv' = Shannon.realdiv.summary)
+  
+  write.xlsx(list.msummaries, 
+        file = "./statistics/240116_Model_summaries.xlsx")
+
+    
+  
+  
 
 
 
