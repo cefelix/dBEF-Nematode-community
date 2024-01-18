@@ -851,7 +851,46 @@ SEED = 19111996
       m.Pr.Shannon.gaus_p2, m.Pr.Shannon.gaus_p)
     
 #Om ~ sowndiv: no model can predict accurately enough, as most samples have only one or two identified omnivorous individuals in them
+    ggplot(data = dat, aes( x = Hill_q0.Om, y = sowndivLog))+
+      geom_jitter(width = 0.2)
     
+    (dat$Hill_q0.Om == 0) %>% sum() #32
+    (dat$Hill_q0.Om == 1) %>% sum() #59
+    (dat$Hill_q0.Om == 2) %>% sum() #71
+    (dat$Hill_q0.Om == 3) %>% sum() #39
+    (dat$Hill_q0.Om == 4) %>% sum() #28
+    (dat$Hill_q0.Om == 5) %>% sum() #6
+    (dat$Hill_q0.Om == 6) %>% sum() #5
+    
+    (dat$Hill_q0.Om) %>% density() %>% plot()
+    (dat$Hill_q1.Om) %>% density() %>% plot()
+    
+    ggplot(data = dat, aes( x = Hill_q1.Om, y = Hill_q0.Om))+
+      geom_point()+ #this looks random, while variance in Hill0 decreases with increasing Hill1
+      facet_wrap(~treatment)
+      
+    ggplot(data = dat, aes( x = Hill_q1.Pr, y = Hill_q0.Pr))+
+      geom_point() #this looks like a saturating relationship
+    #does this point towards an incomplete sample in Omnivores? look at Chao et al. 2012 
+    
+    #actually, this might just indicate different levels of eveness in different communities --> 
+      #(maybe analyse evenness as Hill0/Hill1 as benoit suggested)
+    
+    
+    #other trophic guilds:
+    ggplot(data = dat, aes( x = Hill_q1.Fu, y = Hill_q0.Fu))+
+      geom_point()+
+      facet_wrap(~treatment)
+    
+    ggplot(data = dat, aes( x = Hill_q1.Ba, y = Hill_q0.Ba))+
+       geom_point() 
+      
+    ggplot(data = dat, aes( x = Hill_q1.Pl, y = Hill_q0.Pl))+
+      geom_point()    
+    
+    dat %>% head()
+    
+    dat$Om_per100g*dat$soilDW
 #save selected models in .RData file:
     save(m.all.Shannon.gaus_p5, 
          m.Ba.Shannon.gaus_p5,
