@@ -8,7 +8,7 @@ library(gridExtra)
 library(hexbin)
 library(GGally)
 
-dBEF_nem <- read.csv("./dBEF_nem.csv", row.names = 1)
+dBEF_nem <- read.csv("./dBEF_nem_Coverage.csv", row.names = 1)
 dBEF_nem %>%
   str()
 
