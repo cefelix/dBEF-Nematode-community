@@ -11,7 +11,7 @@ dat <- dat %>% mutate(sowndivLogStd = ( (sowndivLog - mean(sowndivLog)) / sd(sow
                       .after = sowndivLog) %>%
   mutate(realdivLogStd = ( (realdivLog - mean(realdivLog)) / sd(realdivLog) ),
          .after = realdivLog) %>%
-  mutate(funcdivStd = funcdiv - mean(funcdiv) / sd(funcdiv),
+  mutate(funcdivStd = ( (funcdiv - mean(funcdiv)) / sd(funcdiv) ),
          .after = funcdiv)
 
 
@@ -99,7 +99,7 @@ pp_check(m.Ba_funcdiv_p5, ndraws=100)+xlim(0,500)
 
 save(m.Ba_funcdiv_p, m.Ba_funcdiv_p2, m.Ba_funcdiv_p31, m.Ba_funcdiv_p32, m.Ba_funcdiv_p4,
      m.Ba_funcdiv_p5,
-     file="./statistics/brms/240108_Ba_funcdiv_priors.RData")
+     file="./statistics/brms/240131_Ba_funcdiv_priors.RData")
 
 rm(m.Ba_funcdiv_p, m.Ba_funcdiv_p2, m.Ba_funcdiv_p31, m.Ba_funcdiv_p32, m.Ba_funcdiv_p4,
    m.Ba_funcdiv_p5)  
@@ -161,7 +161,7 @@ summary(m.Fu_funcdiv_p5, prob=0.9)
 
 save(m.Fu_funcdiv_p, m.Fu_funcdiv_p2, m.Fu_funcdiv_p31, m.Fu_funcdiv_p32, m.Fu_funcdiv_p4,
      m.Fu_funcdiv_p5,
-     file="./statistics/brms/240109_Fu_funcdiv_priors.RData")  
+     file="./statistics/brms/240131_Fu_funcdiv_priors.RData")  
 
 rm(m.Fu_funcdiv_p, m.Fu_funcdiv_p2, m.Fu_funcdiv_p31, m.Fu_funcdiv_p32, m.Fu_funcdiv_p4,
    m.Fu_funcdiv_p5)
@@ -223,7 +223,7 @@ summary(m.Pl_funcdiv_p5, prob=0.9)
 
 
 save(m.Pl_funcdiv_p, m.Pl_funcdiv_p2, m.Pl_funcdiv_p31, m.Pl_funcdiv_p32, m.Pl_funcdiv_p4,
-     m.Pl_funcdiv_p5, file="./statistics/brms/240109_Pl_funcdiv_priors.RData")  
+     m.Pl_funcdiv_p5, file="./statistics/brms/240131_Pl_funcdiv_priors.RData")  
 
 rm(m.Pl_funcdiv_p, m.Pl_funcdiv_p2, m.Pl_funcdiv_p31, m.Pl_funcdiv_p32, m.Pl_funcdiv_p4,
    m.Pl_funcdiv_p5)
@@ -313,7 +313,7 @@ loo.Pr
 
 save(m.Pr_funcdiv_p, m.Pr_funcdiv_p2, m.Pr_funcdiv_p31, m.Pr_funcdiv_p32, m.Pr_funcdiv_p4,
      m.Pr_funcdiv_p5, m.Pr_funcdiv_p6, m.Pr_funcdiv_p7, m.Pr_funcdiv_p8,
-     file="./statistics/brms/240109_Pr_funcdiv_priors.RData")  
+     file="./statistics/brms/240131_Pr_funcdiv_priors.RData")  
 
 rm(m.Pr_funcdiv_p, m.Pr_funcdiv_p2, m.Pr_funcdiv_p31, m.Pr_funcdiv_p32, m.Pr_funcdiv_p4,
    m.Pr_funcdiv_p5, m.Pr_funcdiv_p6, m.Pr_funcdiv_p7, m.Pr_funcdiv_p8)
@@ -396,7 +396,7 @@ summary(m.Om_funcdiv_p8, prob=0.9)
 
 save(m.Om_funcdiv_p, m.Om_funcdiv_p2, m.Om_funcdiv_p31, m.Om_funcdiv_p32, m.Om_funcdiv_p4,
      m.Om_funcdiv_p5, m.Om_funcdiv_p6, m.Om_funcdiv_p7, m.Om_funcdiv_p8,
-     file="./statistics/brms/240109_Om_funcdiv_priors.RData")  
+     file="./statistics/brms/240131_Om_funcdiv_priors.RData")  
 
 rm(m.Om_funcdiv_p, m.Om_funcdiv_p2, m.Om_funcdiv_p31, m.Om_funcdiv_p32, m.Om_funcdiv_p4,
    m.Om_funcdiv_p5, m.Om_funcdiv_p6, m.Om_funcdiv_p7, m.Om_funcdiv_p8)
@@ -410,7 +410,7 @@ library(ggplot2)
 #saving the selected models in a seperate file:
 
 #Ba ~ funcdiv: p5
-load("./statistics/brms/240108_Ba_funcdiv_priors.RData")
+load("./statistics/brms/240131_Ba_funcdiv_priors.RData")
 loo.Ba <- loo(m.Ba_funcdiv_p, m.Ba_funcdiv_p2, m.Ba_funcdiv_p31, m.Ba_funcdiv_p32, m.Ba_funcdiv_p4,
               m.Ba_funcdiv_p5)
 loo.Ba
@@ -418,7 +418,7 @@ loo.Ba
 rm(m.Ba_funcdiv_p, m.Ba_funcdiv_p2, m.Ba_funcdiv_p31, m.Ba_funcdiv_p32, m.Ba_funcdiv_p4) 
 
 #Fu ~ realdviv: p5
-load("./statistics/brms/240109_Fu_funcdiv_priors.RData")  
+load("./statistics/brms/240131_Fu_funcdiv_priors.RData")  
 loo.Fu <- loo(m.Fu_funcdiv_p, m.Fu_funcdiv_p2, m.Fu_funcdiv_p31, m.Fu_funcdiv_p32, m.Fu_funcdiv_p4,
               m.Fu_funcdiv_p5)
 loo.Fu
@@ -426,7 +426,7 @@ loo.Fu
 rm(m.Fu_funcdiv_p, m.Fu_funcdiv_p2, m.Fu_funcdiv_p31, m.Fu_funcdiv_p32, m.Fu_funcdiv_p4)
 
 #Pl ~ funcdiv: p5
-load("./statistics/brms/240109_Pl_funcdiv_priors.RData")  
+load("./statistics/brms/240131_Pl_funcdiv_priors.RData")  
 loo.Pl <- loo(m.Pl_funcdiv_p, m.Pl_funcdiv_p2, m.Pl_funcdiv_p31, m.Pl_funcdiv_p32, m.Pl_funcdiv_p4,
               m.Pl_funcdiv_p5 )
 loo.Pl
@@ -434,7 +434,7 @@ loo.Pl
 rm(m.Pl_funcdiv_p, m.Pl_funcdiv_p2, m.Pl_funcdiv_p31, m.Pl_funcdiv_p32, m.Pl_funcdiv_p4)
 
 #Pr ~ funcdiv: p7
-load("./statistics/brms/240109_Pr_funcdiv_priors.RData")  
+load("./statistics/brms/240131_Pr_funcdiv_priors.RData")  
 loo.Pr <- loo(m.Pr_funcdiv_p, m.Pr_funcdiv_p2, m.Pr_funcdiv_p31, m.Pr_funcdiv_p32, m.Pr_funcdiv_p4,
               m.Pr_funcdiv_p5, m.Pr_funcdiv_p6, m.Pr_funcdiv_p7, m.Pr_funcdiv_p8 )
 loo.Pr
@@ -443,7 +443,7 @@ rm(m.Pr_funcdiv_p, m.Pr_funcdiv_p2, m.Pr_funcdiv_p31, m.Pr_funcdiv_p32, m.Pr_fun
    m.Pr_funcdiv_p5, m.Pr_funcdiv_p6, m.Pr_funcdiv_p8)
 
 #Om ~ funcdiv: p7
-load("./statistics/brms/240109_Om_funcdiv_priors.RData")  
+load("./statistics/brms/240131_Om_funcdiv_priors.RData")  
 
 loo.Om <- loo(m.Om_funcdiv_p, m.Om_funcdiv_p2, m.Om_funcdiv_p31, m.Om_funcdiv_p32, m.Om_funcdiv_p4,
               m.Om_funcdiv_p5, m.Om_funcdiv_p6, m.Om_funcdiv_p7, m.Om_funcdiv_p8 )
@@ -454,4 +454,4 @@ rm(m.Om_funcdiv_p, m.Om_funcdiv_p2, m.Om_funcdiv_p31, m.Om_funcdiv_p32, m.Om_fun
 
 #save the best fit models:
 save(m.Ba_funcdiv_p5, m.Fu_funcdiv_p5, m.Pl_funcdiv_p5, m.Om_funcdiv_p7, m.Pr_funcdiv_p7,
-     file = "./statistics/brms/240110_TrophDens_funcdiv_mselect.RData")
+     file = "./statistics/brms/240131_TrophDens_funcdiv_mselect.RData")
