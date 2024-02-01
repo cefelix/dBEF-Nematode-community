@@ -4,8 +4,24 @@ library(brms)
 library(tidyr)
 library(emmeans)
 library(dplyr)
+library(tidybayes)
+
+#exclude 60 sp.:
+dat <- subset(dBEF_nem21, sowndiv != 60) 
+
+#standardize:  
+dat <- dat %>% mutate(sowndivLogStd = ( (sowndivLog - mean(sowndivLog)) / sd(sowndivLog) ),
+                      .after = sowndivLog) %>%
+  mutate(realdivLogStd = ( (realdivLog - mean(realdivLog)) / sd(realdivLog) ),
+         .after = realdivLog)
 
 
+####just trash to try out code ####
+ggplot(dat, aes(x= sowndivLogStd, y=Coverage, col= treatment))+
+  geom_boxplot()
+
+ggplot(dat, aes(x= sowndivLogStd, y=Coverage, col= week))+
+  geom_boxplot()
 
 
 #probability of direction:
@@ -14,6 +30,34 @@ Ba.prob_dir <- emtrends(m.Ba_sowndiv_p5, specs = c("treatment"), var="sowndivLog
 Ba.prob_dir %>% str()
 Ba.prob_dir
 
+
+#this at least works:
+m.Pr_sowndiv_p7 %>%
+  emtrends(~ sowndivLogStd + treatment, var = "sowndivLogStd", epred = TRUE,
+           at = list(sowndivLogStd = seq(-1.5, 1.5, 0.3),
+                     treatment = c("1", "2", "3")),
+           level = 0.9
+           ) #%>% summary(point.est=mean, level=0.9)
+
+m.Pr_sowndiv_p7 %>%
+  emtrends(~ sowndivLogStd + treatment, var = "sowndivLogStd", epred = TRUE,
+           at = list(treatment = c("1", "2", "3")),
+           level = 0.9
+  ) #%>% summary(point.est=mean, level=0.9)
+
+
+emtrends(m.Pr_sowndiv_p7, specs = c("treatment"), var="sowndivLogStd") %>%
+  summary(point.est = mean, level =.9)
+
+conditional_effects(m.Om_sowndiv_p7, method = "posterior_epred") #%>% summary()
+posterior_epred(m.Pr_sowndiv_p7) #the brms version
+epred_draws(m.Pr_sowndiv_p7, newdata = dat) #the tidybayes version
+
+
+summary(m.Pr_sowndiv_p7)
+posterior_epred(m.Pr_sowndiv_p7)
+
+
 #### summarise_models() for TrophDens ~sowndiv, ~realdiv, ~funcdiv #####
   #load models
   load("./statistics/brms/240109_TrophDens_sowndiv_mselect.RData")
@@ -21,10 +65,8 @@ Ba.prob_dir
   load("./statistics/brms/240110_TrophDens_funcdiv_mselect.RData")
 
 
-
-
 #a function which creates a table with point estimates and HPDI for regression coefficients for each treatment:
-summarise_models <- function(brmsfit, predictor, unstandardized_predictor, level=.95) {
+  summarise_models <- function(brmsfit, predictor, unstandardized_predictor, level=.95) {
   response <- deparse(brmsfit$formula)[1] %>% #this row extracts the model term and converts it to a string
     gsub(".*= (.+) ~.*", "\\1", .) #and this excludes everything which is not the response
 
@@ -47,13 +89,33 @@ summarise_models <- function(brmsfit, predictor, unstandardized_predictor, level
   
   family <- family(brmsfit)$family
   
-  emt.s <- emtrends( brmsfit, specs = c("treatment"), var = predictor) %>% 
-    summary(., point.est = mean, level = level) #get slope estimates mean and HPDI
+  emt.s <- emtrends( brmsfit, specs = c("treatment"), var = predictor,
+                     epred = TRUE) %>% 
+    summary(., point.est = mean, level = level) %>% #get slope estimates mean and HPDI
+    mutate(LogStd.trend = log((eval(as.symbol(paste(predictor, "trend", sep=".")))+100)/100), .before = "lower.HPD",
+              #https://stackoverflow.com/questions/9057006/getting-strings-recognized-as-variable-names-in-r (2nd answer)
+              #eval(as.symbol(paste(predictor, "trend", sep="."))) necessary to extract any predictor 
+              #back-transforms to the same scale as emtrends(epred=FALS) yields
+           lower.HPD = log((lower.HPD+100)/100),
+           upper.HPD = log((upper.HPD+100)/100)) %>%
+    select( -as.symbol(paste(predictor, "trend", sep=".")) )
   
-  emt.s90 <- emtrends( brmsfit, specs = c("treatment"), var = predictor) %>% 
-    summary(., point.est = mean, level = .9)
-  emt.s95 <- emtrends( brmsfit, specs = c("treatment"), var = predictor) %>% 
-    summary(., point.est = mean, level = .9)
+  emt.s90 <- emtrends( brmsfit, specs = c("treatment"), var = predictor,
+                       epred = TRUE) %>% 
+    summary(., point.est = mean, level = .9) %>%
+  mutate(LogStd.trend = log((eval(as.symbol(paste(predictor, "trend", sep=".")))+100)/100), .before = "lower.HPD",
+         lower.HPD = log((lower.HPD+100)/100),
+         upper.HPD = log((upper.HPD+100)/100)) %>%
+  select( -as.symbol(paste(predictor, "trend", sep=".")) )
+  
+  emt.s95 <- emtrends( brmsfit, specs = c("treatment"), var = predictor,
+                       epred = TRUE) %>% 
+    summary(., point.est = mean, level = .9) %>%
+    mutate(LogStd.trend = log((eval(as.symbol(paste(predictor, "trend", sep=".")))+100)/100), .before = "lower.HPD",
+           lower.HPD = log((lower.HPD+100)/100),
+           upper.HPD = log((upper.HPD+100)/100)) %>%
+    select( -as.symbol(paste(predictor, "trend", sep=".")) )
+  
 
   #adding letters, indicating different significance levels (in relation having no effect) : 
   significance <- rep(NA, nrow(emt.s))
@@ -82,7 +144,7 @@ summarise_models <- function(brmsfit, predictor, unstandardized_predictor, level
     pd_t2 <- c(round(pd$pd[pd$Parameter == "treatment1 - treatment2"], 3), "",  round(pd$pd[pd$Parameter == "treatment2 - treatment3"], 3)) # a column showing pd of each treatment against treatment 2
     pd_t3 <- c(round(pd$pd[pd$Parameter == "treatment1 - treatment3"], 3),  round(pd$pd[pd$Parameter == "treatment2 - treatment3"], 3), "") # a column showing pd of each treatment against treatment 3
      
-  #adding significance codes to pd: . (>.9), * (>.95), ** (>.99)
+#adding significance codes to pd: . (>.9), * (>.95), ** (>.99)
     for (i in 1:length(pd_t1)) {
       if (pd_t1[i] > 0.995 ) {
         pd_t1[i] <- paste(pd_t1[i], "**")
@@ -144,9 +206,10 @@ summarise_models <- function(brmsfit, predictor, unstandardized_predictor, level
     bind_rows()
   sowndiv.summary
   
-  #un-standardize beta coefficients:
+  
+#un-standardize beta coefficients:
   sowndiv.summary <- sowndiv.summary %>%
-    mutate(., sowndivLog.trend = exp(sowndiv.summary$sowndivLogStd.trend / sd(dat$sowndivLog)), .before = "bulk ESS") %>%
+    mutate(., sowndivLog.trend = exp(sowndiv.summary$LogStd.trend / sd(dat$sowndivLog)), .before = "bulk ESS") %>%
     mutate(lower.HPD.2 = exp((sowndiv.summary$lower.HPD) / sd(dat$sowndivLog)), .before = "bulk ESS") %>%
     mutate(upper.HPD.2 = exp((sowndiv.summary$upper.HPD) / sd(dat$sowndivLog)), .before = "bulk ESS") 
   
@@ -164,7 +227,7 @@ summarise_models <- function(brmsfit, predictor, unstandardized_predictor, level
   
   #un-standardize beta coefficients:
   realdiv.summary <- realdiv.summary %>%
-    mutate(., realdivLog.trend = exp(realdiv.summary$realdivLogStd.trend / sd(dat$realdivLog)), .before = "bulk ESS") %>%
+    mutate(., realdivLog.trend = exp(realdiv.summary$LogStd.trend / sd(dat$realdivLog)), .before = "bulk ESS") %>%
     mutate(lower.HPD.2 = exp((realdiv.summary$lower.HPD) / sd(dat$realdivLog)), .before = "bulk ESS") %>%
     mutate(upper.HPD.2 = exp((realdiv.summary$upper.HPD) / sd(dat$realdivLog)), .before = "bulk ESS") 
     
@@ -181,9 +244,9 @@ summarise_models <- function(brmsfit, predictor, unstandardized_predictor, level
   
   #un-standardize beta coefficients:
   funcdiv.summary <- funcdiv.summary %>%
-    mutate(., funcdiv.trend = exp(funcdiv.summary$funcdivStd.trend / sd(dat$funcdiv)), .before = "bulk ESS") %>%
-    mutate(lower.HPD.2 = exp((funcdiv.summary$lower.HPD) / sd(dat$funcdiv)), .before = "bulk ESS") %>%
-    mutate(upper.HPD.2 = exp((funcdiv.summary$upper.HPD) / sd(dat$funcdiv)), .before = "bulk ESS") 
+    mutate(., funcdiv.trend = funcdiv.summary$LogStd.trend / sd(dat$funcdiv), .before = "bulk ESS") %>%
+    mutate(lower.HPD.2 = (funcdiv.summary$lower.HPD) / sd(dat$funcdiv), .before = "bulk ESS") %>%
+    mutate(upper.HPD.2 = (funcdiv.summary$upper.HPD) / sd(dat$funcdiv), .before = "bulk ESS") 
   
   funcdiv.summary
   
@@ -243,6 +306,73 @@ summarise_models <- function(brmsfit, predictor, unstandardized_predictor, level
         file = "./statistics/240116_Model_summaries.xlsx")
 
     
+####plot the most significant relationships: Trophic group densities####
+  library(ggplot2)
+  
+  
+  ggplot(data = dat, aes(x=sowndivLog, y=Pr_per100g))+
+    geom_jitter(width = 0.1, shape =19, alpha = 0.4,
+                aes(col=treatment))+
+    facet_wrap(~treatment)
+  
+  predictions <- conditional_effects(m.Pr_sowndiv_p7, 
+                                    #re_formula = NULL, # this includes random effects when predicting
+                                     prob = 0.9,
+                                     method = "posterior_epred")[[3]] 
+  predictions <- conditional_effects(m.Pr_sowndiv_p7, 
+                                     re_formula = NULL, # this includes random effects when predicting
+                                     prob = 0.9,
+                                     method = "posterior_predict")[[3]] 
+  predictions
+  
+  emt.s <- emtrends(m.Pr_sowndiv_p7, specs = c("treatment"), var = predictor) %>% 
+    summary(., point.est = mean, level = 0.9) #get slope estimates mean and HPDI
+  emt.s
+  
+  
+  
+  
+  emtrends(m.Pr_sowndiv_p7, specs = c("treatment"), var = "sowndivLogStd")
+  
+  ggplot(dat, aes(x=sowndivLogStd, y=Pr_per100g) )+
+    geom_ribbon(data=predictions, aes(ymin= lower__, ymax=upper__, 
+                                      fill=treatment), 
+                alpha=0.2, show.legend=FALSE)+
+    geom_jitter(width=0.1, shape=19, alpha=0.4, 
+                aes(col=treatment))+
+    geom_line(data=predictions, aes(x= sowndivLogStd, y=estimate__, 
+                                    linetype=treatment, col=treatment),
+              linewidth= 1, show.legend = FALSE)+
+    facet_wrap(~treatment)+
+    scale_color_manual(labels=treatments2, values = cols)+
+    scale_x_continuous(name = "sown plant diversity", breaks = BREAKS,
+                       labels = c("1", "2", "4", "8", "16"))+
+    scale_y_continuous(name = "Ba per 100g DW")+
+    theme_bw()+
+    theme(legend.position ="bottom")
+  
+  
+####the probability of zero predators: ####
+  plot_emmeans1 <- m.Pr_sowndiv_p7 |> 
+    emmeans(~ sowndivLogStd*treatment, var = "sowndivLogStd", dpar = "hu",
+            #regrid = "response", 
+            #tran = "log", type = "response",
+            at = list(sowndivLogStd = seq(min(dat$sowndivLogStd), max(dat$sowndivLogStd), 0.01),
+                      treatment = unique(dat$treatment))) |> 
+    gather_emmeans_draws() |> 
+    mutate(.value = exp(.value)) |> 
+    
+    
+    ggplot(aes(x = sowndivLogStd, y = .value)) +
+    stat_lineribbon(size = 1) +
+    labs(x = "sowndiv (standardized)", y = "Predicted density of Pr per 100g SDW",
+         subtitle = "Hurdle part of the model (dpar = \"hu\")",
+         fill = "Credible interval") +
+    theme(legend.position = "bottom")
+  
+  plot_emmeans1
+  
+  ref_grid(m.Pr_sowndiv_p7)
   
   
 
