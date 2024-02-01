@@ -23,7 +23,7 @@ SEED = 19111996
 #load(file = "./statistics/brms/231127_Hill.RData" )
 
 #exclude 60 sp.:
-dat <- subset(dBEF_nem21, realdiv != 60) 
+dat <- subset(dBEF_nem21, sowndiv != 60) 
 #standardize:  
 dat <- dat %>% mutate(realdivLogStd = ( (realdivLog - mean(realdivLog)) / sd(realdivLog) ),
                       .after = realdivLog) %>%
