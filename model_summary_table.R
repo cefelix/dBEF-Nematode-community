@@ -62,7 +62,7 @@ posterior_epred(m.Pr_sowndiv_p7)
   #load models
   load("./statistics/brms/240109_TrophDens_sowndiv_mselect.RData")
   load("./statistics/brms/240109_TrophDens_realdiv_mselect.RData")
-  load("./statistics/brms/240110_TrophDens_funcdiv_mselect.RData")
+  load("./statistics/brms/240131_TrophDens_funcdiv_mselect.RData")
 
 
 #a function which creates a table with point estimates and HPDI for regression coefficients for each treatment:
@@ -89,21 +89,24 @@ posterior_epred(m.Pr_sowndiv_p7)
   
   family <- family(brmsfit)$family
   
+  #the mean of the expected value of the posterior predictive distribution, HPDIs, and PDs
   emt.s <- emtrends( brmsfit, specs = c("treatment"), var = predictor,
                      epred = TRUE) %>% 
     summary(., point.est = mean, level = level) %>% #get slope estimates mean and HPDI
-    mutate(LogStd.trend = log((eval(as.symbol(paste(predictor, "trend", sep=".")))+100)/100), .before = "lower.HPD",
+    mutate(mean.trend = log((eval(as.symbol(paste(predictor, "trend", sep=".")))+100)/100), .before = "lower.HPD",
               #https://stackoverflow.com/questions/9057006/getting-strings-recognized-as-variable-names-in-r (2nd answer)
               #eval(as.symbol(paste(predictor, "trend", sep="."))) necessary to extract any predictor 
               #back-transforms to the same scale as emtrends(epred=FALS) yields
            lower.HPD = log((lower.HPD+100)/100),
            upper.HPD = log((upper.HPD+100)/100)) %>%
+    mutate(pd = modelbased::estimate_slopes(brmsfit, trend = predictor, at = "treatment", ci= level)$pd, .after = "upper.HPD") %>%
     select( -as.symbol(paste(predictor, "trend", sep=".")) )
   
+  #### start exclude: significance based on HPDIs ####
   emt.s90 <- emtrends( brmsfit, specs = c("treatment"), var = predictor,
                        epred = TRUE) %>% 
     summary(., point.est = mean, level = .9) %>%
-  mutate(LogStd.trend = log((eval(as.symbol(paste(predictor, "trend", sep=".")))+100)/100), .before = "lower.HPD",
+  mutate(mean.trend = log((eval(as.symbol(paste(predictor, "trend", sep=".")))+100)/100), .before = "lower.HPD",
          lower.HPD = log((lower.HPD+100)/100),
          upper.HPD = log((upper.HPD+100)/100)) %>%
   select( -as.symbol(paste(predictor, "trend", sep=".")) )
@@ -111,30 +114,57 @@ posterior_epred(m.Pr_sowndiv_p7)
   emt.s95 <- emtrends( brmsfit, specs = c("treatment"), var = predictor,
                        epred = TRUE) %>% 
     summary(., point.est = mean, level = .9) %>%
-    mutate(LogStd.trend = log((eval(as.symbol(paste(predictor, "trend", sep=".")))+100)/100), .before = "lower.HPD",
+    mutate(mean.trend = log((eval(as.symbol(paste(predictor, "trend", sep=".")))+100)/100), .before = "lower.HPD",
            lower.HPD = log((lower.HPD+100)/100),
            upper.HPD = log((upper.HPD+100)/100)) %>%
     select( -as.symbol(paste(predictor, "trend", sep=".")) )
   
 
-  #adding letters, indicating different significance levels (in relation having no effect) : 
-  significance <- rep(NA, nrow(emt.s))
+  #adding letters, indicating different significance levels based on HPDs (in relation having no effect) : 
+  significance.HPD <- rep(NA, nrow(emt.s))
   for ( i in 1 : nrow(emt.s95)){
     if( (emt.s95$upper.HPD[i] > 0 & emt.s95$lower.HPD[i] > 0 ) |  #positive relationship (95% CI)
         (emt.s95$upper.HPD[i] < 0 & emt.s95$lower.HPD[i] < 0 )) { #negative (95% CI)
-      significance[i] = "a"
+      significance.HPD[i] = "a"
     }
     else if( (emt.s90$upper.HPD[i] > 0 & emt.s90$lower.HPD[i] > 0 ) |  #positive (90% CI)
              (emt.s90$upper.HPD[i] < 0 & emt.s90$lower.HPD[i] < 0 )) { #negative (90% CI)
-      significance[i] = "b"
+      significance.HPD[i] = "b"
     }
     
     
     else {
-      significance[i] = ""
+      significance.HPD[i] = ""
     }
   }
-
+  #### end exclude: significance based on HPDIs ####
+  #adding significance, based on probability of direction
+  support <- rep(NA, nrow(emt.s)) 
+  for (i in 1:nrow(emt.s) ) {
+    if (emt.s$pd[i] < 0.95 ) {
+      support[i] <- " "
+    }
+    else if (emt.s$pd[i] >= 0.95 & emt.s$pd[i] < 0.975)  {
+      support[i] <- "."
+    }
+    else if (emt.s$pd[i] >= 0.975 & emt.s$pd[i] < 0.995)  {
+      support[i] <- "*"
+    }
+    else if (emt.s$pd[i] >= 0.995 & emt.s$pd[i] < 0.9995)  {
+      support[i] <- "**"
+    }
+    else if (emt.s$pd[i] >= 0.9995 )  {
+      support[i] <- "***"
+    }
+  }
+  
+  ####work here####
+  modelbased <- modelbased::estimate_slopes(brmsfit, trend = predictor, at = "treatment", ci= level)
+  modelbased::estimate_contrasts(brmsfit, trend = predictor, contrast = "treatment", ci= level)
+  #here it is old
+  
+  
+#### exclude: p_direction between treatments ####   
   #adding probability of direction to each treatment:
     pd <- emtrends(brmsfit, specs = c("treatment"), var = predictor) %>%
       pairs() %>%
@@ -143,7 +173,7 @@ posterior_epred(m.Pr_sowndiv_p7)
     pd_t1 <- c("", round(pd$pd[pd$Parameter == "treatment1 - treatment2"], 3),  round(pd$pd[pd$Parameter == "treatment1 - treatment3"], 3)) # a column showing pd of each treatment against treatment 1
     pd_t2 <- c(round(pd$pd[pd$Parameter == "treatment1 - treatment2"], 3), "",  round(pd$pd[pd$Parameter == "treatment2 - treatment3"], 3)) # a column showing pd of each treatment against treatment 2
     pd_t3 <- c(round(pd$pd[pd$Parameter == "treatment1 - treatment3"], 3),  round(pd$pd[pd$Parameter == "treatment2 - treatment3"], 3), "") # a column showing pd of each treatment against treatment 3
-     
+  
 #adding significance codes to pd: . (>.9), * (>.95), ** (>.99)
     for (i in 1:length(pd_t1)) {
       if (pd_t1[i] > 0.995 ) {
@@ -192,7 +222,8 @@ posterior_epred(m.Pr_sowndiv_p7)
     
        
   divs <- 1 #Placeholder: add divergent transitions
-  row <- cbind(response, predictor, family, emt.s[], ESS, divs, significance, pd_t1, pd_t2, pd_t3)
+  row <- cbind(response, predictor, family, emt.s[], support, ESS#, divs, pd_t1, pd_t2, pd_t3
+               )
   return(row)
 }
 
@@ -209,9 +240,9 @@ posterior_epred(m.Pr_sowndiv_p7)
   
 #un-standardize beta coefficients:
   sowndiv.summary <- sowndiv.summary %>%
-    mutate(., sowndivLog.trend = exp(sowndiv.summary$LogStd.trend / sd(dat$sowndivLog)), .before = "bulk ESS") %>%
-    mutate(lower.HPD.2 = exp((sowndiv.summary$lower.HPD) / sd(dat$sowndivLog)), .before = "bulk ESS") %>%
-    mutate(upper.HPD.2 = exp((sowndiv.summary$upper.HPD) / sd(dat$sowndivLog)), .before = "bulk ESS") 
+    mutate(., mean.trend_destand = exp(sowndiv.summary$mean.trend / sd(dat$sowndivLog)), .before = "pd") %>%
+    mutate(lower.HPD.2 = exp((sowndiv.summary$lower.HPD) / sd(dat$sowndivLog)), .before = "pd") %>%
+    mutate(upper.HPD.2 = exp((sowndiv.summary$upper.HPD) / sd(dat$sowndivLog)), .before = "pd") 
   
   sowndiv.summary
  
@@ -263,6 +294,9 @@ posterior_epred(m.Pr_sowndiv_p7)
   Shannon.sowndiv.summary <- lapply(Shannon.sown.list, summarise_models, predictor = "sowndivLogStd", level =.9) %>% 
     bind_rows()
   Shannon.sowndiv.summary
+  
+  ####work here
+  bayestestR::rope(Shannon.sowndiv.summary$lower.HPD)
   
   #un-standardize beta coefficients:
   Shannon.sowndiv.summary <- Shannon.sowndiv.summary %>%
