@@ -85,6 +85,13 @@ loo.Ba1 <- loo(m.Ba1_sowndiv_p, m.Ba1_sowndiv_p2, m.Ba1_sowndiv_p31,
                m.Ba1_sowndiv_p32, m.Ba1_sowndiv_p4, m.Ba1_sowndiv_p5)
 loo.Ba1
 
+save(m.Ba1_sowndiv_p, m.Ba1_sowndiv_p2, m.Ba1_sowndiv_p31, 
+     m.Ba1_sowndiv_p32, m.Ba1_sowndiv_p4, m.Ba1_sowndiv_p5,
+     file = "./statistics/brms/240205_Ba1_sowndiv.RData")
+
+rm(m.Ba1_sowndiv_p, m.Ba1_sowndiv_p2, m.Ba1_sowndiv_p31, 
+   m.Ba1_sowndiv_p32, m.Ba1_sowndiv_p4, m.Ba1_sowndiv_p5)
+
 #### Ba2 ~ sowndiv ####
   #selecting models based on looic,
   #see here https://users.aalto.fi/~ave/CV-FAQ.html#12_What_is_the_interpretation_of_ELPD__elpd_loo__elpd_diff
@@ -147,6 +154,13 @@ loo.Ba1
   loo.Ba2 <- loo(m.Ba2_sowndiv_p, m.Ba2_sowndiv_p2, m.Ba2_sowndiv_p31, 
                  m.Ba2_sowndiv_p32, m.Ba2_sowndiv_p4, m.Ba2_sowndiv_p5)
   loo.Ba2
+  
+  save(m.Ba2_sowndiv_p, m.Ba2_sowndiv_p2, m.Ba2_sowndiv_p31, 
+       m.Ba2_sowndiv_p32, m.Ba2_sowndiv_p4, m.Ba2_sowndiv_p5,
+       file = "./statistics/brms/240205_Ba2_sowndiv.RData")
+  
+  rm(m.Ba2_sowndiv_p, m.Ba2_sowndiv_p2, m.Ba2_sowndiv_p31, 
+     m.Ba2_sowndiv_p32, m.Ba2_sowndiv_p4, m.Ba2_sowndiv_p5)
   
 #### Ba3 ~ sowndiv ####
   #selecting models based on looic,
@@ -218,7 +232,14 @@ loo.Ba1
   
   loo.Ba4 <- loo(m.Ba4_sowndiv_p, m.Ba4_sowndiv_p2, m.Ba4_sowndiv_p31, 
                  m.Ba4_sowndiv_p32, m.Ba4_sowndiv_p4, m.Ba4_sowndiv_p5)
-  loo.Ba4  
+  loo.Ba4 
+  
+  save(m.Ba4_sowndiv_p, m.Ba4_sowndiv_p2, m.Ba4_sowndiv_p31, 
+       m.Ba4_sowndiv_p32, m.Ba4_sowndiv_p4, m.Ba4_sowndiv_p5,
+       file = "./statistics/brms/240205_Ba4_sowndiv.RData")
+  
+  rm(m.Ba4_sowndiv_p, m.Ba4_sowndiv_p2, m.Ba4_sowndiv_p31, 
+     m.Ba4_sowndiv_p32, m.Ba4_sowndiv_p4, m.Ba4_sowndiv_p5)
   
 #### Ba5 ~ sowndiv ####
   #selecting models based on looic,

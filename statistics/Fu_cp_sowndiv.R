@@ -84,6 +84,13 @@ loo.Fu2 <- loo(m.Fu2_sowndiv_p, m.Fu2_sowndiv_p2, m.Fu2_sowndiv_p31,
                m.Fu2_sowndiv_p32, m.Fu2_sowndiv_p4, m.Fu2_sowndiv_p5)
 loo.Fu2
 
+save(m.Fu2_sowndiv_p, m.Fu2_sowndiv_p2, m.Fu2_sowndiv_p31, 
+     m.Fu2_sowndiv_p32, m.Fu2_sowndiv_p4, m.Fu2_sowndiv_p5,
+     file = "./statistics/brms/240205_Fu2_sowndiv.RData")
+
+rm(m.Fu2_sowndiv_p, m.Fu2_sowndiv_p2, m.Fu2_sowndiv_p31, 
+   m.Fu2_sowndiv_p32, m.Fu2_sowndiv_p4, m.Fu2_sowndiv_p5)
+
 #### Fu3 ~ sowndiv ####
 #selecting models based on looic,
 #see here https://users.aalto.fi/~ave/CV-FAQ.html#12_What_is_the_interpretation_of_ELPD__elpd_loo__elpd_diff
@@ -147,6 +154,13 @@ loo.Fu3 <- loo(m.Fu3_sowndiv_p, m.Fu3_sowndiv_p2, m.Fu3_sowndiv_p31,
                m.Fu3_sowndiv_p32, m.Fu3_sowndiv_p4, m.Fu3_sowndiv_p5)
 loo.Fu3
 
+save(m.Fu3_sowndiv_p, m.Fu3_sowndiv_p2, m.Fu3_sowndiv_p31, 
+     m.Fu3_sowndiv_p32, m.Fu3_sowndiv_p4, m.Fu3_sowndiv_p5,
+     file = "./statistics/brms/240205_Fu3_sowndiv.RData")
+
+rm(m.Fu3_sowndiv_p, m.Fu3_sowndiv_p2, m.Fu3_sowndiv_p31, 
+   m.Fu3_sowndiv_p32, m.Fu3_sowndiv_p4, m.Fu3_sowndiv_p5)
+
 #### Fu4 ~ sowndiv ####
 #selecting models based on looic,
 #see here https://users.aalto.fi/~ave/CV-FAQ.html#12_What_is_the_interpretation_of_ELPD__elpd_loo__elpd_diff
@@ -209,6 +223,13 @@ m.Fu4_sowndiv_p5 %>% pp_check(ndraws=100)
 loo.Fu4 <- loo(m.Fu4_sowndiv_p, m.Fu4_sowndiv_p2, m.Fu4_sowndiv_p31, 
                m.Fu4_sowndiv_p32, m.Fu4_sowndiv_p4, m.Fu4_sowndiv_p5)
 loo.Fu4
+
+save(m.Fu4_sowndiv_p, m.Fu4_sowndiv_p2, m.Fu4_sowndiv_p31, 
+     m.Fu4_sowndiv_p32, m.Fu4_sowndiv_p4, m.Fu4_sowndiv_p5,
+     file = "./statistics/brms/240205_Fu4_sowndiv.RData")
+
+rm(m.Fu4_sowndiv_p, m.Fu4_sowndiv_p2, m.Fu4_sowndiv_p31, 
+   m.Fu4_sowndiv_p32, m.Fu4_sowndiv_p4, m.Fu4_sowndiv_p5)
 
 #### Fu5 ~ sowndiv ####
 #selecting models based on looic,

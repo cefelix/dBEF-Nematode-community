@@ -84,6 +84,13 @@ loo.Pl2 <- loo(m.Pl2_sowndiv_p, m.Pl2_sowndiv_p2, m.Pl2_sowndiv_p31,
                m.Pl2_sowndiv_p32, m.Pl2_sowndiv_p4, m.Pl2_sowndiv_p5)
 loo.Pl2
 
+save(m.Pl2_sowndiv_p, m.Pl2_sowndiv_p2, m.Pl2_sowndiv_p31, 
+     m.Pl2_sowndiv_p32, m.Pl2_sowndiv_p4, m.Pl2_sowndiv_p5,
+     file = "./statistics/brms/240205_Pl2_sowndiv.RData")
+
+rm(m.Pl2_sowndiv_p, m.Pl2_sowndiv_p2, m.Pl2_sowndiv_p31, 
+m.Pl2_sowndiv_p32, m.Pl2_sowndiv_p4, m.Pl2_sowndiv_p5)
+
 #### Pl3 ~ sowndiv ####
 #selecting models based on looic,
 #see here https://users.aalto.fi/~ave/CV-FAQ.html#12_What_is_the_interpretation_of_ELPD__elpd_loo__elpd_diff
@@ -147,6 +154,13 @@ loo.Pl3 <- loo(m.Pl3_sowndiv_p, m.Pl3_sowndiv_p2, m.Pl3_sowndiv_p31,
                m.Pl3_sowndiv_p32, m.Pl3_sowndiv_p4, m.Pl3_sowndiv_p5)
 loo.Pl3
 
+save(m.Pl3_sowndiv_p, m.Pl3_sowndiv_p2, m.Pl3_sowndiv_p31, 
+     m.Pl3_sowndiv_p32, m.Pl3_sowndiv_p4, m.Pl3_sowndiv_p5,
+     file = "./statistics/brms/240205_Pl3_sowndiv.RData")
+
+rm(m.Pl3_sowndiv_p, m.Pl3_sowndiv_p2, m.Pl3_sowndiv_p31, 
+   m.Pl3_sowndiv_p32, m.Pl3_sowndiv_p4, m.Pl3_sowndiv_p5)
+
 #### Pl4 ~ sowndiv ####
 #selecting models based on looic,
 #see here https://users.aalto.fi/~ave/CV-FAQ.html#12_What_is_the_interpretation_of_ELPD__elpd_loo__elpd_diff
@@ -209,6 +223,13 @@ m.Pl4_sowndiv_p5 %>% pp_check(ndraws=100)
 loo.Pl4 <- loo(m.Pl4_sowndiv_p, m.Pl4_sowndiv_p2, m.Pl4_sowndiv_p31, 
                m.Pl4_sowndiv_p32, m.Pl4_sowndiv_p4, m.Pl4_sowndiv_p5)
 loo.Pl4
+
+save(m.Pl4_sowndiv_p, m.Pl4_sowndiv_p2, m.Pl4_sowndiv_p31, 
+     m.Pl4_sowndiv_p32, m.Pl4_sowndiv_p4, m.Pl4_sowndiv_p5,
+     file = "./statistics/brms/240205_Pl4_sowndiv.RData")
+
+rm(m.Pl4_sowndiv_p, m.Pl4_sowndiv_p2, m.Pl4_sowndiv_p31, 
+   m.Pl4_sowndiv_p32, m.Pl4_sowndiv_p4, m.Pl4_sowndiv_p5)
 
 ####Pl5 ~ sowndiv ####
 sum(dat$Pl5==0) #224/228 -> no model possible

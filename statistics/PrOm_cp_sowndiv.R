@@ -84,5 +84,10 @@ loo.Pr4_Om4 <- loo(m.Pr4_Om4_sowndiv_p, m.Pr4_Om4_sowndiv_p2, m.Pr4_Om4_sowndiv_
                m.Pr4_Om4_sowndiv_p32, m.Pr4_Om4_sowndiv_p4, m.Pr4_Om4_sowndiv_p5)
 loo.Pr4_Om4
 
+save(m.Pr4_Om4_sowndiv_p, m.Pr4_Om4_sowndiv_p2, m.Pr4_Om4_sowndiv_p31, 
+     m.Pr4_Om4_sowndiv_p32, m.Pr4_Om4_sowndiv_p4, m.Pr4_Om4_sowndiv_p5,
+     file = "./statistics/brms/240205_Pr4_Om4_sowndiv.RData")
 
+rm(m.Pr4_Om4_sowndiv_p, m.Pr4_Om4_sowndiv_p2, m.Pr4_Om4_sowndiv_p31, 
+   m.Pr4_Om4_sowndiv_p32, m.Pr4_Om4_sowndiv_p4, m.Pr4_Om4_sowndiv_p5)
 
