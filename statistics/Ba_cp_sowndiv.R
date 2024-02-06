@@ -1,6 +1,7 @@
 library(brms)
 library(rstan)
 library(ggplot2)
+library(dplyr)
 
 # fitting trophic group densities ~ funcdiv
 #data:
@@ -46,7 +47,6 @@ m.Ba1_sowndiv_p <- brm(
 pp_check(m.Ba1_sowndiv_p, ndraws=100)+
   xlim(0,300)
 summary(m.Ba1_sowndiv_p, prob =0.9)
-conditional_effects(m.Ba1_sowndiv_p)
 
 m.Ba1_sowndiv_p2 <- update(m.Ba1_sowndiv_p,
                            bf(Ba1 ~ sowndivLogStd*treatment + sowndivLogStd*week + treatment*week + 
@@ -116,7 +116,6 @@ rm(m.Ba1_sowndiv_p, m.Ba1_sowndiv_p2, m.Ba1_sowndiv_p31,
   pp_check(m.Ba2_sowndiv_p, ndraws=100)+
     xlim(0,300)
   summary(m.Ba2_sowndiv_p, prob =0.9)
-  conditional_effects(m.Ba2_sowndiv_p)
   
   m.Ba2_sowndiv_p2 <- update(m.Ba2_sowndiv_p,
                              bf(Ba2 ~ sowndivLogStd*treatment + sowndivLogStd*week + treatment*week + 
@@ -195,7 +194,6 @@ rm(m.Ba1_sowndiv_p, m.Ba1_sowndiv_p2, m.Ba1_sowndiv_p31,
   pp_check(m.Ba4_sowndiv_p, ndraws=100)+
     xlim(0,300)
   summary(m.Ba4_sowndiv_p, prob =0.9)
-  conditional_effects(m.Ba4_sowndiv_p)
   
   m.Ba4_sowndiv_p2 <- update(m.Ba4_sowndiv_p,
                              bf(Ba4 ~ sowndivLogStd*treatment + sowndivLogStd*week + treatment*week + 
@@ -250,8 +248,48 @@ rm(m.Ba1_sowndiv_p, m.Ba1_sowndiv_p2, m.Ba1_sowndiv_p31,
   
   sum(dat$Ba5==0) #228/228 -> no model fitting possible
   
-#### save best fit models ####
-  save(m.Ba1_sowndiv_p, m.Ba2_sowndiv_p, m.Ba4_sowndiv_p,
+#### model selection ####
+  load("./statistics/brms/240205_Ba1_sowndiv.RData")
+  load("./statistics/brms/240205_Ba2_sowndiv.RData")
+  load("./statistics/brms/240205_Ba4_sowndiv.RData")
+  
+  loo.Ba1 <- loo(m.Ba1_sowndiv_p, m.Ba1_sowndiv_p2, m.Ba1_sowndiv_p31, 
+                 m.Ba1_sowndiv_p32, m.Ba1_sowndiv_p4, m.Ba1_sowndiv_p5)
+  loo.Ba1 #p5
+  
+  loo.Ba2 <- loo(m.Ba2_sowndiv_p, m.Ba2_sowndiv_p2, m.Ba2_sowndiv_p31, 
+                 m.Ba2_sowndiv_p32, m.Ba2_sowndiv_p4, m.Ba2_sowndiv_p5)
+  loo.Ba2 #p5
+  
+  loo.Ba4 <- loo(m.Ba4_sowndiv_p, m.Ba4_sowndiv_p2, m.Ba4_sowndiv_p31, 
+                 m.Ba4_sowndiv_p32, m.Ba4_sowndiv_p4, m.Ba4_sowndiv_p5)
+  loo.Ba4 #p5
+  
+  #posterior predictive checks on selected models:
+  pp_check(m.Ba1_sowndiv_p5, ndraws = 100) +
+    xlim(0,200)
+  pp_check(m.Ba2_sowndiv_p5, ndraws = 100) +
+    xlim(0,500)
+  pp_check(m.Ba4_sowndiv_p5, ndraws = 100) +
+    xlim(0,150)
+  
+  #conditional effects
+  conditional_effects(m.Ba1_sowndiv_p5) #t1 substantially higher than t2, trends probably non-significant
+  conditional_effects(m.Ba2_sowndiv_p5) #slightly positive trend in t1, slightly negativ in t2/t3
+  conditional_effects(m.Ba4_sowndiv_p5) #strong negative trend in t3, slightly positive in t2/t3. t3 might be driven mainly by 2 outliers at sowndiv=1
+    
+    ggplot(dat, aes(x=sowndivLog, y=Ba4, col=treatment))+
+      geom_jitter(width=.2) #check out the blue outliers in treatment 3:
+    dat %>% filter(treatment == 3 & sowndivLog == 0 & Ba4 > 75) %>%
+      select(Sample) #B4A13D1 
+    dat %>% filter(treatment == 3 & sowndivLog == 1 & Ba4 > 50) %>%
+      select(Sample) #B3A08D1
+    dat %>% filter(treatment == 3 & sowndivLog == 2 & Ba4 > 55) %>%
+      select(Sample) #B4A07D1
+    #the 3 high B4 densities are from different plots
+  
+  
+  save(m.Ba1_sowndiv_p5, m.Ba2_sowndiv_p5, m.Ba4_sowndiv_p5,
        file = "./statistics/brms/240205_Ba_cp_sowndiv_mselect.RData")
   
  

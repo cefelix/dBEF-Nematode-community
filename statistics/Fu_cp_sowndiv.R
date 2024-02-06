@@ -45,7 +45,6 @@ m.Fu2_sowndiv_p <- brm(
 pp_check(m.Fu2_sowndiv_p, ndraws=100)+
   xlim(0,300)
 summary(m.Fu2_sowndiv_p, prob =0.9)
-conditional_effects(m.Fu2_sowndiv_p)
 
 m.Fu2_sowndiv_p2 <- update(m.Fu2_sowndiv_p,
                            bf(Fu2 ~ sowndivLogStd*treatment + sowndivLogStd*week + treatment*week + 
@@ -115,7 +114,6 @@ m.Fu3_sowndiv_p <- brm(
 pp_check(m.Fu3_sowndiv_p, ndraws=100)+
   xlim(0,300)
 summary(m.Fu3_sowndiv_p, prob =0.9)
-conditional_effects(m.Fu3_sowndiv_p)
 
 m.Fu3_sowndiv_p2 <- update(m.Fu3_sowndiv_p,
                            bf(Fu3 ~ sowndivLogStd*treatment + sowndivLogStd*week + treatment*week + 
@@ -185,7 +183,6 @@ m.Fu4_sowndiv_p <- brm(
 pp_check(m.Fu4_sowndiv_p, ndraws=100)+
   xlim(0,300)
 summary(m.Fu4_sowndiv_p, prob =0.9)
-conditional_effects(m.Fu4_sowndiv_p)
 
 m.Fu4_sowndiv_p2 <- update(m.Fu4_sowndiv_p,
                            bf(Fu4 ~ sowndivLogStd*treatment + sowndivLogStd*week + treatment*week + 
@@ -239,3 +236,37 @@ beta_coeff_priors <- prior(normal(0,10), class = "b")
 SEED = 22061996
 
 sum(dat$Fu5==0) #228/228 -> no modelling possible
+
+#### model selection####
+load("./statistics/brms/240205_Fu2_sowndiv.RData")
+load("./statistics/brms/240205_Fu3_sowndiv.RData")
+load("./statistics/brms/240205_Fu4_sowndiv.RData")
+
+loo.Fu2 <- loo(m.Fu2_sowndiv_p, m.Fu2_sowndiv_p2, m.Fu2_sowndiv_p31, 
+               m.Fu2_sowndiv_p32, m.Fu2_sowndiv_p4, m.Fu2_sowndiv_p5)
+loo.Fu2 #p5
+
+loo.Fu3 <- loo(m.Fu3_sowndiv_p, m.Fu3_sowndiv_p2, m.Fu3_sowndiv_p31, 
+               m.Fu3_sowndiv_p32, m.Fu3_sowndiv_p4, m.Fu3_sowndiv_p5)
+loo.Fu3 #p5
+
+loo.Fu4 <- loo(m.Fu4_sowndiv_p, m.Fu4_sowndiv_p2, m.Fu4_sowndiv_p31, 
+               m.Fu4_sowndiv_p32, m.Fu4_sowndiv_p4, m.Fu4_sowndiv_p5)
+loo.Fu4 #p5
+
+#posterior predictive checks on selected models:
+pp_check(m.Fu2_sowndiv_p5, ndraws = 100) +
+  xlim(0,2000)
+pp_check(m.Fu3_sowndiv_p5, ndraws = 100) +
+  xlim(0,500)
+pp_check(m.Fu4_sowndiv_p5, ndraws = 100)
+
+#conditional effects:
+conditional_effects(m.Fu2_sowndiv_p5) #slightly positive trend in t1/t2, slightly neg in t3
+conditional_effects(m.Fu3_sowndiv_p5) #positive in all treatments
+conditional_effects(m.Fu4_sowndiv_p5) #slightly positive in t1/t3, neutral in t2
+
+
+#save the selected models
+save(m.Fu2_sowndiv_p5, m.Fu3_sowndiv_p5, m.Fu4_sowndiv_p5,
+     file = "./statistics/brms/Fu_cp_sowndiv_mselect.RData")

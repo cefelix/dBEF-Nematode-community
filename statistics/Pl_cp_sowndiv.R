@@ -45,7 +45,6 @@ m.Pl2_sowndiv_p <- brm(
 pp_check(m.Pl2_sowndiv_p, ndraws=100)+
   xlim(0,300)
 summary(m.Pl2_sowndiv_p, prob =0.9)
-conditional_effects(m.Pl2_sowndiv_p)
 
 m.Pl2_sowndiv_p2 <- update(m.Pl2_sowndiv_p,
                            bf(Pl2 ~ sowndivLogStd*treatment + sowndivLogStd*week + treatment*week + 
@@ -115,7 +114,6 @@ m.Pl3_sowndiv_p <- brm(
 pp_check(m.Pl3_sowndiv_p, ndraws=100)+
   xlim(0,300)
 summary(m.Pl3_sowndiv_p, prob =0.9)
-conditional_effects(m.Pl3_sowndiv_p)
 
 m.Pl3_sowndiv_p2 <- update(m.Pl3_sowndiv_p,
                            bf(Pl3 ~ sowndivLogStd*treatment + sowndivLogStd*week + treatment*week + 
@@ -185,7 +183,6 @@ m.Pl4_sowndiv_p <- brm(
 pp_check(m.Pl4_sowndiv_p, ndraws=100)+
   xlim(0,300)
 summary(m.Pl4_sowndiv_p, prob =0.9)
-conditional_effects(m.Pl4_sowndiv_p)
 
 m.Pl4_sowndiv_p2 <- update(m.Pl4_sowndiv_p,
                            bf(Pl4 ~ sowndivLogStd*treatment + sowndivLogStd*week + treatment*week + 
@@ -233,3 +230,39 @@ rm(m.Pl4_sowndiv_p, m.Pl4_sowndiv_p2, m.Pl4_sowndiv_p31,
 
 ####Pl5 ~ sowndiv ####
 sum(dat$Pl5==0) #224/228 -> no model possible
+
+####select models ####
+  load("./statistics/brms/240205_Pl2_sowndiv.RData")
+  load("./statistics/brms/240205_Pl3_sowndiv.RData")
+  load("./statistics/brms/240205_Pl4_sowndiv.RData")
+  
+  loo.Pl2 <- loo(m.Pl2_sowndiv_p, m.Pl2_sowndiv_p2, m.Pl2_sowndiv_p31, 
+                 m.Pl2_sowndiv_p32, m.Pl2_sowndiv_p4, m.Pl2_sowndiv_p5)
+  loo.Pl2 #p5
+  
+  loo.Pl3 <- loo(m.Pl3_sowndiv_p, m.Pl3_sowndiv_p2, m.Pl3_sowndiv_p31, 
+                 m.Pl3_sowndiv_p32, m.Pl3_sowndiv_p4, m.Pl3_sowndiv_p5)
+  loo.Pl3 #p5
+  
+  loo.Pl4 <- loo(m.Pl4_sowndiv_p, m.Pl4_sowndiv_p2, m.Pl4_sowndiv_p31, 
+                 m.Pl4_sowndiv_p32, m.Pl4_sowndiv_p4, m.Pl4_sowndiv_p5)
+  loo.Pl4 #p5
+  
+  #posterior predictive checks on selected models:
+  pp_check(m.Pl2_sowndiv_p5, ndraws = 100) +
+    xlim(0,1000)
+  pp_check(m.Pl3_sowndiv_p5, ndraws = 100) +
+    xlim(0,1000)
+  pp_check(m.Pl4_sowndiv_p5, ndraws = 100) +
+    xlim(0,150)
+  
+  #conditional effects
+  conditional_effects(m.Pl2_sowndiv_p5) #positive trend in t1, slightly pos. in t2, slightly neg. in t3
+  conditional_effects(m.Pl3_sowndiv_p5) #slightly pos in t1/t2/t2 at same level
+  conditional_effects(m.Pl4_sowndiv_p5) #neutral at same level
+  
+  
+  save(m.Pl2_sowndiv_p5, m.Pl3_sowndiv_p5, m.Pl4_sowndiv_p5,
+       file = "./statistics/brms/240205_Pl_cp_sowndiv_mselect.RData")
+  
+

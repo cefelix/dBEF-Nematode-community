@@ -45,7 +45,6 @@ m.Pr4_Om4_sowndiv_p <- brm(
 pp_check(m.Pr4_Om4_sowndiv_p, ndraws=100)+
   xlim(0,300)
 summary(m.Pr4_Om4_sowndiv_p, prob =0.9)
-conditional_effects(m.Pr4_Om4_sowndiv_p)
 
 m.Pr4_Om4_sowndiv_p2 <- update(m.Pr4_Om4_sowndiv_p,
                            bf(Pr4_Om4 ~ sowndivLogStd*treatment + sowndivLogStd*week + treatment*week + 
@@ -91,3 +90,19 @@ save(m.Pr4_Om4_sowndiv_p, m.Pr4_Om4_sowndiv_p2, m.Pr4_Om4_sowndiv_p31,
 rm(m.Pr4_Om4_sowndiv_p, m.Pr4_Om4_sowndiv_p2, m.Pr4_Om4_sowndiv_p31, 
    m.Pr4_Om4_sowndiv_p32, m.Pr4_Om4_sowndiv_p4, m.Pr4_Om4_sowndiv_p5)
 
+#### model selection ####
+  load("./statistics/brms/240205_Pr4_Om4_sowndiv.RData")
+  
+  loo.Pr4_Om4 <- loo(m.Pr4_Om4_sowndiv_p, m.Pr4_Om4_sowndiv_p2, m.Pr4_Om4_sowndiv_p31, 
+                     m.Pr4_Om4_sowndiv_p32, m.Pr4_Om4_sowndiv_p4, m.Pr4_Om4_sowndiv_p5)
+  loo.Pr4_Om4 #p5
+  
+  #posterior predictive check
+  pp_check(m.Pr4_Om4_sowndiv_p5, ndraws = 100)
+  
+  #conditional effects
+  conditional_effects(m.Pr4_Om4_sowndiv_p5) #pos. for t1, neutral t3, slightly negative t2
+
+  #save
+  save(m.Pr4_Om4_sowndiv_p,
+       file = "./statistics/brms/240205_Pr_Om_cp_sowndiv_mselect.RData")
