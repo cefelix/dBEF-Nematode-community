@@ -104,5 +104,6 @@ rm(m.Pr4_Om4_sowndiv_p, m.Pr4_Om4_sowndiv_p2, m.Pr4_Om4_sowndiv_p31,
   conditional_effects(m.Pr4_Om4_sowndiv_p5) #pos. for t1, neutral t3, slightly negative t2
 
   #save
-  save(m.Pr4_Om4_sowndiv_p,
+  save(m.Pr4_Om4_sowndiv_p5,
        file = "./statistics/brms/240205_Pr_Om_cp_sowndiv_mselect.RData")
+  

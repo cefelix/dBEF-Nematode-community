@@ -269,4 +269,4 @@ conditional_effects(m.Fu4_sowndiv_p5) #slightly positive in t1/t3, neutral in t2
 
 #save the selected models
 save(m.Fu2_sowndiv_p5, m.Fu3_sowndiv_p5, m.Fu4_sowndiv_p5,
-     file = "./statistics/brms/Fu_cp_sowndiv_mselect.RData")
+     file = "./statistics/brms/240205_Fu_cp_sowndiv_mselect.RData")
