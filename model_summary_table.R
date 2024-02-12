@@ -17,74 +17,11 @@ dat <- dat %>% mutate(sowndivLogStd = ( (sowndivLog - mean(sowndivLog)) / sd(sow
                       .after = sowndivLog) %>%
   mutate(realdivLogStd = ( (realdivLog - mean(realdivLog)) / sd(realdivLog) ),
          .after = realdivLog)
-  #for explaination on how to un-standardize coeffizients see here:
+
+#Explanation how to un-standardize coefficients here:
   #https://discourse.mc-stan.org/t/how-to-rescale-coefficients-of-lognormal-regression-to-be-change-in-y-for-unit-increase-of-x/22472
 
-#### OUTDATED: a function which creates a table with point estimates and HPDI (epred =TRUE) ####
-summarise_models.epred <- function(brmsfit, predictor, unstandardized_predictor, level=.95) {
-  response <- deparse(brmsfit$formula)[1] %>% #this row extracts the model term and converts it to a string
-    gsub(".*= (.+) ~.*", "\\1", .) #and this excludes everything which is not the response
-  
-  
-  #extracting Bulk/Tail ESS:
-  ms <- summary(brmsfit) #extract summary from model
-  fixed <- ms$fixed
-  fixed$predictor <- rownames(fixed)
-  ESS <- cbind( #a 2x3 matrix with bulk/tail ESS for sowndiv:treatment 
-    rbind(fixed$Bulk_ESS[fixed$predictor == predictor],                  
-          fixed$Bulk_ESS[fixed$predictor == paste(predictor, "treatment2", sep = ":")],
-          fixed$Bulk_ESS[fixed$predictor == paste(predictor, "treatment3", sep = ":")]
-    ), 
-    rbind(fixed$Tail_ESS[fixed$predictor == predictor],
-          fixed$Tail_ESS[fixed$predictor == paste(predictor, "treatment2", sep = ":")],
-          fixed$Tail_ESS[fixed$predictor == paste(predictor, "treatment3", sep = ":")]
-    )
-  )
-  colnames(ESS) <- c("bulk ESS", "tail ESS")
-  
-  family <- family(brmsfit)$family
-  
-  #the mean of the expected value of the posterior predictive distribution, HPDIs, and PDs
-  emt.s <- emtrends( brmsfit, specs = c("treatment"), var = predictor,
-                     epred = TRUE) %>% 
-    summary(., point.est = mean, level = level) %>% #get slope estimates mean and HPDI
-    mutate(mean.trend = log((eval(as.symbol(paste(predictor, "trend", sep=".")))+100)/100), .before = "lower.HPD",
-           #https://stackoverflow.com/questions/9057006/getting-strings-recognized-as-variable-names-in-r (2nd answer)
-           #eval(as.symbol(paste(predictor, "trend", sep="."))) necessary to extract any predictor 
-           #back-transforms to the same scale as emtrends(epred=FALSE) yields
-           lower.HPD = log((lower.HPD+100)/100),
-           upper.HPD = log((upper.HPD+100)/100)) %>%
-    #mutate(pd = 0.6)
-    mutate(pd = estimate_slopes(brmsfit, trend = predictor, at = "treatment", ci= level)$pd, .after = "upper.HPD") %>%
-    select( -as.symbol(paste(predictor, "trend", sep=".")) )
-  
-  #adding significance, based on probability of direction
-  support <- rep(NA, nrow(emt.s)) 
-  for (i in 1:nrow(emt.s) ) {
-    if (emt.s$pd[i] < 0.95 ) {
-      support[i] <- " "
-    }
-    else if (emt.s$pd[i] >= 0.95 & emt.s$pd[i] < 0.975)  {
-      support[i] <- "."
-    }
-    else if (emt.s$pd[i] >= 0.975 & emt.s$pd[i] < 0.995)  {
-      support[i] <- "*"
-    }
-    else if (emt.s$pd[i] >= 0.995 & emt.s$pd[i] < 0.9995)  {
-      support[i] <- "**"
-    }
-    else if (emt.s$pd[i] >= 0.9995 )  {
-      support[i] <- "***"
-    }
-  }
-  
-  divs <- 1 #Placeholder: add divergent transitions
-  row <- cbind(response, predictor, family, emt.s[], support, ESS#, divs, pd_t1, pd_t2, pd_t3
-  )
-  return(row)
-}
-
-#### a function which creates a table with point estimates (mean of posterior) and HPDI (95% CI) ####
+# a function which creates a table with point estimates (mean of posterior) and HPDI (95% CI):
 summarise_models <- function(brmsfit, predictor, unstandardized_predictor, level=.95) {
   response <- deparse(brmsfit$formula)[1] %>% #this row extracts the model term and converts it to a string
     gsub(".*= (.+) ~.*", "\\1", .) #and this excludes everything which is not the response
@@ -214,41 +151,7 @@ summarise_models <- function(brmsfit, predictor, unstandardized_predictor, level
     mutate(upper.HPD.2 = exp((realdiv.summary$upper.HPD) / sd(dat$realdivLog)), .before = "bulk ESS") %>%
     mutate_at((vars(mean.trend, lower.HPD, upper.HPD, pd) ), round, digits=3)  
     
-  
   realdiv.summary 
-  
-  
-  realdiv.summary
-
-  
-#### OLD: funcdiv ####  
-#~funcdivStd 
-  # in order to run summarise_models on the funcdiv model, you have to ad funcdivStd to dat (idk why):
-  dat <- dat %>% 
-    mutate(funcdivStd = ( (funcdiv - mean(funcdiv)) / sd(funcdiv) ),
-           .after = funcdiv)
-  #list of models:
-  func.list <- list(m.Ba_funcdiv_p5, m.Fu_funcdiv_p5, m.Pl_funcdiv_p5, m.Pr_funcdiv_p7, m.Om_funcdiv_p7)
-  
-  # a df of the model summaries:
-  funcdiv.summary <- lapply(func.list, summarise_models, predictor = "funcdivStd", level =.95) %>% 
-    bind_rows()
-  funcdiv.summary
-  
-  #un-standardize beta coefficients:
-  funcdiv.summary <- funcdiv.summary %>%
-    mutate(., funcdiv.trend = round(funcdiv.summary$mean.trend / sd(dat$funcdiv), 3), .before = "bulk ESS") %>%
-    mutate(lower.HPD.2 = round((funcdiv.summary$lower.HPD) / sd(dat$funcdiv), 3), .before = "bulk ESS") %>%
-    mutate(upper.HPD.2 = round((funcdiv.summary$upper.HPD) / sd(dat$funcdiv), 3), .before = "bulk ESS") 
-  
-  funcdiv.summary %>% 
-    mutate(mean.trend = round(mean.trend, 3),
-           lower.HPD = round(lower.HPD, 3),
-           upper.HPD = round(upper.HPD, 3),
-           pd = round(pd, 3))
-  funcdiv.summary 
-  
-  funcdiv.summary
   
 #### write each model summary into a .xlsx sheet  ####
   library(openxlsx)
@@ -258,7 +161,7 @@ summarise_models <- function(brmsfit, predictor, unstandardized_predictor, level
  write.xlsx(list.msummaries, 
       file = "./statistics/240212_Model_summaries.xlsx")
 
-#### the difference between emtrends(), emtrends(epred=TRUE) and posterior_epred() ####
+####OLD: the difference between emtrends(), emtrends(epred=TRUE) and posterior_epred() ####
   emtrends(m.Ba4_sowndiv_p5, var="sowndivLogStd") %>%
     summary(., point.est = mean, level = .95) %>%
     mutate(sowndivLogStd.trend = exp(sowndivLogStd.trend / sd(dat$sowndivLog))-1,
@@ -290,7 +193,7 @@ summarise_models <- function(brmsfit, predictor, unstandardized_predictor, level
   
   a <- pd_table(m.Ba_sowndiv_p5, predictor = "sowndivLogStd")
   
-  #### custom forest ####
+####NOT USED: custom forest ####
   custom_forest_plot <- function(mod, variable) {
     post <- as_draws_array(mod) 
     ci.95 <- ci(post, method = 'ETI') %>% filter(Parameter %in% variable) %>% rowwise() %>% mutate(mu = (CI_low+CI_high)/2)
