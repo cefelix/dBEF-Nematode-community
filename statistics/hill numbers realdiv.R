@@ -44,7 +44,7 @@ beta_coeff_priors <- prior(normal(0,10), class = "b")
 # stepwise elimiantion: gaus_p4, as for t2w1-t2w2 : p_dir = 93.73 % < 95 %
 #looic: gauss_p5, as it is the most parsimonous model whose looic doesnt 
 #differ significantly (less than 2 SE) from the best fit model
-load("./statistics/brms/231221_hill_all_realdiv.RData")
+load("./statistics/brms/240214_hill_all_realdiv.RData")
 
 #using a gaussian distribution with a normal(0,10) prior for beta coefficients
 m.all.Shannon.gaus_p <- brm(Hill_q1 ~ realdivLogStd*treatment*week + (1|block/plot), 
@@ -164,7 +164,7 @@ save(m.all.Shannon.gamma_p5, m.all.Shannon.gamma_p4, m.all.Shannon.gamma_p32,m.a
      m.all.Shannon.gamma_p2, m.all.Shannon.gamma_p,
      m.all.Shannon.gaus_p5,m.all.Shannon.gaus_p4, m.all.Shannon.gaus_p32, m.all.Shannon.gaus_p31,
      m.all.Shannon.gaus_p2, m.all.Shannon.gaus_p,
-     file="./statistics/brms/231221_hill_all_realdiv.RData")
+     file="./statistics/brms/240214_hill_all_realdiv.RData")
 
 rm(m.all.Shannon.gamma_p5, m.all.Shannon.gamma_p4, m.all.Shannon.gamma_p32,m.all.Shannon.gamma_p31,
    m.all.Shannon.gamma_p2, m.all.Shannon.gamma_p,
@@ -176,7 +176,7 @@ rm(m.all.Shannon.gamma_p5, m.all.Shannon.gamma_p4, m.all.Shannon.gamma_p32,m.all
 #stepwise elimiantion: gaus_p, as p_dir of t2w1-t2w2 is 99.87 % (> 95 %) 
 #looic: gauss_p5, as it is the most parsimonous model whose looic doesnt 
 #differ significantly (less than 2 SE) from the best fit model
-load("./statistics/brms/231221_hill_Ba_realdiv.RData")
+load("./statistics/brms/240214_hill_Ba_realdiv.RData")
 
 #using a gaussian distribution with a normal(0,10) prior for beta coefficients
 m.Ba.Shannon.gaus_p <- brm(Hill_q1.Ba ~ realdivLogStd*treatment*week + (1|block/plot), 
@@ -317,7 +317,7 @@ save(m.Ba.Shannon.gamma_p5, m.Ba.Shannon.gamma_p4, m.Ba.Shannon.gamma_p32,m.Ba.S
      m.Ba.Shannon.gamma_p2, m.Ba.Shannon.gamma_p,
      m.Ba.Shannon.gaus_p5,m.Ba.Shannon.gaus_p4, m.Ba.Shannon.gaus_p32, m.Ba.Shannon.gaus_p31,
      m.Ba.Shannon.gaus_p2, m.Ba.Shannon.gaus_p,
-     file="./statistics/brms/231221_hill_Ba_realdiv.RData")
+     file="./statistics/brms/240214_hill_Ba_realdiv.RData")
 
 rm(m.Ba.Shannon.gamma_p5, m.Ba.Shannon.gamma_p4, m.Ba.Shannon.gamma_p32,m.Ba.Shannon.gamma_p31,
    m.Ba.Shannon.gamma_p2, m.Ba.Shannon.gamma_p,
@@ -330,7 +330,7 @@ rm(m.Ba.Shannon.gamma_p5, m.Ba.Shannon.gamma_p4, m.Ba.Shannon.gamma_p32,m.Ba.Sha
 # stepwise elimiantion: gamma_p4
 #looic: gamma_p5, as it is the most parsimonous model to not
 #differ significantly (less than 2 SE) from the best fit model
-load(     file="./statistics/brms/231221_hill_Fu_realdiv.RData")
+load(     file="./statistics/brms/240214_hill_Fu_realdiv.RData")
 
 #using a gaussian distribution with a normal(0,10) prior for beta coefficients
 m.Fu.Shannon.gaus_p <- brm(Hill_q1.Fu ~ realdivLogStd*treatment*week + (1|block/plot), 
@@ -441,7 +441,7 @@ save(m.Fu.Shannon.gamma_p5, m.Fu.Shannon.gamma_p4, m.Fu.Shannon.gamma_p32,m.Fu.S
      m.Fu.Shannon.gamma_p2, m.Fu.Shannon.gamma_p,
      m.Fu.Shannon.gaus_p5,m.Fu.Shannon.gaus_p4, m.Fu.Shannon.gaus_p32, m.Fu.Shannon.gaus_p31,
      m.Fu.Shannon.gaus_p2, m.Fu.Shannon.gaus_p,
-     file="./statistics/brms/231221_hill_Fu_realdiv.RData")
+     file="./statistics/brms/240214_hill_Fu_realdiv.RData")
 
 rm(m.Fu.Shannon.gamma_p5, #m.Fu.Shannon.gamma_p4, 
    m.Fu.Shannon.gamma_p32,m.Fu.Shannon.gamma_p31,
@@ -454,7 +454,7 @@ rm(m.Fu.Shannon.gamma_p5, #m.Fu.Shannon.gamma_p4,
 # stepwise elimiantion: gaus_p, as for t2w1-t2w2 : p_dir=96.43% (>90%)
 #looic: gauss_p5, as it is the most parsimonous model whose looic doesnt 
 #differ significantly (less than 2 SE) from the best fit model
-load(     file="./statistics/brms/231221_hill_Pl_realdiv.RData")
+load(     file="./statistics/brms/240214_hill_Pl_realdiv.RData")
 
 #using a gaussian distribution with a normal(0,10) prior for beta coefficients
 m.Pl.Shannon.gaus_p <- brm(Hill_q1.Pl ~ realdivLogStd*treatment*week + (1|block/plot), 
@@ -575,7 +575,7 @@ save(m.Pl.Shannon.gamma_p5, m.Pl.Shannon.gamma_p4, m.Pl.Shannon.gamma_p32,m.Pl.S
      m.Pl.Shannon.gamma_p2, m.Pl.Shannon.gamma_p,
      m.Pl.Shannon.gaus_p5,m.Pl.Shannon.gaus_p4, m.Pl.Shannon.gaus_p32, m.Pl.Shannon.gaus_p31,
      m.Pl.Shannon.gaus_p2, m.Pl.Shannon.gaus_p,
-     file="./statistics/brms/231221_hill_Pl_realdiv.RData")
+     file="./statistics/brms/240214_hill_Pl_realdiv.RData")
 
 rm(m.Pl.Shannon.gamma_p5, m.Pl.Shannon.gamma_p4, m.Pl.Shannon.gamma_p32,m.Pl.Shannon.gamma_p31,
    m.Pl.Shannon.gamma_p2, m.Pl.Shannon.gamma_p,
@@ -583,270 +583,134 @@ rm(m.Pl.Shannon.gamma_p5, m.Pl.Shannon.gamma_p4, m.Pl.Shannon.gamma_p32,m.Pl.Sha
    m.Pl.Shannon.gaus_p2#, m.Pl.Shannon.gaus_p
    )
 
-#### Shannon Pr ~ realdivLogStd: gamma_p (looic: gamma_p5) ####
+#### Shannon PrOm ~ realdivLogStd: gamma_p (looic: gamma_p5)  ####
 #all gaussian models show significantly better fit than the gamma models (elpd_diff > 2 SE_diff)
-# stepwise elimiantion: gamma_p, as prob_dir between t3w1 and t3w2 is 91.33% (>90%)
+# stepwise elimiantion: gaus_p4, as week is significant (95% CI)
 #looic: gauss_p5, as it is the most parsimonous model whose looic doesnt 
 #differ significantly (less than 2 SE) from the best fit model
-load(file="./statistics/brms/231221_hill_Pr_realdiv.RData")
+load(file="./statistics/brms/240214_hill_PrOm_realdiv.RData")
+
 
 #using a gaussian distribution with a normal(0,10) prior for beta coefficients
-m.Pr.Shannon.gaus_p <- brm(Hill_q1.Pr ~ realdivLogStd*treatment*week + (1|block/plot), 
-                           data = dat, family = "gaussian",
-                           chains = 3,
-                           cores = 3,
-                           iter = 2000, warmup = 1000,
-                           prior = beta_coeff_priors,
-                           seed = SEED,
-                           control = list(adapt_delta = 0.99) )  #9 div
-summary(m.Pr.Shannon.gaus_p, prob=0.9 )
-  
-  #do not do this:
-  #almost marginally significant, look at emtrends:
-    emt = emtrends( m.Pr.Shannon.gaus_p, specs = c("treatment", "week"), var="realdivLogStd")
-    summary(emt, point.est=mean, level = .9) 
-    emt.pairs <- pairs(emt)
-    summary(emt.pairs, point.est=mean, level = .9)
-    bayestestR::p_direction(emt.pairs) #t1w1-t1w2: 93.57% (>90%) 
-  
+m.PrOm.Shannon.gaus_p <- brm(Hill_q1.PrOm ~ realdivLogStd*treatment*week + (1|block/plot), 
+                             data = dat, family = "gaussian",
+                             chains = 3,
+                             cores = 3,
+                             iter = 2000, warmup = 1000,
+                             prior = beta_coeff_priors,
+                             seed = SEED,
+                             control = list(adapt_delta = 0.99) )  #4 div
+summary(m.PrOm.Shannon.gaus_p, prob=0.95 )
+#keep 3-fold interaction as it is significant (CI = 0.95)
+
 #remove 3 way interaction:
-m.Pr.Shannon.gaus_p2 <- update(m.Pr.Shannon.gaus_p, 
-                               bf(Hill_q1.Pr ~ realdivLogStd*treatment + treatment*week + 
-                                    realdivLogStd*week + (1|block/plot)),
-                               seed = SEED) # 10 div
-summary(m.Pr.Shannon.gaus_p2, prob=0.9)
+m.PrOm.Shannon.gaus_p2 <- update(m.PrOm.Shannon.gaus_p, 
+                                 bf(Hill_q1.PrOm ~ realdivLogStd*treatment + treatment*week + 
+                                      realdivLogStd*week + (1|block/plot)),
+                                 seed = SEED) # 8 div
+summary(m.PrOm.Shannon.gaus_p2, prob=0.9)
 
 #remove treatment*week
-m.Pr.Shannon.gaus_p31 <- update(m.Pr.Shannon.gaus_p, 
-                                bf(Hill_q1.Pr ~ realdivLogStd*treatment + realdivLogStd*week + 
-                                     (1|block/plot)),
-                                seed = SEED) #16 div
-summary(m.Pr.Shannon.gaus_p31, prob=0.9 )
+m.PrOm.Shannon.gaus_p31 <- update(m.PrOm.Shannon.gaus_p, 
+                                  bf(Hill_q1.PrOm ~ realdivLogStd*treatment + realdivLogStd*week + 
+                                       (1|block/plot)),
+                                  seed = SEED) #3 div
+summary(m.PrOm.Shannon.gaus_p31, prob=0.9 )
 
 #remove realdiv*week
-m.Pr.Shannon.gaus_p32 <- update(m.Pr.Shannon.gaus_p, 
-                                bf(Hill_q1.Pr ~ realdivLogStd*treatment + treatment*week + 
-                                     (1|block/plot)),
-                                seed = SEED) # 4 div
-summary(m.Pr.Shannon.gaus_p32, prob=0.9 )
+m.PrOm.Shannon.gaus_p32 <- update(m.PrOm.Shannon.gaus_p, 
+                                  bf(Hill_q1.PrOm ~ realdivLogStd*treatment + treatment*week + 
+                                       (1|block/plot)),
+                                  seed = SEED) # 4 div
+summary(m.PrOm.Shannon.gaus_p32, prob=0.9 )
 
 #remove both treatment*week and realdiv*week:
-m.Pr.Shannon.gaus_p4 <- update(m.Pr.Shannon.gaus_p, 
-                               bf(Hill_q1.Pr ~ realdivLogStd*treatment + week + (1|block/plot)),
-                               seed = SEED) #9 div
-summary(m.Pr.Shannon.gaus_p4, prob=0.9 )
-#stepwise simplification: choose p4, as week is marginally significant (95% CI)
+m.PrOm.Shannon.gaus_p4 <- update(m.PrOm.Shannon.gaus_p, 
+                                 bf(Hill_q1.PrOm ~ realdivLogStd*treatment + week + (1|block/plot)),
+                                 seed = SEED)
+summary(m.PrOm.Shannon.gaus_p4, prob=0.9 )
+#stepwise simplification (when not considering 3-fold interactions): choose p4, as week is marginally significant (90% CI)
 
-    #remove week:
-    m.Pr.Shannon.gaus_p5 <- update(m.Pr.Shannon.gaus_p, 
-                                   bf(Hill_q1.Pr ~ realdivLogStd*treatment + (1|block/plot)),
-                                   seed = SEED)
-    summary(m.Pr.Shannon.gaus_p5, prob=0.9 )
+#remove week:
+m.PrOm.Shannon.gaus_p5 <- update(m.PrOm.Shannon.gaus_p, 
+                                 bf(Hill_q1.PrOm ~ realdivLogStd*treatment + (1|block/plot)),
+                                 seed = SEED)
+summary(m.PrOm.Shannon.gaus_p5, prob=0.9 )
+pp_check(m.PrOm.Shannon.gaus_p, ndraws=100)
 
-loo(m.Pr.Shannon.gaus_p5,m.Pr.Shannon.gaus_p4, m.Pr.Shannon.gaus_p32, m.Pr.Shannon.gaus_p31,
-    m.Pr.Shannon.gaus_p2, m.Pr.Shannon.gaus_p)
+loo(m.PrOm.Shannon.gaus_p5,m.PrOm.Shannon.gaus_p4, m.PrOm.Shannon.gaus_p32, m.PrOm.Shannon.gaus_p31,
+    m.PrOm.Shannon.gaus_p2, m.PrOm.Shannon.gaus_p)
 
 #using a gamma distribution with a normal(0,10) prior for beta coefficients
-m.Pr.Shannon.gamma_p <- brm(Hill_q1.Pr ~ realdivLogStd*treatment*week + (1|block/plot), 
-                            data = dat, family = "gamma",
-                            chains = 3,
-                            cores = 3,
-                            iter = 2000, warmup = 1000,
-                            prior = beta_coeff_priors,
-                            seed = SEED,
-                            control = list(adapt_delta = 0.99) )  # 8 div
-summary(m.Pr.Shannon.gamma_p, prob=0.9) #
-#keep p, as 3-way interaction is marginally significant
-pp_check(m.Pr.Shannon.gamma_p, ndraws=100)
-#look at emtrends:
-    emt = emtrends(m.Pr.Shannon.gamma_p, specs = c("treatment", "week"), var="realdivLogStd")
-    summary(emt, point.est=mean, level = .9) 
-    emt.pairs <- pairs(emt)
-    summary(emt.pairs, point.est=mean, level = .9)
-    bayestestR::p_direction(emt.pairs) #t3w1 vs t3w2: p_dir=91.33%
+m.PrOm.Shannon.gamma_p <- brm(Hill_q1.PrOm ~ realdivLogStd*treatment*week + (1|block/plot), 
+                              data = dat, family = "gamma",
+                              chains = 3,
+                              cores = 3,
+                              iter = 2000, warmup = 1000,
+                              prior = beta_coeff_priors,
+                              seed = SEED,
+                              control = list(adapt_delta = 0.99) )  # 1 div
+summary(m.PrOm.Shannon.gamma_p, prob=0.9)
+pp_check(m.PrOm.Shannon.gamma_p, ndraws = 100) #visually much better fit than gaus_p
+
+#keep 3-way interaction
 
 #remove 3 way interaction:
-m.Pr.Shannon.gamma_p2 <- update(m.Pr.Shannon.gamma_p, 
-                                bf(Hill_q1.Pr ~ realdivLogStd*treatment + treatment*week + 
-                                     realdivLogStd*week + (1|block/plot)),
-                                seed = SEED) # 15 div
-summary(m.Pr.Shannon.gamma_p2, prob=0.9)
+m.PrOm.Shannon.gamma_p2 <- update(m.PrOm.Shannon.gamma_p, 
+                                  bf(Hill_q1.PrOm ~ realdivLogStd*treatment + treatment*week + 
+                                       realdivLogStd*week + (1|block/plot)),
+                                  seed = SEED) # 5 div
+summary(m.PrOm.Shannon.gamma_p2, prob=0.9)
 
 #remove treatment*week
-m.Pr.Shannon.gamma_p31 <- update(m.Pr.Shannon.gamma_p, 
-                                 bf(Hill_q1.Pr ~ realdivLogStd*treatment + realdivLogStd*week + 
-                                      (1|block/plot)),
-                                 seed = SEED) #9 div
-summary(m.Pr.Shannon.gamma_p31, prob=0.9 )
+m.PrOm.Shannon.gamma_p31 <- update(m.PrOm.Shannon.gamma_p, 
+                                   bf(Hill_q1.PrOm ~ realdivLogStd*treatment + realdivLogStd*week + 
+                                        (1|block/plot)),
+                                   seed = SEED) #12 div
+summary(m.PrOm.Shannon.gamma_p31, prob=0.9 )
 
 #remove realdiv*week
-m.Pr.Shannon.gamma_p32 <- update(m.Pr.Shannon.gamma_p, 
-                                 bf(Hill_q1.Pr ~ realdivLogStd*treatment + treatment*week + 
-                                      (1|block/plot)),
-                                 seed = SEED) #4 div
-summary(m.Pr.Shannon.gamma_p32, prob=0.9 )
+m.PrOm.Shannon.gamma_p32 <- update(m.PrOm.Shannon.gamma_p, 
+                                   bf(Hill_q1.PrOm ~ realdivLogStd*treatment + treatment*week + 
+                                        (1|block/plot)),
+                                   seed = SEED) #4 div
+summary(m.PrOm.Shannon.gamma_p32, prob=0.9 )
 
 #remove both treatment*week and realdiv*week:
-m.Pr.Shannon.gamma_p4 <- update(m.Pr.Shannon.gamma_p, 
-                                bf(Hill_q1.Pr ~ realdivLogStd*treatment + week + (1|block/plot)),
-                                seed = SEED) # 4 div
-summary(m.Pr.Shannon.gamma_p4, prob=0.9 )
+m.PrOm.Shannon.gamma_p4 <- update(m.PrOm.Shannon.gamma_p, 
+                                  bf(Hill_q1.PrOm ~ realdivLogStd*treatment + week + (1|block/plot)),
+                                  seed = SEED)
+summary(m.PrOm.Shannon.gamma_p4, prob=0.9 )
+#stepwise simplification without 3-way interaction: keep week, as it is marginally significant (CI=90%)
 
-#stepwise simplification keep week, as it is marginally significant (CI=90%)
-pp_check(m.Pr.Shannon.gamma_p4, ndraws=100)
+pp_check(m.PrOm.Shannon.gamma_p, ndraws=100)
 
 
 #remove week:
-m.Pr.Shannon.gamma_p5 <- update(m.Pr.Shannon.gamma_p, 
-                                bf(Hill_q1.Pr ~ realdivLogStd*treatment + (1|block/plot)),
-                                seed = SEED)
-summary(m.Pr.Shannon.gamma_p5, prob=0.9 )
+m.PrOm.Shannon.gamma_p5 <- update(m.PrOm.Shannon.gamma_p, 
+                                  bf(Hill_q1.PrOm ~ realdivLogStd*treatment + (1|block/plot)),
+                                  seed = SEED)
+summary(m.PrOm.Shannon.gamma_p5, prob=0.9 )
 
 #compare
-Pr.loo <- loo(m.Pr.Shannon.gamma_p5, m.Pr.Shannon.gamma_p4, m.Pr.Shannon.gamma_p32,m.Pr.Shannon.gamma_p31,
-              m.Pr.Shannon.gamma_p2, m.Pr.Shannon.gamma_p,
-              m.Pr.Shannon.gaus_p5,m.Pr.Shannon.gaus_p4, m.Pr.Shannon.gaus_p32, m.Pr.Shannon.gaus_p31,
-              m.Pr.Shannon.gaus_p2, m.Pr.Shannon.gaus_p)
-Pr.loo
-#using a gamma distribution shows much better fit
-
-save(m.Pr.Shannon.gamma_p5, m.Pr.Shannon.gamma_p4, m.Pr.Shannon.gamma_p32,m.Pr.Shannon.gamma_p31,
-     m.Pr.Shannon.gamma_p2, m.Pr.Shannon.gamma_p,
-     m.Pr.Shannon.gaus_p5,m.Pr.Shannon.gaus_p4, m.Pr.Shannon.gaus_p32, m.Pr.Shannon.gaus_p31,
-     m.Pr.Shannon.gaus_p2, m.Pr.Shannon.gaus_p,
-     file="./statistics/brms/231221_hill_Pr_realdiv.RData")
-
-rm(m.Pr.Shannon.gamma_p5, m.Pr.Shannon.gamma_p4, m.Pr.Shannon.gamma_p32,m.Pr.Shannon.gamma_p31,
-   m.Pr.Shannon.gamma_p2, #m.Pr.Shannon.gamma_p,
-   m.Pr.Shannon.gaus_p5,m.Pr.Shannon.gaus_p4, m.Pr.Shannon.gaus_p32, m.Pr.Shannon.gaus_p31,
-   m.Pr.Shannon.gaus_p2, m.Pr.Shannon.gaus_p)
-
-#### Shannon Om ~ realdivLogStd: no fitting possible  ####
-ggplot(data = dat, aes(y=Sample, x=Hill_q1.Om))+
-  geom_point()
-
-sum(dat$Hill_q1.Om == 1 | dat$Hill_q1.Om == 2) #196 of 240 
-  #-> this wont fit neither a gaussian nor a gamma distribution
-
-
-load( file="./statistics/brms/231221_hill_Om_realdiv.RData")
-
-#using a gaussian distribution with a normal(0,10) prior for beta coefficients
-m.Om.Shannon.gaus_p <- brm(Hill_q1.Om ~ realdivLogStd*treatment*week + (1|block/plot), 
-                           data = dat, family = "gaussian",
-                           chains = 3,
-                           cores = 3,
-                           iter = 2000, warmup = 1000,
-                           prior = beta_coeff_priors,
-                           seed = SEED,
-                           control = list(adapt_delta = 0.99) )  #6 div
-summary(m.Om.Shannon.gaus_p, prob=0.9 )
-
-#remove 3 way interaction:
-m.Om.Shannon.gaus_p2 <- update(m.Om.Shannon.gaus_p, 
-                               bf(Hill_q1.Om ~ realdivLogStd*treatment + treatment*week + 
-                                    realdivLogStd*week + (1|block/plot)),
-                               seed = SEED) # 8 div
-summary(m.Om.Shannon.gaus_p2, prob=0.9)
-
-#remove treatment*week
-m.Om.Shannon.gaus_p31 <- update(m.Om.Shannon.gaus_p, 
-                                bf(Hill_q1.Om ~ realdivLogStd*treatment + realdivLogStd*week + 
-                                     (1|block/plot)),
-                                seed = SEED) #3 div
-summary(m.Om.Shannon.gaus_p31, prob=0.9 )
-
-#remove realdiv*week
-m.Om.Shannon.gaus_p32 <- update(m.Om.Shannon.gaus_p, 
-                                bf(Hill_q1.Om ~ realdivLogStd*treatment + treatment*week + 
-                                     (1|block/plot)),
-                                seed = SEED) # 4 div
-summary(m.Om.Shannon.gaus_p32, prob=0.9 )
-
-#remove both treatment*week and realdiv*week:
-m.Om.Shannon.gaus_p4 <- update(m.Om.Shannon.gaus_p, 
-                               bf(Hill_q1.Om ~ realdivLogStd*treatment + week + (1|block/plot)),
-                               seed = SEED)
-summary(m.Om.Shannon.gaus_p4, prob=0.9 )
-#stepwise simplification: choose p4, as week is significant (95% CI)
-
-#remove week:
-m.Om.Shannon.gaus_p5 <- update(m.Om.Shannon.gaus_p, 
-                               bf(Hill_q1.Om ~ realdivLogStd*treatment + (1|block/plot)),
-                               seed = SEED)
-summary(m.Om.Shannon.gaus_p5, prob=0.9 )
-#stepwise simplification: choose p5
-
-
-loo(m.Om.Shannon.gaus_p5,m.Om.Shannon.gaus_p4, m.Om.Shannon.gaus_p32, m.Om.Shannon.gaus_p31,
-    m.Om.Shannon.gaus_p2, m.Om.Shannon.gaus_p)
-
-#using a gamma distribution with a normal(0,10) prior for beta coefficients
-m.Om.Shannon.gamma_p <- brm(Hill_q1.Om ~ realdivLogStd*treatment*week + (1|block/plot), 
-                            data = dat, family = "gamma",
-                            chains = 3,
-                            cores = 3,
-                            iter = 2000, warmup = 1000,
-                            prior = beta_coeff_priors,
-                            seed = SEED,
-                            control = list(adapt_delta = 0.99) )  # 4 div
-summary(m.Om.Shannon.gamma_p, prob=0.9)
-pp_check(m.Om.Shannon.gamma_p, ndraws = 100)
-
-#remove 3 way interaction:
-m.Om.Shannon.gamma_p2 <- update(m.Om.Shannon.gamma_p, 
-                                bf(Hill_q1.Om ~ realdivLogStd*treatment + treatment*week + 
-                                     realdivLogStd*week + (1|block/plot)),
-                                seed = SEED) # 5 div
-summary(m.Om.Shannon.gamma_p2, prob=0.9)
-
-#remove treatment*week
-m.Om.Shannon.gamma_p31 <- update(m.Om.Shannon.gamma_p, 
-                                 bf(Hill_q1.Om ~ realdivLogStd*treatment + realdivLogStd*week + 
-                                      (1|block/plot)),
-                                 seed = SEED) #12 div
-summary(m.Om.Shannon.gamma_p31, prob=0.9 )
-
-#remove realdiv*week
-m.Om.Shannon.gamma_p32 <- update(m.Om.Shannon.gamma_p, 
-                                 bf(Hill_q1.Om ~ realdivLogStd*treatment + treatment*week + 
-                                      (1|block/plot)),
-                                 seed = SEED) #4 div
-summary(m.Om.Shannon.gamma_p32, prob=0.9 )
-
-#remove both treatment*week and realdiv*week:
-m.Om.Shannon.gamma_p4 <- update(m.Om.Shannon.gamma_p, 
-                                bf(Hill_q1.Om ~ realdivLogStd*treatment + week + (1|block/plot)),
-                                seed = SEED)
-summary(m.Om.Shannon.gamma_p4, prob=0.9 )
-#stepwise simplification keep week, as it is marginally significant (CI=90%)
-pp_check(m.Om.Shannon.gamma_p4, ndraws=100)
-
-
-#remove week:
-m.Om.Shannon.gamma_p5 <- update(m.Om.Shannon.gamma_p, 
-                                bf(Hill_q1.Om ~ realdivLogStd*treatment + (1|block/plot)),
-                                seed = SEED)
-summary(m.Om.Shannon.gamma_p5, prob=0.9 )
-
-#compare
-Om.loo <- loo(m.Om.Shannon.gamma_p5, m.Om.Shannon.gamma_p4, m.Om.Shannon.gamma_p32,m.Om.Shannon.gamma_p31,
-              m.Om.Shannon.gamma_p2, m.Om.Shannon.gamma_p,
-              m.Om.Shannon.gaus_p5,m.Om.Shannon.gaus_p4, m.Om.Shannon.gaus_p32, m.Om.Shannon.gaus_p31,
-              m.Om.Shannon.gaus_p2, m.Om.Shannon.gaus_p)
-Om.loo
+PrOm.loo <- loo(m.PrOm.Shannon.gamma_p5, m.PrOm.Shannon.gamma_p4, m.PrOm.Shannon.gamma_p32,m.PrOm.Shannon.gamma_p31,
+                m.PrOm.Shannon.gamma_p2, m.PrOm.Shannon.gamma_p,
+                m.PrOm.Shannon.gaus_p5,m.PrOm.Shannon.gaus_p4, m.PrOm.Shannon.gaus_p32, m.PrOm.Shannon.gaus_p31,
+                m.PrOm.Shannon.gaus_p2, m.PrOm.Shannon.gaus_p)
+PrOm.loo
 #using a gaussian distribution shows better fit
 
-save(m.Om.Shannon.gamma_p5, m.Om.Shannon.gamma_p4, m.Om.Shannon.gamma_p32,m.Om.Shannon.gamma_p31,
-     m.Om.Shannon.gamma_p2, m.Om.Shannon.gamma_p,
-     m.Om.Shannon.gaus_p5,m.Om.Shannon.gaus_p4, m.Om.Shannon.gaus_p32, m.Om.Shannon.gaus_p31,
-     m.Om.Shannon.gaus_p2, m.Om.Shannon.gaus_p,
-     file="./statistics/brms/231221_hill_Om_realdiv.RData")
+save(m.PrOm.Shannon.gamma_p5, m.PrOm.Shannon.gamma_p4, m.PrOm.Shannon.gamma_p32,m.PrOm.Shannon.gamma_p31,
+     m.PrOm.Shannon.gamma_p2, m.PrOm.Shannon.gamma_p,
+     m.PrOm.Shannon.gaus_p5,m.PrOm.Shannon.gaus_p4, m.PrOm.Shannon.gaus_p32, m.PrOm.Shannon.gaus_p31,
+     m.PrOm.Shannon.gaus_p2, m.PrOm.Shannon.gaus_p,
+     file="./statistics/brms/240214_hill_PrOm_realdiv.RData")
 
-rm(m.Om.Shannon.gamma_p5, m.Om.Shannon.gamma_p4, m.Om.Shannon.gamma_p32,m.Om.Shannon.gamma_p31,
-   m.Om.Shannon.gamma_p2, m.Om.Shannon.gamma_p,
-   m.Om.Shannon.gaus_p5,m.Om.Shannon.gaus_p4, m.Om.Shannon.gaus_p32, m.Om.Shannon.gaus_p31,
-   m.Om.Shannon.gaus_p2, m.Om.Shannon.gaus_p)
+rm(m.PrOm.Shannon.gamma_p5, m.PrOm.Shannon.gamma_p4, m.PrOm.Shannon.gamma_p32,m.PrOm.Shannon.gamma_p31,
+   m.PrOm.Shannon.gamma_p2, m.PrOm.Shannon.gamma_p,
+   m.PrOm.Shannon.gaus_p5,m.PrOm.Shannon.gaus_p4, m.PrOm.Shannon.gaus_p32, m.PrOm.Shannon.gaus_p31,
+   m.PrOm.Shannon.gaus_p2, m.PrOm.Shannon.gaus_p)
+
 
 #### model selection ####
 library(brms)
@@ -856,12 +720,12 @@ library(ggplot2)
 #saving the selected models in a seperate file:
 
 #all ~ realdiv: gaus_p5
-load("./statistics/brms/231221_hill_all_realdiv.RData")
+load("./statistics/brms/240214_hill_all_realdiv.RData")
   all.loo <- loo(m.all.Shannon.gamma_p5, m.all.Shannon.gamma_p4, m.all.Shannon.gamma_p32,m.all.Shannon.gamma_p31,
                 m.all.Shannon.gamma_p2, m.all.Shannon.gamma_p,
                 m.all.Shannon.gaus_p5,m.all.Shannon.gaus_p4, m.all.Shannon.gaus_p32, m.all.Shannon.gaus_p31,
                 m.all.Shannon.gaus_p2, m.all.Shannon.gaus_p)
-  all.loo
+  all.loo #gaus_p5
   rm(m.all.Shannon.gamma_p5, m.all.Shannon.gamma_p4, m.all.Shannon.gamma_p32,m.all.Shannon.gamma_p31,
      m.all.Shannon.gamma_p2, m.all.Shannon.gamma_p,
      #m.all.Shannon.gaus_p5,
@@ -869,8 +733,8 @@ load("./statistics/brms/231221_hill_all_realdiv.RData")
      m.all.Shannon.gaus_p2, m.all.Shannon.gaus_p)
 
 
-#Ba ~ realdiv: gaus_p5
-load("./statistics/brms/231221_hill_Ba_realdiv.RData")
+#Ba ~ realdiv: gamma_p5
+load("./statistics/brms/240214_hill_Ba_realdiv.RData")
 Ba.loo <- loo(m.Ba.Shannon.gamma_p5, m.Ba.Shannon.gamma_p4, m.Ba.Shannon.gamma_p32,m.Ba.Shannon.gamma_p31,
                         m.Ba.Shannon.gamma_p2, m.Ba.Shannon.gamma_p,
                         m.Ba.Shannon.gaus_p5,m.Ba.Shannon.gaus_p4, m.Ba.Shannon.gaus_p32, m.Ba.Shannon.gaus_p31,
@@ -883,21 +747,21 @@ rm(m.Ba.Shannon.gamma_p5, m.Ba.Shannon.gamma_p4, m.Ba.Shannon.gamma_p32,m.Ba.Sha
     m.Ba.Shannon.gaus_p2, m.Ba.Shannon.gaus_p)
 
 #Fu ~ realdiv: gaus_p5
-  load("./statistics/brms/231221_hill_Fu_realdiv.RData")
+  load("./statistics/brms/240214_hill_Fu_realdiv.RData")
   Fu.loo <- loo(m.Fu.Shannon.gamma_p5, m.Fu.Shannon.gamma_p4, m.Fu.Shannon.gamma_p32,m.Fu.Shannon.gamma_p31,
                 m.Fu.Shannon.gamma_p2, m.Fu.Shannon.gamma_p,
                 m.Fu.Shannon.gaus_p5,m.Fu.Shannon.gaus_p4, m.Fu.Shannon.gaus_p32, m.Fu.Shannon.gaus_p31,
                 m.Fu.Shannon.gaus_p2, m.Fu.Shannon.gaus_p)
   Fu.loo
-  rm(#m.Fu.Shannon.gamma_p5, 
+  rm(m.Fu.Shannon.gamma_p5, 
      m.Fu.Shannon.gamma_p4, m.Fu.Shannon.gamma_p32,m.Fu.Shannon.gamma_p31,
      m.Fu.Shannon.gamma_p2, m.Fu.Shannon.gamma_p,
      m.Fu.Shannon.gaus_p5,
      m.Fu.Shannon.gaus_p4, m.Fu.Shannon.gaus_p32, m.Fu.Shannon.gaus_p31,
      m.Fu.Shannon.gaus_p2, m.Fu.Shannon.gaus_p)
 
-#Pl ~ realdiv: gaus_p5
-  load("./statistics/brms/231221_hill_Pl_realdiv.RData")
+#Pl ~ realdiv: gamma_p5
+  load("./statistics/brms/240214_hill_Pl_realdiv.RData")
   Pl.loo <- loo(m.Pl.Shannon.gamma_p5, m.Pl.Shannon.gamma_p4, m.Pl.Shannon.gamma_p32,m.Pl.Shannon.gamma_p31,
                 m.Pl.Shannon.gamma_p2, m.Pl.Shannon.gamma_p,
                 m.Pl.Shannon.gaus_p5,m.Pl.Shannon.gaus_p4, m.Pl.Shannon.gaus_p32, m.Pl.Shannon.gaus_p31,
@@ -910,13 +774,13 @@ rm(m.Ba.Shannon.gamma_p5, m.Ba.Shannon.gamma_p4, m.Ba.Shannon.gamma_p32,m.Ba.Sha
     m.Pl.Shannon.gaus_p4, m.Pl.Shannon.gaus_p32, m.Pl.Shannon.gaus_p31,
     m.Pl.Shannon.gaus_p2, m.Pl.Shannon.gaus_p)
 
-#Pr ~ realdiv: gamma_p5
-  load("./statistics/brms/231221_hill_Pr_realdiv.RData")
-  Pr.loo <- loo(m.Pr.Shannon.gamma_p5, m.Pr.Shannon.gamma_p4, m.Pr.Shannon.gamma_p32,m.Pr.Shannon.gamma_p31,
-                m.Pr.Shannon.gamma_p2, m.Pr.Shannon.gamma_p,
-                m.Pr.Shannon.gaus_p5,m.Pr.Shannon.gaus_p4, m.Pr.Shannon.gaus_p32, m.Pr.Shannon.gaus_p31,
-                m.Pr.Shannon.gaus_p2, m.Pr.Shannon.gaus_p)
-  Pr.loo
+#PrOm ~ realdiv: gamma_p5
+  load("./statistics/brms/240214_hill_PrOm_realdiv.RData")
+  PrOm.loo <- loo(m.PrOm.Shannon.gamma_p5, m.PrOm.Shannon.gamma_p4, m.PrOm.Shannon.gamma_p32,m.PrOm.Shannon.gamma_p31,
+                m.PrOm.Shannon.gamma_p2, m.PrOm.Shannon.gamma_p,
+                m.PrOm.Shannon.gaus_p5,m.PrOm.Shannon.gaus_p4, m.PrOm.Shannon.gaus_p32, m.PrOm.Shannon.gaus_p31,
+                m.PrOm.Shannon.gaus_p2, m.PrOm.Shannon.gaus_p)
+  PrOm.loo
   rm(#m.Pr.Shannon.gamma_p5, 
     m.Pr.Shannon.gamma_p4, m.Pr.Shannon.gamma_p32,m.Pr.Shannon.gamma_p31,
     m.Pr.Shannon.gamma_p2, m.Pr.Shannon.gamma_p,
@@ -928,11 +792,11 @@ rm(m.Ba.Shannon.gamma_p5, m.Ba.Shannon.gamma_p4, m.Ba.Shannon.gamma_p32,m.Ba.Sha
   
 #save selected models in .RData file:
   save(m.all.Shannon.gaus_p5, 
-       m.Ba.Shannon.gaus_p5,
-       m.Fu.Shannon.gamma_p5,
-       m.Pl.Shannon.gaus_p5,
-       m.Pr.Shannon.gamma_p5,
-       file = "./statistics/brms/240116_Hill_realdiv_mselect.RData")
+       m.Ba.Shannon.gamma_p5,
+       m.Fu.Shannon.gaus_p5,
+       m.Pl.Shannon.gamma_p5,
+       m.PrOm.Shannon.gamma_p5,
+       file = "./statistics/brms/240214_Hill_realdiv_mselect.RData")
   
   
   
