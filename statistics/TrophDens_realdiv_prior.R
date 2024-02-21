@@ -272,7 +272,7 @@ SEED = 22061996
 #for both weeks  
 m.Pr_realdiv_p <- brm(
   bf(Pr_per100g ~ realdivLogStd*treatment*week + (1|block/plot),
-     hu ~ realdivLogStd + treatment + week + (1|block/plot)),
+     hu ~ realdivLogStd*treatment + (1|block/plot)),
   data = dat, 
   prior = beta_coeff_priors,
   family = hurdle_lognormal,
@@ -290,7 +290,7 @@ pp_check(m.Pr_realdiv_p, ndraws=100)+
 m.Pr_realdiv_p2 <- update(m.Pr_realdiv_p, 
                           bf(Pr_per100g ~ realdivLogStd*treatment + realdivLogStd*week + treatment*week + 
                                (1|block/plot),
-                             hu ~ realdivLogStd + treatment + week + (1|block/plot)), 
+                             hu ~ realdivLogStd*treatment + (1|block/plot)), 
                           seed = SEED) #3 div
 
 summary(m.Pr_realdiv_p2, prob=0.9)
@@ -298,63 +298,42 @@ summary(m.Pr_realdiv_p2, prob=0.9)
 #remove realdivLogStd*week
 m.Pr_realdiv_p31 <- update(m.Pr_realdiv_p, 
                            bf(Pr_per100g ~ realdivLogStd*treatment + treatment*week + (1|block/plot),
-                              hu ~ realdivLogStd + treatment + week + (1|block/plot)), 
+                              hu ~ realdivLogStd*treatment + (1|block/plot)), 
                            seed = SEED) #1 div
 summary(m.Pr_realdiv_p31, prob=0.9)
 
 #remove treatment*week 
 m.Pr_realdiv_p32 <- update(m.Pr_realdiv_p, 
                            bf(Pr_per100g ~ realdivLogStd*treatment + realdivLogStd*week + (1|block/plot),
-                              hu ~ realdivLogStd + treatment + week + (1|block/plot)), 
+                              hu ~ realdivLogStd*treatment + (1|block/plot)), 
                            seed = SEED)
 summary(m.Pr_realdiv_p32, prob=0.9)
 
 #remove realdivLogStd*week and treatment*week 
 m.Pr_realdiv_p4 <- update(m.Pr_realdiv_p, 
                           bf(Pr_per100g ~ realdivLogStd*treatment + week + (1|block/plot),
-                             hu ~ realdivLogStd + treatment + week + (1|block/plot)), 
+                             hu ~ realdivLogStd*treatment + (1|block/plot)), 
                           seed = SEED) #7 div
 summary(m.Pr_realdiv_p4, prob=0.9)
 
-#remove hu~realdiv
+#remove week
 m.Pr_realdiv_p5 <- update(m.Pr_realdiv_p, 
-                          bf(Pr_per100g ~ realdivLogStd*treatment + week + (1|block/plot),
-                             hu ~ treatment + week + (1|block/plot)), 
+                          bf(Pr_per100g ~ realdivLogStd*treatment + (1|block/plot),
+                             hu ~ realdivLogStd*treatment + (1|block/plot)), 
                           seed = SEED)
 summary(m.Pr_realdiv_p5, prob=0.9)
 
-#remove week
-m.Pr_realdiv_p6 <- update(m.Pr_realdiv_p, 
-                          bf(Pr_per100g ~ realdivLogStd*treatment + (1|block/plot),
-                             hu ~ treatment + week + (1|block/plot)), 
-                          seed = SEED)
-summary(m.Pr_realdiv_p6, prob=0.9)
-#stepwise removal: stop here, as treatment is marginally significant for prob(zero nematodes)
-
-#remove hu~treatment
-m.Pr_realdiv_p7 <- update(m.Pr_realdiv_p, 
-                          bf(Pr_per100g ~ realdivLogStd*treatment + (1|block/plot),
-                             hu ~ week + (1|block/plot)), 
-                          seed = SEED)
-summary(m.Pr_realdiv_p7, prob=0.95) #hu~week is "significant" as 95% CI doesnt cut zero
-
-#remove hu~week
-m.Pr_realdiv_p8 <- update(m.Pr_realdiv_p, 
-                          bf(Pr_per100g ~ realdivLogStd*treatment + (1|block/plot),
-                             hu ~1), 
-                          seed = SEED) #2 div
-summary(m.Pr_realdiv_p8, prob=0.9)
 
 save(m.Pr_realdiv_p, m.Pr_realdiv_p2, m.Pr_realdiv_p31, m.Pr_realdiv_p32, m.Pr_realdiv_p4,
-     m.Pr_realdiv_p5, m.Pr_realdiv_p6, m.Pr_realdiv_p7, m.Pr_realdiv_p8,
-     file="./statistics/brms/231219_Pr_realdiv_priors.RData")  
+     m.Pr_realdiv_p5,
+     file="./statistics/brms/240221_Pr_realdiv_priors.RData")  
 
 rm(m.Pr_realdiv_p, m.Pr_realdiv_p2, m.Pr_realdiv_p31, m.Pr_realdiv_p32, m.Pr_realdiv_p4,
    m.Pr_realdiv_p5, m.Pr_realdiv_p7, m.Pr_realdiv_p8)
 
-####Om ~ realdiv, both weeks: p7 (looic-p7)  ####
+#### Om ~ realdiv ####
 #looic: p7 is most parsimonous with a elpd that is not significantly worse (more than 2 SE elpd diff), while elpd_diff < 4
-#stepwise term removal at 90% CI: p7, as hu~treatment is not marginally significant, but hu~week is significant (95% CI)
+#stepwise termremoval at 90% CI: p7, as hu~treatment is not marginally significant, but hu~week is significant (95% CI)
 sum(subset(dat, week=="W1")$Om_per100g == 0) #89
 sum(subset(dat, week=="W2")$Om_per100g == 0) #42
 
@@ -366,7 +345,7 @@ SEED = 22061996
 #for both weeks  
 m.Om_realdiv_p <- brm(
   bf(Om_per100g ~ realdivLogStd*treatment*week + (1|block/plot),
-     hu ~ realdivLogStd + treatment + week + (1|block/plot)),
+     hu ~ realdivLogStd*treatment + (1|block/plot)),
   data = dat, 
   prior = beta_coeff_priors,
   family = hurdle_lognormal,
@@ -384,68 +363,45 @@ pp_check(m.Om_realdiv_p, ndraws=100)+
 m.Om_realdiv_p2 <- update(m.Om_realdiv_p, 
                           bf(Om_per100g ~ realdivLogStd*treatment + realdivLogStd*week + treatment*week + 
                                (1|block/plot),
-                             hu ~ realdivLogStd + treatment + week + (1|block/plot)), 
+                             hu ~ realdivLogStd*treatment + (1|block/plot)), 
                           seed = SEED) #3 div
 summary(m.Om_realdiv_p2)
 
 #remove realdivLogStd*week
 m.Om_realdiv_p31 <- update(m.Om_realdiv_p, 
                            bf(Om_per100g ~ realdivLogStd*treatment + treatment*week + (1|block/plot),
-                              hu ~ realdivLogStd + treatment + week + (1|block/plot)), 
+                              hu ~ realdivLogStd*treatment + (1|block/plot)), 
                            seed = SEED)
 summary(m.Om_realdiv_p31)
 
 #remove treatment*week 
 m.Om_realdiv_p32 <- update(m.Om_realdiv_p, 
                            bf(Om_per100g ~ realdivLogStd*treatment + realdivLogStd*week + (1|block/plot),
-                              hu ~ realdivLogStd + treatment + week + (1|block/plot)), 
+                              hu ~ realdivLogStd*treatmentk + (1|block/plot)), 
                            seed = SEED)
 summary(m.Om_realdiv_p32)
 
 #remove realdivLogStd*week and treatment*week 
 m.Om_realdiv_p4 <- update(m.Om_realdiv_p, 
                           bf(Om_per100g ~ realdivLogStd*treatment + week + (1|block/plot),
-                             hu ~ realdivLogStd + treatment + week + (1|block/plot)), 
+                             hu ~ realdivLogStd*treatment + (1|block/plot)), 
                           seed = SEED) #7 div
 summary(m.Om_realdiv_p4, prob=0.9)
 
 #remove week
 m.Om_realdiv_p5 <- update(m.Om_realdiv_p, 
                           bf(Om_per100g ~ realdivLogStd*treatment + (1|block/plot),
-                             hu ~ realdivLogStd + treatment + week + (1|block/plot)), 
+                             hu ~ realdivLogStd*treatment + (1|block/plot)), 
                           seed = SEED) #1 div
 summary(m.Om_realdiv_p5, prob=0.9)
 
-#remove hu~realdiv
-m.Om_realdiv_p6 <- update(m.Om_realdiv_p, 
-                          bf(Om_per100g ~ realdivLogStd*treatment + (1|block/plot),
-                             hu ~ week + treatment + (1|block/plot)), 
-                          seed = SEED)
-summary(m.Om_realdiv_p6, prob=0.9) 
-
-#remove hu~treatment
-m.Om_realdiv_p7 <- update(m.Om_realdiv_p, 
-                          bf(Om_per100g ~ realdivLogStd*treatment + (1|block/plot),
-                             hu ~ week + (1|block/plot)), 
-                          seed = SEED) #1 div
-summary(m.Om_realdiv_p7, prob=0.9)
-#stepwise removal: choose p7, as hu~week is significant at 95% CI
-pp_check(m.Om_realdiv_p7, ndraws=100 )+
-  xlim(0,200)
-
-#remove hu~week
-m.Om_realdiv_p8 <- update(m.Om_realdiv_p, 
-                          bf(Om_per100g ~ realdivLogStd*treatment + (1|block/plot),
-                             hu ~1), 
-                          seed = SEED) #1 div
-summary(m.Om_realdiv_p8, prob=0.9)
 
 save(m.Om_realdiv_p, m.Om_realdiv_p2, m.Om_realdiv_p31, m.Om_realdiv_p32, m.Om_realdiv_p4,
-     m.Om_realdiv_p5, m.Om_realdiv_p6, m.Om_realdiv_p7, m.Om_realdiv_p8,
+     m.Om_realdiv_p5,
      file="./statistics/brms/231219_Om_realdiv_priors.RData")  
 
 rm(m.Om_realdiv_p, m.Om_realdiv_p2, m.Om_realdiv_p31, m.Om_realdiv_p32, m.Om_realdiv_p4,
-   m.Om_realdiv_p5, m.Om_realdiv_p6, m.Om_realdiv_p7, m.Om_realdiv_p8)
+   m.Om_realdiv_p5)
 
 
 
@@ -483,7 +439,7 @@ library(ggplot2)
 #Pr ~ realdiv
   load("./statistics/brms/231219_Pr_realdiv_priors.RData")  
   loo.Pr <- loo(m.Pr_realdiv_p, m.Pr_realdiv_p2, m.Pr_realdiv_p31, m.Pr_realdiv_p32, m.Pr_realdiv_p4,
-                m.Pr_realdiv_p5, m.Pr_realdiv_p6, m.Pr_realdiv_p7, m.Pr_realdiv_p8 )
+                m.Pr_realdiv_p5)
   loo.Pr
   
   rm(m.Pr_realdiv_p, m.Pr_realdiv_p2, m.Pr_realdiv_p31, m.Pr_realdiv_p32, m.Pr_realdiv_p4,
@@ -493,7 +449,7 @@ library(ggplot2)
   load("./statistics/brms/231219_Om_realdiv_priors.RData")  
   
   loo.Om <- loo(m.Om_realdiv_p, m.Om_realdiv_p2, m.Om_realdiv_p31, m.Om_realdiv_p32, m.Om_realdiv_p4,
-                m.Om_realdiv_p5, m.Om_realdiv_p6, m.Om_realdiv_p7, m.Om_realdiv_p8 )
+                m.Om_realdiv_p5)
   loo.Om
   
   rm(m.Om_realdiv_p, m.Om_realdiv_p2, m.Om_realdiv_p31, m.Om_realdiv_p32, m.Om_realdiv_p4,
@@ -501,5 +457,5 @@ library(ggplot2)
   
 #save the best fit models:
   save(m.Ba_realdiv_p5, m.Fu_realdiv_p5, m.Pl_realdiv_p5, m.Om_realdiv_p7, m.Pr_realdiv_p7,
-    file = "./statistics/brms/240109_TrophDens_realdiv_mselect.RData")
+    file = "./statistics/brms/240221_TrophDens_realdiv_mselect.RData")
   
