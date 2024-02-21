@@ -23,7 +23,7 @@ datW2 <- subset(dat, week=="W2")
 #priors    
 beta_coeff_priors <- prior(normal(0,10), class = "b")  
 
-####Ba ~ realdiv, both weeks: ####
+####Ba ~ realdiv, both weeks ####
 #stepwise elimination: p6, as realdiv:week is marginally significant (90%CI)
 #looic: p5, as it the most parsimonous with a elpd_diff less 4 to the best elpd model 
 
@@ -112,7 +112,7 @@ save(m.Ba_realdiv_p, m.Ba_realdiv_p2, m.Ba_realdiv_p31, m.Ba_realdiv_p32, m.Ba_r
 rm(m.Ba_realdiv_p, m.Ba_realdiv_p2, m.Ba_realdiv_p31, m.Ba_realdiv_p32, m.Ba_realdiv_p4,
    m.Ba_realdiv_p5)
 
-####Fu ~ realdiv, both weeks: p4 (looic p5) ####
+####Fu ~ realdiv, both weeks ####
 #stepwise elimination of non-significant terms: p4, as week is marginally significant
 #looic: p5, as it is the most parsimonious model and all elpd_diff lay in range of 2 SE_diff
 
@@ -185,7 +185,7 @@ save(m.Fu_realdiv_p, m.Fu_realdiv_p2, m.Fu_realdiv_p31, m.Fu_realdiv_p32, m.Fu_r
 rm(m.Fu_realdiv_p, m.Fu_realdiv_p2, m.Fu_realdiv_p31, m.Fu_realdiv_p32,
    m.Fu_realdiv_p4, m.Fu_realdiv_p5)
 
-####Pl ~ realdiv, both weeks: p4 (looic p4) ####
+####Pl ~ realdiv, both weeks ####
 #stepwise elimination of non-significant terms: p4, as week is significant
 #looic: p4, as it is the most parsimonous model with a elpd_se_diff of less than 2 SE
 sum(subset(dat, week=="W1")$Pl_per100g == 0) #2
@@ -258,7 +258,7 @@ save(m.Pl_realdiv_p, m.Pl_realdiv_p2, m.Pl_realdiv_p31, m.Pl_realdiv_p32, m.Pl_r
 rm(m.Pl_realdiv_p, m.Pl_realdiv_p2, m.Pl_realdiv_p31, m.Pl_realdiv_p32, 
    m.Pl_realdiv_p4, m.Pl_realdiv_p5)
 
-####Pr ~ realdiv, both weeks: p6 (looic p8), simplification CHECKED####
+####Pr ~ realdiv, both weeks ####
 #looic p8, as most parsimonious with elpd not differing significantly (less than 2 SE)
 #stepwise removal p6, as hu~term is marginally significant 
 sum(subset(dat, week=="W1")$Pr_per100g == 0) #44

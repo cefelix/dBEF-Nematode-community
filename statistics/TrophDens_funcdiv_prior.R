@@ -429,7 +429,7 @@ rm(m.Fu_funcdiv_p, m.Fu_funcdiv_p2, m.Fu_funcdiv_p31, m.Fu_funcdiv_p32, m.Fu_fun
 load("./statistics/brms/240131_Pl_funcdiv_priors.RData")  
 loo.Pl <- loo(m.Pl_funcdiv_p, m.Pl_funcdiv_p2, m.Pl_funcdiv_p31, m.Pl_funcdiv_p32, m.Pl_funcdiv_p4,
               m.Pl_funcdiv_p5 )
-loo.Pl
+loo.Pl #P5
 
 rm(m.Pl_funcdiv_p, m.Pl_funcdiv_p2, m.Pl_funcdiv_p31, m.Pl_funcdiv_p32, m.Pl_funcdiv_p4)
 
@@ -437,7 +437,7 @@ rm(m.Pl_funcdiv_p, m.Pl_funcdiv_p2, m.Pl_funcdiv_p31, m.Pl_funcdiv_p32, m.Pl_fun
 load("./statistics/brms/240131_Pr_funcdiv_priors.RData")  
 loo.Pr <- loo(m.Pr_funcdiv_p, m.Pr_funcdiv_p2, m.Pr_funcdiv_p31, m.Pr_funcdiv_p32, m.Pr_funcdiv_p4,
               m.Pr_funcdiv_p5, m.Pr_funcdiv_p6, m.Pr_funcdiv_p7, m.Pr_funcdiv_p8 )
-loo.Pr
+loo.Pr #p7
 
 rm(m.Pr_funcdiv_p, m.Pr_funcdiv_p2, m.Pr_funcdiv_p31, m.Pr_funcdiv_p32, m.Pr_funcdiv_p4,
    m.Pr_funcdiv_p5, m.Pr_funcdiv_p6, m.Pr_funcdiv_p8)
