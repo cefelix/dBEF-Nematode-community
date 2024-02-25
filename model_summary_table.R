@@ -32,20 +32,20 @@ summarise_models <- function(brmsfit, predictor, unstandardized_predictor, level
   fixed <- ms$fixed
   fixed$predictor <- rownames(fixed)
   ESS <- cbind( #a 2x3 matrix with bulk/tail ESS for sowndiv:treatment 
-    rbind(fixed$Bulk_ESS[fixed$predictor == predictor],                  
-          fixed$Bulk_ESS[fixed$predictor == paste(predictor, "treatment2", sep = ":")],
-          fixed$Bulk_ESS[fixed$predictor == paste(predictor, "treatment3", sep = ":")]
+    rbind(fixed$Bulk_ESS[fixed$predictor == predictor] %>% round(2),                  
+          fixed$Bulk_ESS[fixed$predictor == paste(predictor, "treatment2", sep = ":")] %>% round(2),
+          fixed$Bulk_ESS[fixed$predictor == paste(predictor, "treatment3", sep = ":")] %>% round(2)
     ), 
-    rbind(fixed$Tail_ESS[fixed$predictor == predictor],
-          fixed$Tail_ESS[fixed$predictor == paste(predictor, "treatment2", sep = ":")],
-          fixed$Tail_ESS[fixed$predictor == paste(predictor, "treatment3", sep = ":")]
+    rbind(fixed$Tail_ESS[fixed$predictor == predictor] %>% round(2),
+          fixed$Tail_ESS[fixed$predictor == paste(predictor, "treatment2", sep = ":")] %>% round(2),
+          fixed$Tail_ESS[fixed$predictor == paste(predictor, "treatment3", sep = ":")] %>% round(2)
     )
   )
   colnames(ESS) <- c("bulk ESS", "tail ESS")
   
   family <- family(brmsfit)$family
   
-  #the mean of the posterior distribution, HPDIs, and PDs
+  #the mean of the posterior predictive distribution, HPDIs, and PDs
   emt.s <- emtrends( brmsfit, specs = c("treatment"), var = predictor) %>% 
     summary(., point.est = mean, level = level) %>% #get slope estimates mean and HPDI
     mutate(pd = estimate_slopes(brmsfit, trend = predictor, at = "treatment", ci= level)$pd, .after = "upper.HPD") %>%
@@ -78,20 +78,22 @@ summarise_models <- function(brmsfit, predictor, unstandardized_predictor, level
   return(row)
 }
 
-#### summarise_models() for trophic groups / functional guilds ~ sowndiv  #####
+#### summarise_models() for abundance/density ~ sowndiv  #####
   #load models
-  load("./statistics/brms/240109_TrophDens_sowndiv_mselect.RData")
+  load("./statistics/brms/240221_TrophDens_sowndiv_mselect.RData")
     load("./statistics/brms/240205_Ba_cp_sowndiv_mselect.RData")
     load("./statistics/brms/240205_Fu_cp_sowndiv_mselect.RData") 
     load("./statistics/brms/240205_Pl_cp_sowndiv_mselect.RData")
-    load("./statistics/brms/240205_Pr_Om_cp_sowndiv_mselect.RData")
+    load("./statistics/brms/240221_Pr_Om_cp_sowndiv_mselect.RData")
+    load("./statistics/brms/240216_abun_offset_mselect.RData")
  
 #~sowndivLogStd
   #a list with all final models:
-  sown.list <- list(m.Ba_sowndiv_p5, m.Ba1_sowndiv_p5, m.Ba2_sowndiv_p5, m.Ba4_sowndiv_p5,
+  sown.list <- list(m.abun_all.sowndiv_p5,
+                    m.Ba_sowndiv_p5, m.Ba1_sowndiv_p5, m.Ba2_sowndiv_p5, m.Ba4_sowndiv_p5,
                     m.Fu_sowndiv_p5, m.Fu2_sowndiv_p5, m.Fu3_sowndiv_p5, m.Fu4_sowndiv_p5,
                     m.Pl_sowndiv_p5, m.Pl2_sowndiv_p5, m.Pl3_sowndiv_p5, m.Pl4_sowndiv_p5,
-                    m.Pr_sowndiv_p7, m.Om_sowndiv_p7, m.Pr4_Om4_sowndiv_p5)
+                    m.Pr_sowndiv_p5, m.Om_sowndiv_p5, m.Pr_Om_sowndiv_p5)
   
   # a df of the model summaries:
   sowndiv.summary <- lapply(sown.list, summarise_models, predictor = "sowndivLogStd", level =.95) %>% 
@@ -110,11 +112,11 @@ summarise_models <- function(brmsfit, predictor, unstandardized_predictor, level
     mutate(upper.HPD.2 = (exp((sowndiv.summary$upper.HPD) / sd(dat$sowndivLog)) ) %>% round(., 3), .before = "pd") %>%
     mutate_at((vars(mean.trend, lower.HPD, upper.HPD, pd) ), round, digits=3)  
   
-  sowndiv.summary %>% 
+ sowndiv.summary <- sowndiv.summary %>% 
     mutate(mean.trend = round(mean.trend, 3),
            lower.HPD = round(lower.HPD, 3),
            upper.HPD = round(upper.HPD, 3),
-           pd = round(pd, 3))
+           pd = round(pd, 4))
   sowndiv.summary 
 
   # a check on the de-standardization:  
@@ -126,18 +128,20 @@ summarise_models <- function(brmsfit, predictor, unstandardized_predictor, level
     mutate_at((vars(sowndivLogStd.trend, lower.HPD, upper.HPD) ), round, digits=3)  
   
 
-#### summarise_models() for trophic groups / functional guilds ~ realdiv  #####
-  load("./statistics/brms/240109_TrophDens_realdiv_mselect.RData")
+#### summarise_models() for abundance/density ~ realdiv  #####
+  load("./statistics/brms/240221_TrophDens_realdiv_mselect.RData")
     load("./statistics/brms/240205_Ba_cp_realdiv_mselect.RData")
     load("./statistics/brms/240205_Fu_cp_realdiv_mselect.RData") 
     load("./statistics/brms/240205_Pl_cp_realdiv_mselect.RData")
-    load("./statistics/brms/240205_Pr_Om_cp_realdiv_mselect.RData")
-
+    load("./statistics/brms/240221_Pr_Om_cp_realdiv_mselect.RData")
+    load("./statistics/brms/240216_abun_offset_mselect.RData")
+    
   #list of models:
-  real.list <- list(m.Ba_realdiv_p5, m.Ba1_realdiv_p5, m.Ba2_realdiv_p5, m.Ba4_realdiv_p5,
+  real.list <- list(m.abun_all.realdiv_p5, 
+                    m.Ba_realdiv_p5, m.Ba1_realdiv_p5, m.Ba2_realdiv_p5, m.Ba4_realdiv_p5,
                     m.Fu_realdiv_p5, m.Fu2_realdiv_p5, m.Fu3_realdiv_p5, m.Fu4_realdiv_p5,
                     m.Pl_realdiv_p5, m.Pl2_realdiv_p5, m.Pl3_realdiv_p5, m.Pl4_realdiv_p5,
-                    m.Pr_realdiv_p7, m.Om_realdiv_p7, m.Pr4_Om4_realdiv_p5)
+                    m.Pr_realdiv_p5, m.Om_realdiv_p5, m.Pr_Om_realdiv_p5)
 
   # a df of the model summaries:
   realdiv.summary <- lapply(real.list, summarise_models, predictor = "realdivLogStd", level =.95) %>% 
@@ -146,20 +150,97 @@ summarise_models <- function(brmsfit, predictor, unstandardized_predictor, level
   
   #un-standardize beta coefficients:
   realdiv.summary <- realdiv.summary %>%
-    mutate(., realdivLog.trend = exp(realdiv.summary$mean.trend / sd(dat$realdivLog)), .before = "bulk ESS") %>%
-    mutate(lower.HPD.2 = exp((realdiv.summary$lower.HPD) / sd(dat$realdivLog)), .before = "bulk ESS") %>%
-    mutate(upper.HPD.2 = exp((realdiv.summary$upper.HPD) / sd(dat$realdivLog)), .before = "bulk ESS") %>%
+    mutate(., realdivLog.trend = exp(realdiv.summary$mean.trend / sd(dat$realdivLog)) %>% round(., 3), .before = "bulk ESS") %>%
+    mutate(lower.HPD.2 = exp((realdiv.summary$lower.HPD) / sd(dat$realdivLog)) %>% round(., 3), .before = "bulk ESS") %>% 
+    mutate(upper.HPD.2 = exp((realdiv.summary$upper.HPD) / sd(dat$realdivLog)) %>% round(., 3), .before = "bulk ESS") %>%
     mutate_at((vars(mean.trend, lower.HPD, upper.HPD, pd) ), round, digits=3)  
     
-  realdiv.summary 
+  realdiv.summary <- realdiv.summary %>%
+    mutate(mean.trend = round(mean.trend, 3),
+           lower.HPD = round(lower.HPD, 3),
+           upper.HPD = round(upper.HPD, 3),
+           pd = round(pd, 4))
+  realdiv.summary
+    
+#### summarise_models() for Effective number of families ####  
+#for ~ sowndiv:
+  load("./statistics/brms/240214_Hill_sowndiv_mselect.RData")
+  Hill.sown.list <- list(m.all.Shannon.gaus_p5, m.Ba.Shannon.gamma_p5, m.Fu.Shannon.gaus_p5, m.Pl.Shannon.gamma_p5, m.PrOm.Shannon.gamma_p5)
+  
+  Hill.sown.summary <- lapply(Hill.sown.list, summarise_models, predictor = "sowndivLogStd", level =.95) %>%
+    bind_rows()
+  
+  #un-standardize beta coefficients:
+  Hill.sown.summary <- Hill.sown.summary %>%
+    mutate(., sowndivLog.trend = Hill.sown.summary$mean.trend / sd(dat$sowndivLog) , .before = "bulk ESS") %>%
+    mutate(lower.HPD.2 = (Hill.sown.summary$lower.HPD) / sd(dat$sowndivLog) , .before = "bulk ESS") %>% 
+    mutate(upper.HPD.2 = (Hill.sown.summary$upper.HPD) / sd(dat$sowndivLog) %>% round(., 3), .before = "bulk ESS") %>%
+    #and a transform for families with a log-link:
+      mutate(sowndivLog.trend = ifelse(family == "gamma", exp(sowndivLog.trend), sowndivLog.trend) %>% round(., 3)) %>%
+      mutate(lower.HPD.2 = ifelse(family == "gamma", exp(lower.HPD.2), lower.HPD.2) %>% round(., 3)) %>%
+      mutate(upper.HPD.2 = ifelse(family == "gamma", exp(upper.HPD.2), upper.HPD.2) %>% round(., 3)) %>%
+    mutate_at((vars(mean.trend, lower.HPD, upper.HPD, pd) ), round, digits=3)  
+  
+  Hill.sown.summary <- Hill.sown.summary %>%
+    mutate(mean.trend = round(mean.trend, 3),
+           lower.HPD = round(lower.HPD, 3),
+           upper.HPD = round(upper.HPD, 3),
+           pd = round(pd, 4))
+  
+  Hill.sown.summary 
+  
+#for ~ realdiv
+  load("./statistics/brms/240214_Hill_realdiv_mselect.RData")
+  Hill.real.list <- list(m.all.Shannon.gaus_p5, m.Ba.Shannon.gamma_p5, m.Fu.Shannon.gaus_p5, m.Pl.Shannon.gamma_p5, m.PrOm.Shannon.gamma_p5)
+  
+  Hill.real.summary <- lapply(Hill.real.list, summarise_models, predictor = "realdivLogStd", level =.95) %>%
+    bind_rows()
+  
+  #un-standardize beta coefficients:
+  Hill.real.summary <- Hill.real.summary %>%
+    mutate(., realdivLog.trend = Hill.real.summary$mean.trend / sd(dat$realdivLog) , .before = "bulk ESS") %>%
+    mutate(lower.HPD.2 = (Hill.real.summary$lower.HPD) / sd(dat$realdivLog) , .before = "bulk ESS") %>% 
+    mutate(upper.HPD.2 = (Hill.real.summary$upper.HPD) / sd(dat$realdivLog) , .before = "bulk ESS") %>%
+    #and a transform for families with a log-link:
+      mutate(realdivLog.trend = ifelse(family == "gamma", exp(realdivLog.trend), realdivLog.trend) %>% round(., 3)) %>%
+      mutate(lower.HPD.2 = ifelse(family == "gamma", exp(lower.HPD.2), lower.HPD.2) %>% round(., 3)) %>%
+      mutate(upper.HPD.2 = ifelse(family == "gamma", exp(upper.HPD.2), upper.HPD.2) %>% round(., 3)) %>%
+    mutate_at((vars(mean.trend, lower.HPD, upper.HPD, pd) ), round, digits=3)  
+  
+  Hill.real.summary <- Hill.real.summary %>%
+    mutate(mean.trend = round(mean.trend, 3),
+           lower.HPD = round(lower.HPD, 3),
+           upper.HPD = round(upper.HPD, 3),
+           pd = round(pd, 4))
+  
+  Hill.real.summary 
+  
+  
+#### summarise_models() for indices ####
+  load("./statistics/brms/240215_SI_mselect.RData")
+  load("./statistics/brms/240215_EI_mselect.RData")
+  
+  indices.sown.list <- list(m.EI.sowndiv_gaus_p5, m.SI.sowndiv_gaus_p5)
+  indices.sown.summary <- lapply(indices.sown.list, summarise_models, predictor = "sowndivLogStd", level =.95) %>%
+    bind_rows()
+  
+  #for real:
+  indices.real.list <- list(m.EI.realdiv_gaus_p5, m.SI.realdiv_gaus_p5)
+  indices.real.summary <- lapply(indices.real.list, summarise_models, predictor = "realdivLogStd", level =.95) %>%
+    bind_rows()
+  
+  indices.summary <- rbind(indices.real.summary, indices.sown.summary)
   
 #### write each model summary into a .xlsx sheet  ####
   library(openxlsx)
   list.msummaries <- list('Densities ~ sowndiv' = sowndiv.summary, 
-                          'Densities ~ realdiv' = realdiv.summary )
+                          'Densities ~ realdiv' = realdiv.summary ,
+                          'Hill numbers ~ sowndiv' = Hill.sown.summary,
+                          'Hill numbers ~ realdiv' = Hill.real.summary,
+                          'EI SI ~ sowndiv realdiv' = indices.summary)
   
  write.xlsx(list.msummaries, 
-      file = "./statistics/240212_Model_summaries.xlsx")
+      file = "./statistics/240221_Model_summaries.xlsx")
 
 ####OLD: the difference between emtrends(), emtrends(epred=TRUE) and posterior_epred() ####
   emtrends(m.Ba4_sowndiv_p5, var="sowndivLogStd") %>%
@@ -185,7 +266,7 @@ summarise_models <- function(brmsfit, predictor, unstandardized_predictor, level
            epred = TRUE) %>%
     summary(., point.est = mean, level = .95)
   
-  posterior_epred(m.Ba4_sowndiv_p5) ##%>% summary()
+  posterior_epred(m.Ba4_sowndiv_p5) #%>% summary()
   
   spread_draws(m.Ba4_sowndiv_p5)
 
