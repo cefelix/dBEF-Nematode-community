@@ -377,7 +377,7 @@ summary(m.Om_realdiv_p31)
 #remove treatment*week 
 m.Om_realdiv_p32 <- update(m.Om_realdiv_p, 
                            bf(Om_per100g ~ realdivLogStd*treatment + realdivLogStd*week + (1|block/plot),
-                              hu ~ realdivLogStd*treatmentk + (1|block/plot)), 
+                              hu ~ realdivLogStd*treatment + (1|block/plot)), 
                            seed = SEED)
 summary(m.Om_realdiv_p32)
 
@@ -398,7 +398,7 @@ summary(m.Om_realdiv_p5, prob=0.9)
 
 save(m.Om_realdiv_p, m.Om_realdiv_p2, m.Om_realdiv_p31, m.Om_realdiv_p32, m.Om_realdiv_p4,
      m.Om_realdiv_p5,
-     file="./statistics/brms/231219_Om_realdiv_priors.RData")  
+     file="./statistics/brms/240221_Om_realdiv_priors.RData")  
 
 rm(m.Om_realdiv_p, m.Om_realdiv_p2, m.Om_realdiv_p31, m.Om_realdiv_p32, m.Om_realdiv_p4,
    m.Om_realdiv_p5)
@@ -437,25 +437,23 @@ library(ggplot2)
   rm(m.Pl_realdiv_p, m.Pl_realdiv_p2, m.Pl_realdiv_p31, m.Pl_realdiv_p32, m.Pl_realdiv_p4)
 
 #Pr ~ realdiv
-  load("./statistics/brms/231219_Pr_realdiv_priors.RData")  
+  load("./statistics/brms/240221_Pr_realdiv_priors.RData")  
   loo.Pr <- loo(m.Pr_realdiv_p, m.Pr_realdiv_p2, m.Pr_realdiv_p31, m.Pr_realdiv_p32, m.Pr_realdiv_p4,
                 m.Pr_realdiv_p5)
   loo.Pr
   
-  rm(m.Pr_realdiv_p, m.Pr_realdiv_p2, m.Pr_realdiv_p31, m.Pr_realdiv_p32, m.Pr_realdiv_p4,
-     m.Pr_realdiv_p5, m.Pr_realdiv_p6, m.Pr_realdiv_p8)
+  rm(m.Pr_realdiv_p, m.Pr_realdiv_p2, m.Pr_realdiv_p31, m.Pr_realdiv_p32, m.Pr_realdiv_p4)
 
 #Om ~ realdiv 
-  load("./statistics/brms/231219_Om_realdiv_priors.RData")  
+  load("./statistics/brms/240221_Om_realdiv_priors.RData")  
   
   loo.Om <- loo(m.Om_realdiv_p, m.Om_realdiv_p2, m.Om_realdiv_p31, m.Om_realdiv_p32, m.Om_realdiv_p4,
                 m.Om_realdiv_p5)
   loo.Om
   
-  rm(m.Om_realdiv_p, m.Om_realdiv_p2, m.Om_realdiv_p31, m.Om_realdiv_p32, m.Om_realdiv_p4,
-     m.Om_realdiv_p5, m.Om_realdiv_p6, m.Om_realdiv_p8)
+  rm(m.Om_realdiv_p, m.Om_realdiv_p2, m.Om_realdiv_p31, m.Om_realdiv_p32, m.Om_realdiv_p4)
   
 #save the best fit models:
-  save(m.Ba_realdiv_p5, m.Fu_realdiv_p5, m.Pl_realdiv_p5, m.Om_realdiv_p7, m.Pr_realdiv_p7,
+  save(m.Ba_realdiv_p5, m.Fu_realdiv_p5, m.Pl_realdiv_p5, m.Om_realdiv_p5, m.Pr_realdiv_p5,
     file = "./statistics/brms/240221_TrophDens_realdiv_mselect.RData")
   

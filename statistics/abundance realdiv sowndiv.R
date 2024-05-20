@@ -122,6 +122,58 @@ m.abun_all.sowndiv_p %>% summary()
   save(m.abun_all.realdiv_p, m.abun_all.realdiv_p2, m.abun_all.realdiv_p31,
        m.abun_all.realdiv_p32, m.abun_all.realdiv_p4, m.abun_all.realdiv_p5,
        file="./statistics/brms/240216_abun_offset_realdiv.RData")
+  
+####dens ~ sowndiv ####
+  m.dens_sowndiv_p <- brm(ind_per100g ~ sowndivLogStd*treatment*week + (1|block/plot), 
+                              data = dat, family = "lognormal",
+                              chains = 3,
+                              cores = 3,
+                              iter = 2000, warmup = 1000, #(tail ESS too low with iter=2000)
+                              seed = SEED,
+                              control = list(adapt_delta = 0.99) ) 
+  pp_check(m.dens_sowndiv_p)
+  
+  m.dens_sowndiv_p2 <- update(m.dens_sowndiv_p,
+                              bf(ind_per100g ~ sowndivLogStd*treatment + sowndivLogStd*week + 
+                                   treatment*week + (1|block/plot)) ) #12 div
+  
+  m.dens_sowndiv_p31 <- update(m.dens_sowndiv_p,
+                              bf(ind_per100g ~ sowndivLogStd*treatment + sowndivLogStd*week + (1|block/plot)) ) #9 div
+  
+  m.dens_sowndiv_p32 <- update(m.dens_sowndiv_p,
+                              bf(ind_per100g ~ sowndivLogStd*treatment + treatment*week + (1|block/plot)) ) #10 div
+  
+  m.dens_sowndiv_p4 <- update(m.dens_sowndiv_p,
+                              bf(ind_per100g ~ sowndivLogStd*treatment + week + (1|block/plot)) ) #3 div
+  
+  m.dens_sowndiv_p5 <- update(m.dens_sowndiv_p,
+                              bf(ind_per100g ~ sowndivLogStd*treatment + (1|block/plot)) ) #2 div
+ 
+####dens ~ realdiv ####
+  m.dens_realdiv_p <- brm(ind_per100g ~ realdivLogStd*treatment*week + (1|block/plot), 
+                          data = dat, family = "lognormal",
+                          chains = 3,
+                          cores = 3,
+                          iter = 2000, warmup = 1000, #(tail ESS too low with iter=2000)
+                          seed = SEED,
+                          control = list(adapt_delta = 0.99) ) #3 div
+  pp_check(m.dens_realdiv_p)
+  
+  m.dens_realdiv_p2 <- update(m.dens_realdiv_p,
+                              bf(ind_per100g ~ realdivLogStd*treatment + realdivLogStd*week + 
+                                   treatment*week + (1|block/plot)) ) #28 div
+  
+  m.dens_realdiv_p31 <- update(m.dens_realdiv_p,
+                               bf(ind_per100g ~ realdivLogStd*treatment + realdivLogStd*week + (1|block/plot)) ) #2 div
+  
+  m.dens_realdiv_p32 <- update(m.dens_realdiv_p,
+                               bf(ind_per100g ~ realdivLogStd*treatment + treatment*week + (1|block/plot)) ) #4 div
+  
+  m.dens_realdiv_p4 <- update(m.dens_realdiv_p,
+                              bf(ind_per100g ~ realdivLogStd*treatment + week + (1|block/plot)) ) #3 div
+  
+  m.dens_realdiv_p5 <- update(m.dens_realdiv_p,
+                              bf(ind_per100g ~ realdivLogStd*treatment + (1|block/plot)) ) #0 div   
 
 #### select best fit based on loo-IC ####
   loo.abun.realdiv <- loo(m.abun_all.realdiv_p, m.abun_all.realdiv_p2, m.abun_all.realdiv_p31,
@@ -134,9 +186,19 @@ m.abun_all.sowndiv_p %>% summary()
   loo.abun.sowndiv #p5
   summary(m.abun_all.sowndiv_p5)
   
+  loo.dens.sowndiv <- loo( m.dens_sowndiv_p,  m.dens_sowndiv_p2,  m.dens_sowndiv_p32,  
+                           m.dens_sowndiv_p31,  m.dens_sowndiv_p4,  m.dens_sowndiv_p5)
+  loo.dens.sowndiv #p5
+  summary(m.dens_sowndiv_p5)
+  
+  loo.dens.realdiv <- loo( m.dens_realdiv_p,  m.dens_realdiv_p2,  m.dens_realdiv_p32,  
+                           m.dens_realdiv_p31,  m.dens_realdiv_p4,  m.dens_realdiv_p5)
+  loo.dens.realdiv #p5
+  summary(m.dens_realdiv_p5)
+  
   #save best fit models:
-  save(m.abun_all.realdiv_p5, m.abun_all.sowndiv_p5,
-       file="./statistics/brms/240216_abun_offset_mselect.RData")
+  save(m.abun_all.realdiv_p5, m.abun_all.sowndiv_p5, m.dens_sowndiv_p5, m.dens_realdiv_p5,
+       file="./statistics/brms/240225_abun_dens_all_mselect.RData")
   
 
 #### OLD (2017 data): negBinom 31 vog: total_nematodes ~ sowndivLogStd*treatment + offset(log(soilDW)) + (1|block/plot), fam=negbinomial, -60sp, year =2017 ####
@@ -163,18 +225,3 @@ pp_check(m.abun.nBinomOffS.31vog, ndraws = 100)
 save(m.abun.nBinomOffS.31,
      m.abun.nBinomOffS.31vog,
      file = "./statistics/brms/231127_abundance_OffSet.RData")
-
-#### not used abundance ~ sowndiv, facet_wrap ~ funcdiv ####
-ggplot(data = dat, aes(x=sowndivLog, y=Fu_per100g, col=treatment))+
-  geom_point()+
-  facet_wrap(~funcdiv)+
-  geom_smooth()
-
-ggplot(data = dat, aes(x=sowndiv, y=Coverage, col=treatment))+
-  geom_boxplot()+
-  facet_wrap(~week)
-
-ggplot(data = dat, aes(x=sowndivLog, y=CI, col=treatment))+
-  geom_jitter(width=0.1)+
-  geom_smooth(method = lm)
-

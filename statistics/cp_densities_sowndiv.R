@@ -424,5 +424,30 @@ save(m.cp1_sowndiv_p, m.cp1_sowndiv_p2, m.cp1_sowndiv_p31, m.cp1_sowndiv_p32, m.
     plot(density(cp5$cp5_per100g))  
     
     #this cannot be fit
- 
+    
+#### select best fit models ####
+    load("./statistics/brms/240131_cp4_sowndiv_priors.RData")
+    loo.cp4 <- loo(m.cp4_sowndiv_p, m.cp4_sowndiv_p2, m.cp4_sowndiv_p31, m.cp4_sowndiv_p32, m.cp4_sowndiv_p4,
+                   m.cp4_sowndiv_p5)
+    loo.cp4 #p5
+    
+    load("./statistics/brms/240131_cp3_sowndiv_priors.RData")
+    loo.cp3 <- loo(m.cp3_sowndiv_p, m.cp3_sowndiv_p2, m.cp3_sowndiv_p31, m.cp3_sowndiv_p32, m.cp3_sowndiv_p4,
+                   m.cp3_sowndiv_p5)
+    loo.cp3 #p5
+     
+    load("./statistics/brms/240131_cp2_sowndiv_priors.RData")
+    loo.cp2 <- loo(m.cp2_sowndiv_p, m.cp2_sowndiv_p2, m.cp2_sowndiv_p31, m.cp2_sowndiv_p32, m.cp2_sowndiv_p4,
+                   m.cp2_sowndiv_p5)
+    loo.cp2 #p5
+    
+    load("./statistics/brms/240131_cp1_sowndiv_priors.RData")
+    loo.cp1 <- loo(m.cp1_sowndiv_p, m.cp1_sowndiv_p2, m.cp1_sowndiv_p31, m.cp1_sowndiv_p32, m.cp1_sowndiv_p4,
+                   m.cp1_sowndiv_p5)
+    loo.cp1 #p5
+    
+    
+    save(m.cp1_sowndiv_p5, m.cp2_sowndiv_p5, m.cp3_sowndiv_p5, m.cp4_sowndiv_p5,
+         file="./statistics/brms/240205_cp_sowndiv_mselect.RData")
+
    

@@ -416,6 +416,8 @@ dBEF_nem <- dBEF_nem %>%
     nemaplex.Ba <- subset(nemaplex, feeding==3)  %>% select(family) %>% unique() #8 families
     nemaplex.PrOm <- subset(nemaplex, feeding== 5 | feeding == 8) %>% select(family) %>% unique()  #10 families
    
+    subset(nemaplex, feeding==1) %>% select(family) %>% nrow()
+    
 
     #extracting the column numbers of the respective trophic guild:
     Pl.cols=NULL

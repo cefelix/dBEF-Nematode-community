@@ -78,6 +78,31 @@ summarise_models <- function(brmsfit, predictor, unstandardized_predictor, level
   return(row)
 }
 
+# a function that estimates marginal means for sowndiv at highest / lowest SR
+summarise_emm <- function(brmsfit ) {
+  response <- deparse(brmsfit$formula)[1] %>% #this row extracts the model term and converts it to a string
+    gsub(".*= (.+) ~.*", "\\1", .)
+  
+ low <- emmeans(brmsfit, specs = c("treatment"),
+          at = list(sowndivLogStd=min(dat$sowndivLogStd)),
+          re_formula = NA) %>% as.data.frame() %>%
+    mutate_at(vars(emmean, lower.HPD, upper.HPD), exp) %>%
+    rename(emmean.low = emmean) %>% 
+   mutate_at(vars(emmean.low, lower.HPD, upper.HPD), round, digits =1)
+  
+ high <- emmeans(brmsfit, specs = c("treatment"),
+          at = list(sowndivLogStd=max(dat$sowndivLogStd)),
+          re_formula = NA) %>% as.data.frame() %>%
+    mutate_at(vars(emmean, lower.HPD, upper.HPD), exp)  %>%
+    rename(emmean.high = emmean) %>%
+   mutate_at(vars(emmean.high, lower.HPD, upper.HPD), round, digits =1)
+ 
+ cbind(response, low, high) 
+ 
+}
+
+summarise_emm(m.Ba_sowndiv_p5)
+
 #### summarise_models() for abundance/density ~ sowndiv  #####
   #load models
   load("./statistics/brms/240221_TrophDens_sowndiv_mselect.RData")
@@ -85,11 +110,11 @@ summarise_models <- function(brmsfit, predictor, unstandardized_predictor, level
     load("./statistics/brms/240205_Fu_cp_sowndiv_mselect.RData") 
     load("./statistics/brms/240205_Pl_cp_sowndiv_mselect.RData")
     load("./statistics/brms/240221_Pr_Om_cp_sowndiv_mselect.RData")
-    load("./statistics/brms/240216_abun_offset_mselect.RData")
+    load("./statistics/brms/240225_abun_dens_all_mselect.RData")
  
 #~sowndivLogStd
   #a list with all final models:
-  sown.list <- list(m.abun_all.sowndiv_p5,
+  sown.list <- list(m.abun_all.sowndiv_p5, m.dens_sowndiv_p5,
                     m.Ba_sowndiv_p5, m.Ba1_sowndiv_p5, m.Ba2_sowndiv_p5, m.Ba4_sowndiv_p5,
                     m.Fu_sowndiv_p5, m.Fu2_sowndiv_p5, m.Fu3_sowndiv_p5, m.Fu4_sowndiv_p5,
                     m.Pl_sowndiv_p5, m.Pl2_sowndiv_p5, m.Pl3_sowndiv_p5, m.Pl4_sowndiv_p5,
@@ -107,9 +132,9 @@ summarise_models <- function(brmsfit, predictor, unstandardized_predictor, level
   #explanation of the un-standardizing is here:
   #https://discourse.mc-stan.org/t/how-to-rescale-coefficients-of-lognormal-regression-to-be-change-in-y-for-unit-increase-of-x/22472
   sowndiv.summary <- sowndiv.summary %>%
-    mutate(., mean.trend_destand = (exp(sowndiv.summary$mean.trend / sd(dat$sowndivLog))) %>% round(., 3), .before = "pd") %>%
-    mutate(lower.HPD.2 = (exp((sowndiv.summary$lower.HPD) / sd(dat$sowndivLog)) ) %>% round(., 3), .before = "pd") %>%
-    mutate(upper.HPD.2 = (exp((sowndiv.summary$upper.HPD) / sd(dat$sowndivLog)) ) %>% round(., 3), .before = "pd") %>%
+    mutate(., mean.trend_destand = ((sowndiv.summary$mean.trend / sd(dat$sowndivLog))) %>% round(., 3), .before = "pd") %>%
+    mutate(lower.HPD.2 = (((sowndiv.summary$lower.HPD) / sd(dat$sowndivLog)) ) %>% round(., 3), .before = "pd") %>%
+    mutate(upper.HPD.2 = (((sowndiv.summary$upper.HPD) / sd(dat$sowndivLog)) ) %>% round(., 3), .before = "pd") %>%
     mutate_at((vars(mean.trend, lower.HPD, upper.HPD, pd) ), round, digits=3)  
   
  sowndiv.summary <- sowndiv.summary %>% 
@@ -127,6 +152,11 @@ summarise_models <- function(brmsfit, predictor, unstandardized_predictor, level
     mutate_at((vars(sowndivLogStd.trend, lower.HPD, upper.HPD) ), exp) %>%
     mutate_at((vars(sowndivLogStd.trend, lower.HPD, upper.HPD) ), round, digits=3)  
   
+  #summarise EMMs:
+  emm_dens_sown <- lapply(sown.list, summarise_emm) %>%
+    bind_rows()
+  emm_dens_sown 
+  
 
 #### summarise_models() for abundance/density ~ realdiv  #####
   load("./statistics/brms/240221_TrophDens_realdiv_mselect.RData")
@@ -134,10 +164,10 @@ summarise_models <- function(brmsfit, predictor, unstandardized_predictor, level
     load("./statistics/brms/240205_Fu_cp_realdiv_mselect.RData") 
     load("./statistics/brms/240205_Pl_cp_realdiv_mselect.RData")
     load("./statistics/brms/240221_Pr_Om_cp_realdiv_mselect.RData")
-    load("./statistics/brms/240216_abun_offset_mselect.RData")
+    load("./statistics/brms/240225_abun_dens_all_mselect.RData")
     
   #list of models:
-  real.list <- list(m.abun_all.realdiv_p5, 
+  real.list <- list(m.abun_all.realdiv_p5, m.dens_realdiv_p5,
                     m.Ba_realdiv_p5, m.Ba1_realdiv_p5, m.Ba2_realdiv_p5, m.Ba4_realdiv_p5,
                     m.Fu_realdiv_p5, m.Fu2_realdiv_p5, m.Fu3_realdiv_p5, m.Fu4_realdiv_p5,
                     m.Pl_realdiv_p5, m.Pl2_realdiv_p5, m.Pl3_realdiv_p5, m.Pl4_realdiv_p5,
@@ -150,9 +180,9 @@ summarise_models <- function(brmsfit, predictor, unstandardized_predictor, level
   
   #un-standardize beta coefficients:
   realdiv.summary <- realdiv.summary %>%
-    mutate(., realdivLog.trend = exp(realdiv.summary$mean.trend / sd(dat$realdivLog)) %>% round(., 3), .before = "bulk ESS") %>%
-    mutate(lower.HPD.2 = exp((realdiv.summary$lower.HPD) / sd(dat$realdivLog)) %>% round(., 3), .before = "bulk ESS") %>% 
-    mutate(upper.HPD.2 = exp((realdiv.summary$upper.HPD) / sd(dat$realdivLog)) %>% round(., 3), .before = "bulk ESS") %>%
+    mutate(., realdivLog.trend = (realdiv.summary$mean.trend / sd(dat$realdivLog)) %>% round(., 3), .before = "bulk ESS") %>%
+    mutate(lower.HPD.2 = ((realdiv.summary$lower.HPD) / sd(dat$realdivLog)) %>% round(., 3), .before = "bulk ESS") %>% 
+    mutate(upper.HPD.2 = ((realdiv.summary$upper.HPD) / sd(dat$realdivLog)) %>% round(., 3), .before = "bulk ESS") %>%
     mutate_at((vars(mean.trend, lower.HPD, upper.HPD, pd) ), round, digits=3)  
     
   realdiv.summary <- realdiv.summary %>%
@@ -187,7 +217,7 @@ summarise_models <- function(brmsfit, predictor, unstandardized_predictor, level
            upper.HPD = round(upper.HPD, 3),
            pd = round(pd, 4))
   
-  Hill.sown.summary 
+  Hill.sown.summary 105.4
   
 #for ~ realdiv
   load("./statistics/brms/240214_Hill_realdiv_mselect.RData")
@@ -237,12 +267,16 @@ summarise_models <- function(brmsfit, predictor, unstandardized_predictor, level
                           'Densities ~ realdiv' = realdiv.summary ,
                           'Hill numbers ~ sowndiv' = Hill.sown.summary,
                           'Hill numbers ~ realdiv' = Hill.real.summary,
-                          'EI SI ~ sowndiv realdiv' = indices.summary)
+                          'EI SI ~ sowndiv realdiv' = indices.summary,
+                          'EMMs densities ~ sowndiv' = emm_dens_sown)
   
  write.xlsx(list.msummaries, 
-      file = "./statistics/240221_Model_summaries.xlsx")
+      file = "./statistics/240228b_Model_summaries.xlsx")
 
 ####OLD: the difference between emtrends(), emtrends(epred=TRUE) and posterior_epred() ####
+ emtrends( m.Om_realdiv_p5, specs = c("treatment"), var = "realdivLogStd") %>% 
+   summary(., point.est = mean, level = .95)
+ 
   emtrends(m.Ba4_sowndiv_p5, var="sowndivLogStd") %>%
     summary(., point.est = mean, level = .95) %>%
     mutate(sowndivLogStd.trend = exp(sowndivLogStd.trend / sd(dat$sowndivLog))-1,

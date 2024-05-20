@@ -279,7 +279,7 @@ conditional_effects(m.Ba2_realdiv_p5) #slightly positive trend in t1, slightly n
 conditional_effects(m.Ba4_realdiv_p5) #strong negative trend in t3, slightly positive in t2/t3. t3 might be driven mainly by 2 outliers at realdiv=1
 
 ggplot(dat, aes(x=realdivLog, y=Ba4, col=treatment))+
-  geom_jitter(width=.2) #check out the blue outliers in treatment 3:
+  geom_point() #check out the blue outliers in treatment 3:
 dat %>% filter(treatment == 3 & realdivLog == 0 & Ba4 > 75) %>%
   select(Sample) #B4A13D1 
 dat %>% filter(treatment == 3 & realdivLog == 1 & Ba4 > 50) %>%

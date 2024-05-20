@@ -429,12 +429,13 @@ library(dplyr)
    
    loo.Om <- loo(m.Om_sowndiv_p, m.Om_sowndiv_p2, m.Om_sowndiv_p31, m.Om_sowndiv_p32, m.Om_sowndiv_p4,
                  m.Om_sowndiv_p5)
+   pp_check(m.Om_sowndiv_p5, ndraws = 100)
    
    loo.Om
    
    save(m.Om_sowndiv_p, m.Om_sowndiv_p2, m.Om_sowndiv_p31, m.Om_sowndiv_p32, m.Om_sowndiv_p4,
         m.Om_sowndiv_p5,
-        file="./statistics/brms/20221_Om_sowndiv_priors.RData")  
+        file="./statistics/brms/240221_Om_sowndiv_priors.RData")  
    
    rm(m.Om_sowndiv_p, m.Om_sowndiv_p2, m.Om_sowndiv_p31, m.Om_sowndiv_p32, m.Om_sowndiv_p4,
       m.Om_sowndiv_p5, m.Om_sowndiv_p7, m.Om_sowndiv_p8)
@@ -472,7 +473,7 @@ library(dplyr)
    rm(m.Pl_sowndiv_p, m.Pl_sowndiv_p2, m.Pl_sowndiv_p31, m.Pl_sowndiv_p32, m.Pl_sowndiv_p4)
    
    #Pr ~ sowndiv
-   load("./statistics/brms/231219_Pr_sowndiv_priors.RData")  
+   load("./statistics/brms/240221_Pr_sowndiv_priors.RData")  
    loo.Pr <- loo(m.Pr_sowndiv_p, m.Pr_sowndiv_p2, m.Pr_sowndiv_p31, m.Pr_sowndiv_p32, m.Pr_sowndiv_p)
    loo.Pr
    
@@ -480,7 +481,7 @@ library(dplyr)
       m.Pr_sowndiv_p5, m.Pr_sowndiv_p6, m.Pr_sowndiv_p8)
    
    #Om ~ sowndiv 
-   load("./statistics/brms/231219_Om_sowndiv_priors.RData")  
+   load("./statistics/brms/240221_Om_sowndiv_priors.RData")  
    
    loo.Om <- loo(m.Om_sowndiv_p, m.Om_sowndiv_p2, m.Om_sowndiv_p31, m.Om_sowndiv_p32, m.Om_sowndiv_p4,
                  m.Om_sowndiv_p5)
@@ -489,7 +490,7 @@ library(dplyr)
    rm(m.Om_sowndiv_p, m.Om_sowndiv_p2, m.Om_sowndiv_p31, m.Om_sowndiv_p32, m.Om_sowndiv_p4)
    
    #save the best fit models:
-   save(m.Ba_sowndiv_p5, m.Fu_sowndiv_p5, m.Pl_sowndiv_p5, m.Om_sowndiv_p7, m.Pr_sowndiv_p7,
+   save(m.Ba_sowndiv_p5, m.Fu_sowndiv_p5, m.Pl_sowndiv_p5, m.Om_sowndiv_p5, m.Pr_sowndiv_p5,
         file = "./statistics/brms/240221_TrophDens_sowndiv_mselect.RData")
    
 ####emmeans####

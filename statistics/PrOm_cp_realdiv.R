@@ -105,9 +105,9 @@ m.Pr_Om_realdiv_p <- brm(
   family = hurdle_lognormal,
   chains = 3,
   cores = 3,
-  iter = 2000, warmup = 1000,
+  iter = 2000, warmup = 1000, #bulk ESS too low when using iter=2000
   seed = SEED,
-  control = list(adapt_delta=0.99)) #10 div
+  control = list(adapt_delta=0.99)) #20 div
 
 pp_check(m.Pr_Om_realdiv_p, ndraws=100)+
   xlim(0,300)
@@ -146,53 +146,27 @@ m.Pr_Om_realdiv_p5 <- update(m.Pr_Om_realdiv_p,
                                seed=SEED)
 m.Pr_Om_realdiv_p5 %>% pp_check(ndraws=100)
 
-m.Pr_Om_realdiv_p6 <- update(m.Pr_Om_realdiv_p,
-                             bf(Pr_Om_per100g ~ realdivLogStd*treatment + (1|block/plot),
-                                hu ~ realdivLogStd + week  + (1|block/plot)),
-                             seed=SEED)
-m.Pr_Om_realdiv_p6 %>% pp_check(ndraws=100)
-summary(m.Pr_Om_realdiv_p6)
-
-m.Pr_Om_realdiv_p7 <- update(m.Pr_Om_realdiv_p,
-                             bf(Pr_Om_per100g ~ realdivLogStd*treatment + (1|block/plot),
-                                hu ~  week  + (1|block/plot)),
-                             seed=SEED)
-m.Pr_Om_realdiv_p7 %>% pp_check(ndraws=100)
-
-m.Pr_Om_realdiv_p8 <- update(m.Pr_Om_realdiv_p,
-                             bf(Pr_Om_per100g ~ realdivLogStd*treatment + (1|block/plot),
-                                hu ~ 1),
-                             seed=SEED)
-m.Pr_Om_realdiv_p8 %>% pp_check(ndraws=100)
 
 
 loo.Pr_Om <- loo(m.Pr_Om_realdiv_p, m.Pr_Om_realdiv_p2, m.Pr_Om_realdiv_p31, 
-                   m.Pr_Om_realdiv_p32, m.Pr_Om_realdiv_p4, m.Pr_Om_realdiv_p5,
-                   m.Pr_Om_realdiv_p6, m.Pr_Om_realdiv_p7, m.Pr_Om_realdiv_p8)
-loo.Pr_Om
+                   m.Pr_Om_realdiv_p32, m.Pr_Om_realdiv_p4, m.Pr_Om_realdiv_p5)
+loo.Pr_Om #p5
 
 save(m.Pr_Om_realdiv_p, m.Pr_Om_realdiv_p2, m.Pr_Om_realdiv_p31, 
      m.Pr_Om_realdiv_p32, m.Pr_Om_realdiv_p4, m.Pr_Om_realdiv_p5,
-     m.Pr_Om_realdiv_p6, m.Pr_Om_realdiv_p7, m.Pr_Om_realdiv_p8,
-     file = "./statistics/brms/240212_Pr_Om_realdiv.RData")
+     file = "./statistics/brms/240221_Pr_Om_realdiv.RData")
 
 rm(m.Pr_Om_realdiv_p, m.Pr_Om_realdiv_p2, m.Pr_Om_realdiv_p31, 
-   m.Pr_Om_realdiv_p32, m.Pr_Om_realdiv_p4, m.Pr_Om_realdiv_p5,
-   m.Pr_Om_realdiv_p6, m.Pr_Om_realdiv_p7, m.Pr_Om_realdiv_p8)
+   m.Pr_Om_realdiv_p32, m.Pr_Om_realdiv_p4, m.Pr_Om_realdiv_p5)
 
 #### model selection ####
-load("./statistics/brms/240212_Pr_Om_realdiv.RData")
+load("./statistics/brms/240221_Pr_Om_realdiv.RData")
 
-loo.Pr4_Om4 <- loo(m.Pr4_Om4_realdiv_p, m.Pr4_Om4_realdiv_p2, m.Pr4_Om4_realdiv_p31, 
-                   m.Pr4_Om4_realdiv_p32, m.Pr4_Om4_realdiv_p4, m.Pr4_Om4_realdiv_p5)
-loo.Pr4_Om4 #p5
+loo.Pr_Om <- loo(m.Pr_Om_realdiv_p, m.Pr_Om_realdiv_p2, m.Pr_Om_realdiv_p31, 
+                   m.Pr_Om_realdiv_p32, m.Pr_Om_realdiv_p4, m.Pr_Om_realdiv_p5)
+loo.Pr_Om #p5
 
-#posterior predictive check
-pp_check(m.Pr4_Om4_realdiv_p5, ndraws = 100)
-
-#conditional effects
-conditional_effects(m.Pr4_Om4_realdiv_p5) #pos. for t1, neutral t3, negative t2
 
 #save
-save(m.Pr4_Om4_realdiv_p5,
-     file = "./statistics/brms/240205_Pr_Om_cp_realdiv_mselect.RData")
+save(m.Pr_Om_realdiv_p5,
+     file = "./statistics/brms/240221_Pr_Om_cp_realdiv_mselect.RData")

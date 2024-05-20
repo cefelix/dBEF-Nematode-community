@@ -9,7 +9,7 @@ abundances2021 <- read_xlsx("./wrangling/abundances2021b.xlsx")
 abundances2021[,2:ncol(abundances2021)] %>% rowSums(na.rm = TRUE) #all identified nematodes
   abundances2021$Sample <- gsub("_", "D" ,abundances2021$Sample) #correct Sample IDs
 
-dBEF_nem <- read.csv("./dBEF_nem.csv", row.names = 1)
+dBEF_nem <- read.csv("./dBEF_nem_c.csv", row.names = 1)
 
 
 #### a function to calculate coverage according to Chao and Jost (2012), eq. 4a ####
